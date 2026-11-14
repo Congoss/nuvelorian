@@ -8,6 +8,7 @@ test('NEAR AI sees completed moves only; policy remains bounded and legal',async
  assert.deepEqual(result,[.15,.15,.7000000000000001]);assert.ok(!JSON.stringify(body).includes('private'));assert.ok(!JSON.stringify(body).includes('selectedChoice'));
 });
 test('offline/invalid inference always returns local-fallback indication',async()=>{
+ assert.equal(await requestPvpAiPolicy([]),null);
  for(const content of ['bad','{"finger":-1,"pencil":1,"poison":1}','{"finger":0,"pencil":0,"poison":0}'])assert.equal(await requestPvpAiPolicy([],{apiKey:'test',fetchImpl:async()=>({ok:true,json:async()=>({choices:[{message:{content}}]})})}),null);
  assert.equal(await requestPvpAiPolicy([],{apiKey:'test',fetchImpl:async()=>{throw Error('offline');}}),null);
 });

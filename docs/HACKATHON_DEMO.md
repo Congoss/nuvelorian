@@ -1,28 +1,32 @@
-# Planet4 — demo video script (about 2 minutes)
+# Planet4 — two-minute judge demo
 
-Record in English, or add English subtitles. Use the real game where possible. Never show `.env` files, the
-admin panel, wallet seed phrases, or private keys. Telegram Stars are not shown.
+Production Beta 4.14. Record in English or use English subtitles. Start at https://p4.nuvelor.gg/web?judge=1 . Hide admin pages, account email, wallet secrets and private configuration.
 
-| Time | Screen | Voice-over / caption |
+| Time | Show | English voice-over |
 | --- | --- | --- |
-| 0:00–0:12 | Game: boss fight, loot drop, equipment screen | "Planet4 is a live boss-fighting game. Every fight drops gear, and now that gear has a real market on NEAR." |
-| 0:12–0:25 | Web sign-in with a NEAR wallet (NEP-413), PL4 ticker | "Players sign in with a NEAR wallet, no Telegram needed. Prices are in PL4, our NEAR token, quoted live." |
-| 0:25–0:45 | Market: list a spare item; the AI hunter Grym buys it; the feed shows the reason | "Players trade with each other. Two AI merchants with their own NEAR accounts take part. Grym only buys to replace stock he has sold, and never pays more than 80% of the revenue from that sale." |
-| 0:45–0:58 | Try a second sale to the agents → rejected | "One farmer can't drain them: one agent sale per seller per day, a shared budget, identity grouping, and items sold by an agent can never be sold back to one." |
-| 0:58–1:12 | Missing set piece → Tor forges and lists it at a premium → player buys | "Tor, the smith, covers shortages. If nobody sells a piece, he forges it, priced above the player level so player drops sell first." |
-| 1:12–1:25 | NearBlocks: PL4 transfer of the trade + 5% fee to nuvelorian.near; Tor's signed tx | "Payments are real PL4 on NEAR mainnet. The server checks the final receipt before delivering, and the merchants sign their own transfers." |
-| 1:25–1:38 | AI traders tab → Simulate 7 days; feed with model lines | "Decisions come from a rules engine. A model on NEAR AI Cloud picks among safe options, but it can never invent a price or sign anything." |
-| 1:38–1:50 | NFT holder rewards: Legion pet claim | "NFT holders get in-game rewards, checked against on-chain ownership." |
-| 1:50–2:00 | PvP preview (labelled "prototype"), then repo + `npm run test:market` passing | "Next: PvP against the same AI merchants. All code is open, and the tests run without keys." |
+| 0:00–0:12 | Landing → Judge demo → game, without a wallet or tutorial | Planet4 turns boss loot into a player economy on NEAR. Judges can enter immediately without a wallet. |
+| 0:12–0:28 | Fight a boss → loot/equipment → Market | Players earn equipment through the game loop and trade spare items for PL4, a NEAR token. Item ownership is managed by the game server. |
+| 0:28–0:50 | Existing completed player trade and its matching NearBlocks receipts | This is a confirmed mainnet trade. The server checks the final token transfer and the five-percent seller fee before delivering the item. |
+| 0:50–1:12 | AI merchants Tor and Grym, their listings, account links and completed trade feed | Tor fills missing stock; Grym restocks only what he has sold. Each merchant has its own NEAR account. Spending limits and permanent no-buyback rules bound the model's choices. |
+| 1:12–1:32 | Orbital Duel → ten-second search → AI → NEAR AI provider label after inference is used | One ranked queue matches players, then falls back to an NPC. NEAR AI coaches future moves from completed rounds. Moves are committed before player input and the client verifies each reveal. |
+| 1:32–1:47 | Rank resource reward receipt or finished fight; return to judge tour | Combat, inventory and rank rewards remain server-authoritative. If the model is unavailable, the local pilot keeps the game responsive. |
+| 1:47–2:00 | Public GitHub README, two tags/diff and passing verification workflow | The new NEAR work is separated from the pre-hackathon baseline. The repository includes reproducible tests, attack scenarios and an isolated economy simulation. |
 
-## Shots to capture separately
+## Record reliably
 
-1. One real closed-pilot trade: listing → wallet `ft_transfer` → item delivered, plus its NearBlocks page.
-2. The terminal: `npm ci && npm run test:market && npm run demo:market`.
-3. The 7-day simulation chart.
-4. Screenshots for the X post: market, AI feed, NearBlocks tx, NFT pet.
+- Use the real guest entry for the first shot. Keep a separate already configured test-player browser for equipment, completed trades and PvP, and label that transition. A guest does not get real trading permissions automatically.
+- Use a completed trade for the explorer shot. Do not depend on a fresh wallet signature, merchant purchase or indexer update while recording. Never claim the isolated simulation is a mainnet transaction.
+- The first NPC move can use the local pilot. Pause briefly for inference, submit a round, and show NEAR AI only when the label actually appears on a subsequent move. If the daily quota is exhausted, use the production verification record as evidence and label the live fight as local fallback.
+- Unpaid reservations keep their own item safe and recoverable; another lot can still be bought. Do not repeatedly send a transaction whose result is unknown.
+- The escrow contract in contracts/market-escrow is tested but is not the live pilot settlement mechanism. Items are not on-chain NFTs, and protected server FullAccess keys are not protocol-restricted FunctionCall keys.
 
-## Local fallback
+## Links for the recording
 
-If the live pilot is unavailable, record `npm run start:market` (http://127.0.0.1:4183, simulated PL4) and label it
-"local demo, simulated PL4". Don't present simulated trades as mainnet trades.
+- Judge demo: https://p4.nuvelor.gg/web?judge=1
+- Repository: https://github.com/Congoss/nuvelorian
+- Feature diff: https://github.com/Congoss/nuvelorian/compare/pre-hackathon...hackathon-submission
+- Player trade: https://nearblocks.io/txns/36WZ44AiH7884JTjsbH68H18HzZTKy2KvdranUvPETjF
+- Merchant purchase: https://nearblocks.io/txns/BHe5FxYs7ivUgrNRavTFDhyAnb8p3XSYE6aoi3y5R19V
+- Merchant sale: https://nearblocks.io/txns/GYm6VhVJABHurqrgKAqoZTt93qwrLPuGpfKKKPjoSW5
+
+The owner records and publishes the public X post with @NEARProtocol and #NEARHackathon, then supplies that post's URL for the final application. This script has not been posted or submitted.
