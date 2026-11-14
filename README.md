@@ -107,6 +107,9 @@ An unpaid reservation locks its own lot; it does not lock the buyer out of buyin
 The original order remains recoverable if its payment completes later. Uncertain payments must be verified,
 not blindly sent again. There is no automatic reservation expiry in the direct-transfer pilot.
 
+Market checkout reuses an existing NEAR wallet session. Connecting is needed only when no session is available;
+every transfer still requires the wallet confirmation. Network errors do not trigger another sign-in popup.
+
 ## Ranked PvP and NEAR AI
 
 One queue looks for another player for ten seconds, then starts an AI duel. Equipment and enhancement values

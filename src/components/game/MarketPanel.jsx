@@ -118,14 +118,12 @@ export default function MarketPanel({profile,onSyncProfile}){
   const list=tab==='agents'?[]:tab==='buy'?data.lots.filter(l=>l.status==='active' && l.sellerId!==profile.id):tab==='mine'?data.lots.filter(l=>['active','reserved'].includes(l.status) && l.sellerId===profile.id):data.items.filter(item=>tab!=='sell' || item.tradable!==false).map(item=>({id:item.id,item}));
   return list.filter(r=>(!slot || r.item.slot===slot)&&(!rarity || equipmentRarity(equipment(r.item)).id===rarity)&&name(r.item).toLowerCase().includes(query.toLowerCase())).sort((a,b)=>(sort==='asc'?1:-1)*((a.price || a.item.npcPrice || 0)-(b.price || b.item.npcPrice || 0)));
  // Catalog is static; filters refresh with the current server snapshot.
- // eslint-disable-next-line react-hooks/exhaustive-deps
  },[data,tab,profile.id,query,slot,rarity,sort,lang]);
  const cents=/^\d+(\.\d{1,2})?$/.test(price)?Math.round(Number(price)*100):0;
  async function payMainnet(orderId,instruction){
-  const {getNearWalletConnector,waitForNearWallet}=await import('@/lib/platform/nearWallet');
+  const {getNearWalletConnector,getNearTransactionWallet,waitForNearWallet}=await import('@/lib/platform/nearWallet');
   const connector=await getNearWalletConnector();if(connector.network!=='mainnet')throw Error('MAINNET_WALLET_REQUIRED');
-  const wallet=await waitForNearWallet(connector.connect());
-  const accounts=await wallet.getAccounts({network:'mainnet'});
+  const {wallet,accounts}=await getNearTransactionWallet(connector);
   const intent=instruction || await gameApi.marketPaymentInstruction(orderId);
   if(intent.network!=='mainnet'||intent.receiverId!=='pl4.nearlytrade.near'||!accounts.some(a=>a.accountId===intent.signerId))throw Error('WRONG_PAYMENT_WALLET');
   const saved=sessionStorage.getItem('p4-mainnet-tx:'+orderId);
@@ -145,7 +143,7 @@ export default function MarketPanel({profile,onSyncProfile}){
   try{
    const intent=await gameApi.marketRegistration();
    if(intent.network!=='mainnet'||intent.receiverId!=='pl4.nearlytrade.near'||intent.actions?.length!==1||intent.actions[0].params.methodName!=='storage_deposit'||intent.actions[0].params.args.account_id!=='nuvelorian.near')throw Error('INVALID_REGISTRATION');
-   const {getNearWalletConnector,waitForNearWallet}=await import('@/lib/platform/nearWallet');const connector=await getNearWalletConnector();if(connector.network!=='mainnet')throw Error('MAINNET_WALLET_REQUIRED');const wallet=await waitForNearWallet(connector.connect());const accounts=await wallet.getAccounts({network:'mainnet'});if(!accounts.some(a=>a.accountId===intent.signerId))throw Error('WRONG_PAYMENT_WALLET');
+   const {getNearWalletConnector,getNearTransactionWallet,waitForNearWallet}=await import('@/lib/platform/nearWallet');const connector=await getNearWalletConnector();if(connector.network!=='mainnet')throw Error('MAINNET_WALLET_REQUIRED');const {wallet,accounts}=await getNearTransactionWallet(connector);if(!accounts.some(a=>a.accountId===intent.signerId))throw Error('WRONG_PAYMENT_WALLET');
    await waitForNearWallet(wallet.signAndSendTransaction(intent));commit(await gameApi.localMarket());
   }catch(error){setMessage(paymentError(error,lang));}finally{inFlight.current=false;setBusy(false);}
  }

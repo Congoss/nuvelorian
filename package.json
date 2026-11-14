@@ -11,7 +11,7 @@
     "start": "node server/index.js",
     "start:local": "powershell -ExecutionPolicy Bypass -File ./run-game.ps1",
     "start:market": "node scripts/run-local-market.mjs",
-    "test:market": "node --test tests/local-market.test.mjs tests/market-agents.test.mjs tests/agent-wallets.test.mjs tests/market-safety.test.mjs tests/equipment-rarity.test.mjs tests/market-testnet-settlement.test.mjs tests/market-access.test.mjs tests/market-restock.test.mjs tests/near-subaccount.test.mjs tests/market-mainnet-rpc.test.mjs tests/market-mainnet-book.test.mjs tests/market-mainnet-agents.test.mjs tests/web-account-switch.test.mjs tests/market-public-stats.test.mjs tests/market-attack-demo.test.mjs",
+    "test:market": "node --test tests/local-market.test.mjs tests/market-agents.test.mjs tests/agent-wallets.test.mjs tests/market-safety.test.mjs tests/equipment-rarity.test.mjs tests/market-testnet-settlement.test.mjs tests/market-access.test.mjs tests/market-restock.test.mjs tests/near-subaccount.test.mjs tests/market-mainnet-rpc.test.mjs tests/market-mainnet-book.test.mjs tests/market-mainnet-agents.test.mjs tests/web-account-switch.test.mjs tests/market-public-stats.test.mjs tests/market-attack-demo.test.mjs tests/near-wallet-market-session.test.mjs",
     "demo:market": "node scripts/demo-market.mjs",
     "simulate:market": "node scripts/simulate-market-week.mjs",
     "demo:attack": "node scripts/demo-attack.mjs",

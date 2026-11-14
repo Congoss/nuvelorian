@@ -66,6 +66,22 @@ export async function openNearWalletModal() {
   return wallet;
 }
 
+export async function getNearTransactionWallet(connector) {
+  connector ||= await getNearWalletConnector();
+  try {
+    const connected = await waitForNearWallet(connector.getConnectedWallet());
+    if (connected.wallet && connected.accounts?.length) return connected;
+  } catch (error) {
+    // A failed RPC or stalled provider is not a reason to open another login.
+    if (!/No wallet selected|No accounts found/i.test(error?.message || '') &&
+        !['NOT_CONNECTED','WALLET_NOT_CONNECTED'].includes(error?.code)) throw error;
+  }
+  const wallet = await waitForNearWallet(connector.connect());
+  const accounts = await waitForNearWallet(wallet.getAccounts({ network: connector.network }));
+  if (!accounts?.length) throw new Error('No accounts found');
+  return { wallet, accounts };
+}
+
 export function getActiveNearAccount() {
   return activeAccountId;
 }
