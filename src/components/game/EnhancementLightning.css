@@ -1,0 +1,18 @@
+.hero-mutant-butterfly .enhancement-lightning{display:none;position:absolute;inset:-28%;width:156%;height:156%;overflow:visible;z-index:4;pointer-events:none;filter:drop-shadow(0 0 2px #b9f4ff) drop-shadow(0 0 5px #65cfffaa)}
+.hero-mutant-butterfly.stage-5 .enhancement-lightning,.hero-mutant-butterfly.stage-6 .enhancement-lightning{display:block}
+.enhancement-arc{stroke:#d7faff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:0;animation:enhancement-arc-flash 2.8s linear infinite}
+.enhancement-arc-branch{stroke:#8ed6ff;stroke-width:1}
+.enhancement-arc-b{animation-duration:3.6s;animation-delay:-1.6s}
+.enhancement-arc-c{animation-duration:4.1s;animation-delay:-3.1s}
+.stage-5 .enhancement-arc-c{display:none}
+.stage-6 .enhancement-arc{stroke:#f3e5ff;stroke-width:1.8}
+.hero-mutant-butterfly.stage-6 .enhancement-lightning{filter:drop-shadow(0 0 2px #dcc1ff) drop-shadow(0 0 5px #a363eeaa)}
+.stage-6 .enhancement-arc-branch{stroke:#cfb5ff}
+@keyframes enhancement-arc-flash{0%,56%,71%,100%{opacity:0}58%,63%{opacity:1}65%{opacity:.25}67%,69%{opacity:.85}}
+html[data-game-hidden="true"] .enhancement-arc,.preview-paused .enhancement-arc{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){.hero-mutant-butterfly .enhancement-lightning{display:none}}
+
+.enhancement-arc-final{display:none}
+.stage-6 .enhancement-arc-final{display:block;animation-duration:2.2s;animation-delay:-.7s}
+.hero-mutant-butterfly.stage-6 .enhancement-lightning{inset:-32%;width:164%;height:164%}
+.stage-6 .enhancement-arc{stroke-width:2;animation-duration:2.4s}

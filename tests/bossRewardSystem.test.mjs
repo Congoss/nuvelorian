@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   calculateActualPoisonRefundUnits,
+  allocateBossPoisonRefundUnits,
   calculateBossReward,
   DEFAULT_BOSS_REWARD_CONFIG,
   getBossDamageBoxIcon,
@@ -10,11 +11,37 @@ import {
   getBossRankMultiplier,
   sanitizeBossRewardConfig,
   stripRetiredBossFragments,
+  getBossRewardDamageUnits,
+  migratePendingBossReward,
 } from '../src/lib/bossRewardSystem.js';
 
 const noSpecials = (config = DEFAULT_BOSS_REWARD_CONFIG) => ({
   ...config,
   specialDrop: { ...config.specialDrop, baseChance: { gear: 0, pet: 0, background: 0 } },
+});
+
+test('large boss rewards grow smoothly with HP while contribution stays proportional', () => {
+  assert.equal(getBossRewardDamageUnits(1000,1000),1);
+  assert.equal(getBossRewardDamageUnits(10000,10000),10);
+  assert.ok(Math.abs(getBossRewardDamageUnits(3000000,3000000)-Math.sqrt(30000))<1e-9);
+  assert.ok(Math.abs(getBossRewardDamageUnits(300000,3000000)/getBossRewardDamageUnits(3000000,3000000)-.1)<1e-9);
+  assert(getBossRewardDamageUnits(4000000,4000000)>getBossRewardDamageUnits(3000000,3000000));
+  const result = calculateBossReward({bossId:'boss7',maxHp:3000000,actualDamageTotal:3000000,rank:1,availableSpecials:[],rng:()=>1});
+  const amounts = Object.fromEntries(result.drops.map(d=>[d.type,d.qty]));
+  assert.equal(amounts.tentacles, 4245617);
+  assert(amounts.xp > 1000 && amounts.xp < 20000);
+  assert.equal(amounts.energy, 8489);
+});
+
+test('unclaimed old boss snapshots are normalized once and assist cashback removed', () => {
+  const old = {rewardFormula:'boss_v2',maxHp:3000000,damage:3000000,rewardSnapshot:[{type:'tentacles',qty:23000000},{type:'weapon',id:'c4',qty:30},{type:'keycard',qty:1},{type:'equipment',itemId:'unique'}]};
+  const migrated = migratePendingBossReward(old,0);
+  assert.equal(migrated.rewardSnapshot.find(d=>d.type==='tentacles').qty,Math.floor(23000000*Math.sqrt(30000)/3000));
+  assert(!migrated.rewardSnapshot.some(d=>d.type==='weapon'));
+  assert(migrated.rewardSnapshot.some(d=>d.type==='equipment'));
+  assert.equal(migrated.rewardSnapshot.find(d=>d.type==='keycard').qty,1);
+  assert.deepEqual(migratePendingBossReward(migrated,0),migrated);
+  assert.equal(old.rewardSnapshot[0].qty,23000000);
 });
 
 test('participation threshold adapts between small and large bosses', () => {
@@ -138,4 +165,17 @@ test('legacy pending snapshots strip fragments but retain a whole key and specia
   ]);
   assert.deepEqual(drops.map((drop) => drop.type), ['keycard', 'equipment']);
   assert.equal(drops[0].qty, 1);
+});
+
+test('shared poison refund distributes one spend, including partial kills and free attacks',()=>{
+ for(const count of [1,2,5,50]){
+ const result=allocateBossPoisonRefundUnits(Array.from({length:count},(_,i)=>({id:i,damage:1000})),100,10000,100);
+ const sum=result.reduce((n,x)=>n+x.units,0);
+ assert(Math.abs(sum-Math.min(100,count*10))<1e-8);
+ assert(result.every(x=>x.units>0));
+ }
+ assert.equal(allocateBossPoisonRefundUnits([{id:1,damage:1000}],0,1000,1)[0].units,0);
+ assert.equal(allocateBossPoisonRefundUnits([{id:1,damage:0}],100,1000,100)[0].units,0);
+ const weighted=allocateBossPoisonRefundUnits([{id:1,damage:250},{id:2,damage:750}],10,1000,10);
+ assert.deepEqual(weighted,[{id:1,units:2.5},{id:2,units:7.5}]);
 });

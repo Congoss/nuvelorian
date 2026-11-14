@@ -13,7 +13,9 @@ const BONUS_KEY_BY_TYPE = {
   large_poison_flat: 'largePoisonFlat',
   energy_capacity_flat: 'energyCapacityFlat',
   energy_regen_pct: 'energyRegenPct',
+  poison_crit_chance_pct: 'poisonCritChancePct',
   crit_chance_pct: 'critChancePct',
+  bleed_chance_pct: 'bleedChancePct',
   poison_preserve_chance_pct: 'poisonPreserveChancePct',
   finger_damage_pct: 'fingerDamagePct',
   pencil_damage_pct: 'pencilDamagePct',
@@ -53,7 +55,7 @@ export function getEquippedSetCounts(profile) {
 export function calculateEquipmentEffects(profile) {
   const effects = {
     fingerDamageFlat: 0, pencilDamageFlat: 0, poisonDamageFlat: 0, bossDamageFlat: 0,
-    smallPoisonFlat: 0, mediumPoisonFlat: 0, largePoisonFlat: 0, critChancePct: 0,
+    smallPoisonFlat: 0, mediumPoisonFlat: 0, largePoisonFlat: 0, critChancePct: 0, poisonCritChancePct: 0, bleedChancePct: 0,
     energyCapacityFlat: 0,
     energyRegenPct: 0,
     poisonPreserveChancePct: 0,
@@ -71,6 +73,10 @@ export function calculateEquipmentEffects(profile) {
       if (!key) return;
       effects[key] += Number(bonus?.value || 0);
     });
+    // Enhancement is always derived from the saved item level, never from an
+    // already enhanced damage value. Each level adds 1% poison damage.
+    const enhancementLevel = Math.max(0, Math.min(15, Math.floor(Number(item?.enhancementLevel || 0))));
+    effects.poisonDamagePct += enhancementLevel * 0.01;
   });
 
   const setCounts = getEquippedSetCounts(profile);
@@ -128,7 +134,8 @@ export function applyEquipmentEffectsToWeapon(baseWeapon, profile) {
   }
 
   if (isFinger || isPencil) result.cooldownMin = Math.max(isFinger ? 5 / 60 : 30 / 60, Number(result.cooldownMin || 0));
-  result.critChance = Number(result.critChance || 0) + effects.critChancePct;
+  result.critChance = Number(result.critChance || 0) + effects.critChancePct + (isPoison ? effects.poisonCritChancePct : 0);
+  result.equipmentBleedChancePct = effects.bleedChancePct;
   result.equipmentBossDamagePct = effects.bossDamagePct;
   if (isPoison) result.saveChance = Math.min(1, Math.max(0, Number(result.saveChance || 0) + effects.poisonPreserveChancePct));
   return result;

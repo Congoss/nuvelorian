@@ -1,0 +1,3 @@
+export const ENHANCEMENT_SLOTS=['weapon','head','hands','armor','legs','boots'];
+export function getEquipmentEnhancementLevels(profile={}){profile ||= {};const levels={};for(const [id,value]of Object.entries(profile.equipment_enhancement_levels||{}))levels[id]=Math.max(0,Math.min(15,Math.floor(Number(value)||0)));for(const item of profile.inventory_items||[])if(item?.id)levels[item.id]=Math.max(levels[item.id]||0,Math.max(0,Math.min(15,Math.floor(Number(item.enhancementLevel)||0))));return levels;}
+export function getFullEquipmentEnhancement(profile={}){profile ||= {};const levels=getEquipmentEnhancementLevels(profile);const ids=ENHANCEMENT_SLOTS.map(slot=>profile.equipped_items?.[slot]);return ids.every(Boolean)?Math.min(...ids.map(id=>levels[id]||0)):0;}

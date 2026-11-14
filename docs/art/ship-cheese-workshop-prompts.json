@@ -1,0 +1,14 @@
+{
+  "tool": "built-in ImageGen",
+  "assets": "public/ship-cheese-boss/cheese-workshop-v3.webp and workshop-*-v1.webp",
+  "prompts": [
+    {
+      "key": "background",
+      "prompt": "ONE portrait 9:16 background for a hand drawn sci-fi cartoon boss arena, simple matte 2D TV animation style like Rick and Morty/Futurama. Broad clean shapes, thin dark outlines, flat two-tone cel shading, muted dusty turquoise olive ochre and violet, NO detailed grunge texture or realistic cinematic shading. Inside a ridiculous spaceship CHEESE PROCESSING ROOM. Broad empty central floor and calm rear wall for a tall yellow cheese monster composited separately. Large open battered olive mixing vat on LEFT EDGE at mid height, no stirrer inside; a round empty dark motor socket above it at 18% width, 30% height intended for separately rotating paddle. On RIGHT edge a short thick gray cheese delivery pipe bends down from ceiling and terminates at 84% width,25% height; leave clear space below for separately animated dripping nozzle. Rear wall has three broad rounded teal panels and a closed small hatch, NO tanks with liquid, NO symmetric reactor, NO coils, no windows or space. Along floor edges a few large simple cheese blocks and small golden puddles, funny crooked hazard stripes at bottom corners. Small wall bulbs at upper corners, diffuse muted lighting. NO boss, NO mice, NO other characters, no moving props, no text, no logos, no numbers, no UI. Full bleed opaque background."
+    },
+    {
+      "key": "props",
+      "prompt": "ONE square transparent 2x2 game animation prop atlas. Simple hand drawn matte 2D sci-fi cartoon like Rick and Morty/Futurama, thin dark ink contours, flat cel shading, muted olive steel gray ochre palette. Four equally sized square cells, every object fully contained with 15% margins, no overlap. TOP LEFT: front view of a chunky THREE-ARM industrial mixing paddle rotor, rusty olive metal and a little yellow cheese residue, circular central hub, rotationally balanced, no frame, no vat. TOP RIGHT: short gray mechanical flexible pipe nozzle pointing straight down, yellow melted cheese drip attached, isolated; no other pipes. BOTTOM LEFT: ONE small yellow Swiss cheese wheel with several holes and a bite, isolated. BOTTOM RIGHT: ONE small hanging work lamp, olive casing and warm cream yellow bulb, short cable above. No backgrounds, no labels, no grid lines, no shadows. All cells true transparent alpha. Bold simple silhouettes for animation at small sizes."
+    }
+  ]
+}

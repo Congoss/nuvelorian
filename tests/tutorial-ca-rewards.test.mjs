@@ -39,14 +39,14 @@ test('quest tutorial returns to location selection when only the planet picker i
   assert.equal(getQuestTutorialRecoveryStep({ questRowCount: 7, hasLocationPicker: false }), 'quest-sector');
 });
 
-test('first tutorial quest cycle reserves 231 energy and only permits the highlighted mission in order', () => {
-  assert.equal(FIRST_QUEST_TUTORIAL_ENERGY, 231);
+test('first tutorial quest reserves four GO and only permits the initial mission before automatic completion', () => {
+  assert.equal(FIRST_QUEST_TUTORIAL_ENERGY, 12);
   const profile = { tutorial_step: 'quest-sector', task_completions: {} };
   assert.equal(canSpendTutorialEnergyOnMission(profile, 'p4-u00-scout'), true);
   assert.equal(canSpendTutorialEnergyOnMission(profile, 'p4-u01-scout'), false);
   assert.equal(canSpendTutorialEnergyOnMission(profile, 'p4-u00-loot'), false);
   assert.equal(canSpendTutorialEnergyOnMission({ ...profile, tutorial_step: 'task-location' }, 'p4-u00-scout'), false);
   assert.equal(canSpendTutorialEnergyOnMission({ tutorial_step: 'completed' }, 'p4-u01-scout'), true);
-  assert.equal(canSpendTutorialEnergyOnMission({ ...profile, task_completions: { 'p4-u00-scout': 4 } }, 'p4-u00-loot'), true);
-  assert.equal(canSpendTutorialEnergyOnMission({ ...profile, task_completions: { 'p4-u00-scout': 4 } }, 'p4-u00-scout'), false);
+  assert.equal(canSpendTutorialEnergyOnMission({ ...profile, task_completions: { 'p4-u00-scout': 4 } }, 'p4-u00-loot'), false);
+  assert.equal(canSpendTutorialEnergyOnMission({ ...profile, task_completions: { 'p4-u00-scout': 4 } }, 'p4-u00-scout'), true);
 });

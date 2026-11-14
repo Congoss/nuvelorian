@@ -1,0 +1,9 @@
+export const SHIP_BATTLE_TEXT={
+ uk:{busy:'Запит ще виконується',pending:'Спочатку повторіть незавершену атаку',pendingHint:'Є незавершена атака. Повторіть запит.',retry:'Повторити атаку',retryLoad:'Повторити завантаження',back:'← Назад',loading:'Завантаження бою…'},
+ ru:{busy:'Запрос ещё выполняется',pending:'Сначала повторите незавершённую атаку',pendingHint:'Есть незавершённая атака. Повторите запрос.',retry:'Повторить атаку',retryLoad:'Повторить загрузку',back:'← Назад',loading:'Загрузка боя…'},
+ en:{busy:'A request is still running',pending:'Retry the pending attack first',pendingHint:'An attack is pending. Retry to check its result.',retry:'Retry attack',retryLoad:'Retry loading',back:'← Back',loading:'Loading battle…'},
+};
+const NAMES={
+ hull:['Сирний паразит','Сырный паразит','Cheese Parasite'],engine:['Заражений солдат','Заражённый солдат','Infected Soldier'],hangar:['Орбітальний нокаут','Орбитальный нокаут','Orbital Knockout'],portal:['Буба-Шмуба, королева жуйок','Буба-Шмуба, королева жвачек','Buba-Shmuba, Gum Queen'],core:['Професор-експеримент','Профессор-эксперимент','Experimental Professor'],lab:['Салат-людожер','Салат-людоед','Cannibal Salad'],garden:['Реакторний кліщ','Реакторный клещ','Reactor Tick'],reactor:['Космічний сквотер','Космический сквоттер','Cosmic Squatter'],habitat:['Автопілот-божество','Автопилот-божество','Autopilot Deity'],bridge:['Антенний паразит','Антенный паразит','Antenna Parasite'],radar:['Унітазний адмірал','Унитазный адмирал','Toilet Admiral'],toilet:['Медузний пастух','Медузный пастух','Jellyfish Shepherd'],jellyfish:['Бармен чорної діри','Бармен чёрной дыры','Black Hole Bartender'],bar:['Капітан паразитів','Капитан паразитов','Captain of Parasites'],
+};
+export function getShipBossName(moduleId,language='uk') {return NAMES[moduleId]?.[language==='ru'?1:language==='en'?2:0]||moduleId;}

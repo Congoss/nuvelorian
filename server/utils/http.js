@@ -1,7 +1,9 @@
+import { auditBody, auditResult } from './playerAudit.js';
 export function sendJson(response, statusCode, payload) {
   response.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
     'Access-Control-Allow-Origin': '*',
+    'Access-Control-Expose-Headers': 'X-Request-Id, Server-Timing, Date',
     'Access-Control-Allow-Headers': 'Content-Type, X-Telegram-Init-Data, X-Telegram-User-Id, X-Telegram-Username, X-Telegram-Mock-User',
     'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS',
   });
@@ -10,6 +12,11 @@ export function sendJson(response, statusCode, payload) {
 }
 
 export function sendData(response, statusCode, data) {
+  if (data?.fight) response.combatSnapshotInfo = {
+    fight_id: data.fight.id, revision: data.fight.combat_revision, hp: data.fight.current_hp,
+    player_id: data.player?.id, poison: { ...data.player?.weapon_inventory },
+  };
+  auditResult(data);
   sendJson(response, statusCode, { data });
 }
 
@@ -44,6 +51,7 @@ export async function readJsonBody(request) {
   try {
     const body = JSON.parse(raw);
     if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('Invalid object');
+    auditBody(body);
     return body;
   } catch {
     throw Object.assign(new Error('Invalid JSON object'), { statusCode: 400, code: 'INVALID_JSON' });

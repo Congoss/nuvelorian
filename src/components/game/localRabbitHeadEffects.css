@@ -1,0 +1,11 @@
+.rabbit-eye-pulse{filter:brightness(1.7) saturate(1.2);animation:rabbit-eye-pulse 4.8s ease-in-out infinite}
+.rabbit-eye-glitch{opacity:0;filter:brightness(2.4) hue-rotate(145deg);animation:rabbit-eye-glitch 9.7s steps(1,end) infinite}
+.rabbit-visor-scan{opacity:0;animation:rabbit-visor-scan 7.3s linear infinite}
+.rabbit-tooth-sheen{opacity:0;animation:rabbit-tooth-sheen 11.7s linear infinite}
+.rabbit-tooth-spark{opacity:0;transform-box:fill-box;transform-origin:center;animation:rabbit-tooth-spark 11.7s ease-out infinite}
+@keyframes rabbit-eye-pulse{0%,100%{opacity:.06}45%{opacity:.65}49%{opacity:.2}53%{opacity:.8}60%{opacity:.35}}
+@keyframes rabbit-eye-glitch{0%,72%,76%,100%{opacity:0;transform:translateX(0)}72.5%,74.5%{opacity:.85;transform:translateX(2px)}73.5%,75.5%{opacity:.45;transform:translateX(-2px)}}
+@keyframes rabbit-visor-scan{0%,81%,100%{opacity:0;transform:translateY(0)}82%{opacity:.45;transform:translateY(0)}90%{opacity:.08;transform:translateY(80px)}91%{opacity:0}}
+@keyframes rabbit-tooth-sheen{0%,60%,66%,100%{opacity:0;transform:translateX(0)}61%{opacity:.9;transform:translateX(0)}65%{opacity:.9;transform:translateX(48px)}}
+@keyframes rabbit-tooth-spark{0%,63%,68%,100%{opacity:0;transform:scale(.2) rotate(0deg)}64.5%{opacity:1;transform:scale(1) rotate(12deg)}67%{opacity:0;transform:scale(.3) rotate(35deg)}}
+@media(prefers-reduced-motion:reduce){.rabbit-head-effects{display:none}}

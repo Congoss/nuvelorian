@@ -19,11 +19,13 @@ const getDefaultLocalApiBaseUrl = (platform) => {
   return `${window.location.origin}/api`;
 };
 
-const configuredPlatform = normalizePlatform(import.meta.env.VITE_APP_PLATFORM);
+const localMarketTest = import.meta.env.DEV && import.meta.env.VITE_LOCAL_MARKET_TEST === '1' && typeof window !== 'undefined' && ['localhost','127.0.0.1','::1'].includes(window.location.hostname);
+const configuredPlatform = normalizePlatform(localMarketTest ? (new URLSearchParams(window.location.search).get('platform') === 'telegram' ? 'telegram' : 'web') : import.meta.env.VITE_APP_PLATFORM);
 const browserMode = typeof window !== 'undefined' && !window.Telegram?.WebApp?.initData;
 const platform = configuredPlatform !== 'base44' && browserMode && import.meta.env.PROD ? 'web' : configuredPlatform;
 
 export const platformConfig = {
+  localMarketTest,
   appName: import.meta.env.VITE_APP_NAME || 'Survivor Telegram Game',
   platform,
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL || getDefaultLocalApiBaseUrl(platform),

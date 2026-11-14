@@ -1,0 +1,13 @@
+{
+  "bossId": "boss8",
+  "status": "staged",
+  "balance": "pending-user",
+  "channels": 10,
+  "equipmentSlots": 6,
+  "pet": "pet-toaster",
+  "medalKills": [
+    10,
+    50,
+    100
+  ]
+}

@@ -1,3 +1,8 @@
+import {getCardPlayPack} from './cardGameConfig.js';
+import { getPvpRefillProduct } from './pvpRanks.js';
+import {RESOURCE_PACKS,GUM_PACKS} from './resourcePacks.js';
+import { parseShipConstructionProduct } from './shipConstructionPayments.js';
+import { applyFriday13SaleToProduct, isFriday13SaleActive, FRIDAY13_END_AT } from './friday13Event.js';
 export const SHOP_PAYMENT_METHODS = [
   {
     id: 'ton',
@@ -105,6 +110,19 @@ export const PAID_CONSUMABLE_PACKS = [
   { id: 'paid_poison_large', title: 'Large Poison ×1', usd: 0.39, stars: 39, poisonId: 'large-poison', amount: 1, paymentMethods: ['near', 'telegram_stars'] },
 ];
 
+export function getRouletteSpinPack(value) {
+  const spins = Number(value);
+  if (![1, 5, 10, 100].includes(spins)) return null;
+  return {
+    id: `roulette_spin_${spins}`,
+    title: `Roulette Spin ×${spins}`,
+    usd: Number((spins * 0.1).toFixed(2)),
+    stars: spins * 10,
+    spins,
+    paymentMethods: ['telegram_stars', 'near'],
+  };
+}
+
 const PAID_POISON_BY_TYPE = {
   small: PAID_CONSUMABLE_PACKS[0],
   medium: PAID_CONSUMABLE_PACKS[1],
@@ -140,12 +158,26 @@ export function getPaidEnergyPack(value) {
   };
 }
 
-export function getShopPaymentProduct(itemId, catalog = getShopCatalog()) {
+function getBaseShopPaymentProduct(itemId, catalog = getShopCatalog()) {
+  const passOrder = String(itemId || '').match(/^bp_(gift|season):(test-\d{4}-\d{2}-\d{2}):(epic|legendary)(?::([a-zA-Z0-9_-]{1,100}))?$/);
+  if (passOrder) {
+    const [, kind, seasonId, tier, recipientId] = passOrder;
+    if ((kind === 'gift') !== Boolean(recipientId)) return null;
+    const pass = BATTLE_PASS_PACKS.find(pack => pack.tier === tier);
+    const stars = seasonId === 'test-2026-11-04' ? (tier === 'epic' ? 599 : 999) : pass.stars;
+    return { ...pass, id: itemId, stars, usd: stars / 100, title: pass.title + (recipientId ? ' Gift' : ''),
+      giftRecipientId: recipientId, giftSeasonId: seasonId };
+  }
+  if (['card_play_1','card_play_3'].includes(itemId)) return getCardPlayPack(Number(itemId.slice(-1)));
+  if (String(itemId).startsWith('ship_build:')) return parseShipConstructionProduct(itemId);
+  const rouletteMatch = String(itemId || '').match(/^roulette_spin_(1|5|10|100)$/);
+  if (rouletteMatch) return getRouletteSpinPack(Number(rouletteMatch[1]));
   const energyMatch = String(itemId || '').match(/^paid_energy_(\d{1,4})$/);
   if (energyMatch) return getPaidEnergyPack(Number(energyMatch[1]));
   const poisonMatch = String(itemId || '').match(/^paid_poison_(small|medium|large)_(\d{1,3})$/);
   if (poisonMatch) return getPaidPoisonPack(PAID_POISON_BY_TYPE[poisonMatch[1]]?.poisonId, Number(poisonMatch[2]));
   const packs = [
+    ...RESOURCE_PACKS,...GUM_PACKS,
     ...(catalog.gemPacks || []),
     ...(catalog.battlePassPacks || []),
     ...(catalog.newbiePacks || []),
@@ -154,13 +186,21 @@ export function getShopPaymentProduct(itemId, catalog = getShopCatalog()) {
   return packs.find((item) => String(item?.id || '') === String(itemId || '')) || null;
 }
 
+export function getShopPaymentProduct(itemId, catalog = getShopCatalog()) {
+  const refill = getPvpRefillProduct(itemId);
+  if (refill) return refill;
+  return applyFriday13SaleToProduct(getBaseShopPaymentProduct(itemId, catalog));
+}
+
 export function getShopCatalog() {
   return {
     version: '2026-06-15',
+    sale: isFriday13SaleActive() ? { percent: 50, endsAt: FRIDAY13_END_AT } : null,
     paymentMethods: SHOP_PAYMENT_METHODS,
     gemPacks: GEM_SHOP_PACKS,
     battlePassPacks: BATTLE_PASS_PACKS,
     newbiePacks: NEWBIE_PACKS,
+    resourcePacks: RESOURCE_PACKS,
     paidConsumablePacks: PAID_CONSUMABLE_PACKS,
   };
 }

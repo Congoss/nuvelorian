@@ -1,0 +1,7 @@
+Generated using built-in ImageGen; three standalone transparent assets in public/ship-cheese-boss/medals/.
+
+Create ONE isolated round collectible boss medal, transparent background, square icon. Image1 is exact existing game MEDAL FORMAT/STYLE reference: thick circular worn metal rim, short triangular rays inside rim, embossed boss portrait relief, dark engraved outlines, flat hand-drawn cartoon shading, no ribbon. Image2 is BOSS IDENTITY reference: giant melted Swiss cheese monster with four asymmetric bulging eye stalks and a huge screaming open mouth. Center a compact recognizable head-and-shoulders portrait of THIS cheese monster embossed in metal; retain four cream-shaped eyes and mouth as sculpted relief, not full scene. Same frontal circular shape, camera, size, portrait design and rim across bronze/silver/gold series. Restrained worn scratched metal, hand-drawn adult sci-fi cartoon like game's other medals, no photorealistic 3D, no glow, no text, no digits, no symbols. Entire medal fits within 8 percent transparent margin. 
+
+Bronze finish: warm copper brown metal, dark brown recesses, muted copper highlights.
+Silver finish: cool silver pewter metal, charcoal recesses, pale silver highlights.
+Gold finish: rich ochre gold metal, dark amber recesses, pale golden highlights.

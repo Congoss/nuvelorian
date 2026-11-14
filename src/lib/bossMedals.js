@@ -19,12 +19,13 @@ export function getBossMedalTier(kills) {
   return null;
 }
 
-export function getBossMedalProgress(kills) {
+export function getBossMedalProgress(kills, language = 'en') {
+  const labels = language === 'ru' ? ['Бронзовая медаль','Серебряная медаль','Золотая медаль','Золотая медаль открыта'] : ['uk','ua'].includes(language) ? ['Бронзова медаль','Срібна медаль','Золота медаль','Золоту медаль відкрито'] : ['Bronze medal','Silver medal','Gold medal','Gold medal unlocked'];
   if (kills >= BOSS_MEDAL_THRESHOLDS.gold) {
     return {
       current: BOSS_MEDAL_THRESHOLDS.gold,
       target: BOSS_MEDAL_THRESHOLDS.gold,
-      label: 'Gold medal unlocked',
+      label: labels[3],
     };
   }
 
@@ -32,7 +33,7 @@ export function getBossMedalProgress(kills) {
     return {
       current: kills,
       target: BOSS_MEDAL_THRESHOLDS.gold,
-      label: 'Gold medal',
+      label: labels[2],
     };
   }
 
@@ -40,14 +41,14 @@ export function getBossMedalProgress(kills) {
     return {
       current: kills,
       target: BOSS_MEDAL_THRESHOLDS.silver,
-      label: 'Silver medal',
+      label: labels[1],
     };
   }
 
   return {
     current: kills,
     target: BOSS_MEDAL_THRESHOLDS.bronze,
-    label: 'Bronze medal',
+    label: labels[0],
   };
 }
 

@@ -19,14 +19,15 @@ export function waitForNearWallet(promise, { signal, timeoutMs = 120000 } = {}) 
   });
 }
 
-export async function signNearWalletProof(challenge, { signal } = {}) {
+export async function signNearWalletProof(challenge, { signal, forceSelect = false } = {}) {
   const connector = await waitForNearWallet(getNearWalletConnector(), { signal });
   let signedAccount;
   const onSigned = ({ accounts }) => { signedAccount = accounts?.[0]; };
   connector.on('wallet:signInAndSignMessage', onSigned);
   try {
     const nonce = Uint8Array.from(atob(challenge.nonce), value => value.charCodeAt(0));
-    await waitForNearWallet(connector.connect({ signMessageParams: {
+    const walletId=forceSelect?await waitForNearWallet(connector.selectWallet({features:{signInAndSignMessage:true}}),{signal}):undefined;
+    await waitForNearWallet(connector.connect({ ...(walletId?{walletId}:{}),signMessageParams: {
       message: challenge.message, recipient: challenge.recipient, nonce,
     } }), { signal });
     if (!signedAccount?.accountId || !signedAccount?.signedMessage) throw new Error('NEAR wallet did not return a signed proof');
@@ -74,7 +75,7 @@ export function setActiveNearAccount(accountId) {
 }
 
 export async function disconnectNearSession() {
-  const previous = connectorPromise;
+  const previous = connectorPromise || (typeof localStorage!=='undefined'&&localStorage.getItem('selected-wallet')?getNearWalletConnector():null);
   activeAccountId = '';
   connectorPromise = undefined;
   try {

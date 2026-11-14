@@ -55,6 +55,35 @@ export function verifyTelegramInitData(initData) {
   }
 }
 
+export function verifyTelegramLoginData(payload, { botToken = serverConfig.telegramBotToken, now = Date.now } = {}) {
+  if (!payload || !botToken) return { ok: false, reason: 'missing_login_data' };
+  const receivedHash = String(payload.hash || '');
+  if (!/^[a-f0-9]{64}$/i.test(receivedHash)) return { ok: false, reason: 'missing_hash' };
+  const entries = Object.entries(payload)
+    .filter(([key, value]) => key !== 'hash' && value !== undefined && value !== null && value !== '')
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('\n');
+  const secretKey = crypto.createHash('sha256').update(botToken).digest();
+  const computedHash = crypto.createHmac('sha256', secretKey).update(entries).digest('hex');
+  if (!crypto.timingSafeEqual(Buffer.from(computedHash, 'hex'), Buffer.from(receivedHash, 'hex'))) {
+    return { ok: false, reason: 'invalid_hash' };
+  }
+  const telegramId = Number(payload.id);
+  const age = now() / 1000 - Number(payload.auth_date);
+  if (!Number.isSafeInteger(telegramId) || telegramId <= 0) return { ok: false, reason: 'invalid_user' };
+  if (!Number.isFinite(age) || age < -30 || age > 86400) return { ok: false, reason: 'expired_login_data' };
+  return {
+    ok: true,
+    reason: null,
+    user: {
+      id: telegramId,
+      username: String(payload.username || `tg_${telegramId}`),
+      photo_url: String(payload.photo_url || ''),
+    },
+  };
+}
+
 export function getSessionFromHeaders(headers) {
   const verified = verifyTelegramInitData(headers['x-telegram-init-data']);
   if (verified.ok) {

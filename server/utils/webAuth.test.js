@@ -38,3 +38,20 @@ test('signed browser session survives server restarts with the same secret', () 
   assert.equal(createWebAuth({ secret: 'test-secret' }).session({ cookie }).telegramId, '123');
   assert.equal(createWebAuth({ secret: 'another-secret' }).session({ cookie }), null);
 });
+
+test('verified Telegram Login can create a browser session directly', () => {
+  const auth = createWebAuth({ secret: 'test-secret', secure: false });
+  const cookie = auth.createSession({ telegramId: '777', username: 'web_player' });
+  assert.equal(auth.session({ cookie }).telegramId, '777');
+  assert.equal(auth.session({ cookie }).username, 'web_player');
+  assert.throws(() => auth.createSession({ telegramId: '777', isMock: true }));
+});
+
+test('NEAR-only signed session preserves a separate wallet identity without Telegram', () => {
+  let clock=1000;const auth=createWebAuth({secret:'near-test',secure:false,now:()=>clock});
+  const cookie=auth.createSession({nearAccountId:'alice.near',username:'alice.near'});
+  const session=auth.session({cookie});assert.equal(session.telegramId,'');assert.equal(session.email,'near_alice.near@miniapp.local');assert.equal(session.nearAccountId,'alice.near');
+  assert.throws(()=>auth.createSession({nearAccountId:'alice.near',isMock:true}));
+  assert.equal(auth.session({cookie:cookie.replace('=', '=x')}),null);
+  clock+=8*24*60*60*1000;assert.equal(auth.session({cookie}),null);
+});

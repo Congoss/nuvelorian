@@ -1,3 +1,4 @@
+export const ROULETTE_PAPER_SPIN_COST = 10;
 export const ROULETTE_REWARD_DEFS = [
   {
     id: 'reward_nothing',
@@ -170,6 +171,15 @@ export function chooseRouletteReward(rng = Math.random) {
 
 export function resolveRouletteRewardById(rewardId) {
   return ROULETTE_REWARD_BY_ID[normalizeRouletteRewardId(rewardId)] || null;
+}
+
+export function getEventRouletteReward(reward, eventActive = false) {
+  if (!eventActive || reward?.id !== 'reward_nothing') return reward;
+  return {
+    ...reward, type: 'halloween_pumpkin', amount: 1, iconKey: 'halloween_pumpkin', accent: '#ff8a1f',
+    label: { ua: 'Гарбуз', en: 'Pumpkin', ru: 'Тыква' },
+    popupText: { ua: '+1 Гарбуз', en: '+1 Pumpkin', ru: '+1 Тыква' },
+  };
 }
 
 function getRewardDeltaReward(previousValue, nextValue, reward) {

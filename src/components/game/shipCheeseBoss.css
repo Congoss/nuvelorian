@@ -1,0 +1,82 @@
+.cheese-arena{position:relative;width:100%;max-width:440px;aspect-ratio:9/14;margin:12px auto;overflow:hidden;isolation:isolate;border:1px solid #68704b;border-radius:9px;background:#202a25}
+.cheese-arena-background{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cheese-boss-rig{position:absolute;left:7%;bottom:12%;width:86%;aspect-ratio:3/4;transform-origin:50% 94%}
+.cheese-boss-breathe{position:absolute;inset:0;transform-origin:50% 95%}
+.cheese-body{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;filter:drop-shadow(0 8px 5px #0005)}
+.cheese-part{display:block;position:absolute;aspect-ratio:1;background-image:url('/ship-cheese-boss/parts.webp');background-size:200% 200%;background-repeat:no-repeat;pointer-events:none}
+.cheese-eye{position:absolute;aspect-ratio:1;z-index:2;pointer-events:none}
+.cheese-eye>img{width:100%;height:100%;object-fit:contain}
+.cheese-eye-surface{position:absolute;left:16%;top:20%;width:70%;height:70%;border-radius:50%;overflow:hidden}
+.cheese-pupil{position:absolute;left:46%;top:46%;width:8%;height:8%;min-width:2px;min-height:2px;border-radius:50%;background:#1b120d}
+.cheese-eyelid{position:absolute;inset:-2px;background:linear-gradient(110deg,#ffc83c,#f3aa22);border-bottom:2px solid #8d521a;border-radius:48%;transform:translateY(-110%)}
+.cheese-alien-rat{background:none;object-fit:contain}
+.cheese-tongue{left:45%;top:58%;width:48%;transform-origin:25% 15%;z-index:3}
+.cheese-rat{z-index:4;transform-origin:50% 85%}
+.cheese-rat-floor-left{left:2%;bottom:4%;width:32%}
+.cheese-rat-floor-right{right:1%;bottom:1%;width:34%}
+.cheese-arena-vignette{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 40px #08100b70}
+.ship-battle-scene:has(.cheese-arena){justify-content:flex-start;gap:10px}
+.ship-battle-scene>.cheese-arena{flex:0 0 auto;max-width:clamp(200px,calc((100dvh - 230px)*9/14),440px);margin:0 auto}
+.ship-battle-scene:has(.cheese-arena)>.ship-battle-hp{flex-shrink:0}
+.cheese-arena.is-animated .cheese-boss-breathe{animation:cheese-breathe 4.6s ease-in-out infinite}
+.cheese-arena.is-animated .cheese-eyelid{animation:cheese-blink 6.7s ease-in-out infinite}
+.cheese-arena.is-animated .cheese-pupil{animation:cheese-look 4.8s ease-in-out infinite}
+.cheese-arena.is-animated .cheese-eye-1 .cheese-eyelid{animation-delay:-2.2s}.cheese-arena.is-animated .cheese-eye-2 .cheese-eyelid{animation-delay:-4.5s}.cheese-arena.is-animated .cheese-eye-3 .cheese-eyelid{animation-delay:-1.1s}
+.cheese-arena.is-animated .cheese-tongue{animation:cheese-tongue 3.9s ease-in-out infinite}
+.cheese-arena.is-animated .cheese-rat{animation:cheese-nibble 1.1s ease-in-out infinite alternate}
+.cheese-arena.is-animated .cheese-rat-floor-right{animation-delay:-.35s}
+.cheese-arena.is-animated .cheese-boss-rig{animation:cheese-hit .24s ease-out}
+.cheese-arena.is-defeated .cheese-boss-rig{transform:translateY(8%) scaleY(.85);filter:saturate(.5);transition:transform .7s,filter .7s}
+@keyframes cheese-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.018,1.025)}}
+@keyframes cheese-blink{0%,42%,46%,100%{transform:translateY(-110%)}44%{transform:translateY(0)}}
+@keyframes cheese-look{0%,100%{transform:translate(0,0)}18%,29%{transform:translate(240%,-120%)}42%,53%{transform:translate(-240%,100%)}70%,81%{transform:translate(60%,260%)}}
+.cheese-arena.is-animated .cheese-eye-1 .cheese-pupil{animation-delay:-1.7s;animation-duration:5.3s}
+.cheese-arena.is-animated .cheese-eye-2 .cheese-pupil{animation-delay:-3.1s;animation-direction:reverse}
+.cheese-arena.is-animated .cheese-eye-3 .cheese-pupil{animation-delay:-.8s;animation-duration:4.1s}
+@keyframes cheese-tongue{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(4deg)}}
+@keyframes cheese-nibble{from{transform:translateY(0) rotate(-1deg)}to{transform:translateY(-2%) rotate(1.5deg)}}
+@keyframes cheese-hit{0%{transform:translateX(0)}25%{transform:translateX(-2%)}65%{transform:translateX(1.5%)}100%{transform:translateX(0)}}
+.cheese-reactor-effects{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cheese-reactor-tank{position:absolute;top:8%;width:17%;height:30%;overflow:hidden;border-radius:45%;background:radial-gradient(ellipse,#ffc35c18,transparent 72%)}
+.cheese-reactor-tank-left{left:0}.cheese-reactor-tank-right{right:0;top:7%}
+.cheese-reactor-bubble{position:absolute;left:calc(12% + var(--bubble)*12%);bottom:0;width:calc(4px + var(--bubble)*1px);aspect-ratio:1;border:1px solid #ffe6a56b;border-radius:50%;background:#ffe2a017;opacity:0}
+.cheese-reactor-lamp{position:absolute;top:16%;width:3%;height:4%;border-radius:50%;background:#a3ffe455;box-shadow:0 0 12px 4px #71eec627;opacity:.35}
+.cheese-reactor-lamp-left{left:26%}.cheese-reactor-lamp-right{right:26%;top:17%}
+.cheese-reactor-steam{position:absolute;bottom:24%;width:16%;height:17%;border-radius:50%;background:radial-gradient(ellipse,#ddd6aa35,transparent 68%);filter:blur(5px);opacity:0;transform-origin:bottom}
+.cheese-reactor-steam-left{left:3%}.cheese-reactor-steam-right{right:2%}
+.cheese-arena.is-animated .cheese-reactor-bubble{animation:cheese-reactor-bubble calc(3.3s + var(--bubble)*.37s) linear infinite;animation-delay:calc(var(--bubble)*-.83s)}
+.cheese-arena.is-animated .cheese-reactor-tank-right .cheese-reactor-bubble{animation-delay:calc(-1.4s + var(--bubble)*-.7s)}
+.cheese-arena.is-animated .cheese-reactor-tank{animation:cheese-reactor-glow 5.4s ease-in-out infinite alternate}
+.cheese-arena.is-animated .cheese-reactor-lamp{animation:cheese-reactor-light 3.7s ease-in-out infinite}
+.cheese-arena.is-animated .cheese-reactor-lamp-right{animation-delay:-1.8s}
+.cheese-arena.is-animated .cheese-reactor-steam{animation:cheese-reactor-steam 5.8s ease-out infinite}
+.cheese-arena.is-animated .cheese-reactor-steam-right{animation-delay:-3.2s}
+.cheese-arena.is-animated .cheese-rat-floor-right{animation:cheese-mouse-sniff 4.6s ease-in-out infinite}
+@keyframes cheese-reactor-bubble{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:.55}85%{opacity:.4}100%{transform:translateY(-180px) scale(1.4);opacity:0}}
+@keyframes cheese-reactor-glow{from{opacity:.45}to{opacity:1}}
+@keyframes cheese-reactor-light{0%,100%{opacity:.25}45%,60%{opacity:.8}}
+@keyframes cheese-reactor-steam{0%,15%{opacity:0;transform:translateY(10%) scale(.5)}35%{opacity:.65}100%{opacity:0;transform:translateY(-75%) scale(1.5)}}
+@keyframes cheese-mouse-sniff{0%,100%{transform:rotate(0)}25%,35%{transform:translateY(-3%) rotate(-5deg)}55%{transform:rotate(2deg)}65%,75%{transform:translateY(-1%) rotate(-1deg)}}
+@media(prefers-reduced-motion:reduce){.cheese-arena *{animation:none!important;transition:none!important}}
+
+.cheese-arena.is-fullscene{position:absolute;inset:0;width:100%;height:100%;max-width:none;aspect-ratio:auto;margin:0;border:0;border-radius:0}.cheese-arena.is-fullscene .cheese-boss-rig{left:calc(50% - min(36%,22dvh));bottom:max(30%,calc(var(--bottom-nav-space,96px) + 135px));width:min(72%,44dvh);max-height:none;}.cheese-arena.is-fullscene .cheese-rat-floor-left{bottom:max(29%,calc(var(--bottom-nav-space,96px) + 125px));width:23%}.cheese-arena.is-fullscene .cheese-rat-floor-right{bottom:max(28%,calc(var(--bottom-nav-space,96px) + 115px));width:25%}
+.cheese-workshop-props{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cheese-workshop-props>img{position:absolute;aspect-ratio:1;object-fit:contain}
+.cheese-workshop-paddle{left:17.2%;top:17.1%;width:9%;transform-origin:50% 57%;transform:translate(-50%,-57%)}
+.cheese-workshop-nozzle{position:absolute;left:83.3%;top:21.9%;width:1.8%;height:3.5%;background:linear-gradient(90deg,#bd8220,#ffdc62 45%,#eeb63c);border-radius:15% 15% 50% 50%;transform-origin:50% 0}
+.cheese-workshop-wheel{left:1%;bottom:30%;width:17%;transform-origin:50% 85%}
+.cheese-workshop-lamp{left:8%;top:2%;width:15%;transform-origin:50% 3%}
+.cheese-workshop-drop{position:absolute;left:83.55%;top:25.2%;width:1.3%;height:2%;background:#f6c748;border-radius:40% 40% 60% 60%;opacity:0}
+.cheese-arena.is-animated .cheese-workshop-paddle{animation:cheese-workshop-paddle 5s linear infinite}
+.cheese-arena.is-animated .cheese-workshop-nozzle{animation:cheese-workshop-nozzle 3.2s ease-in-out infinite}
+.cheese-arena.is-animated .cheese-workshop-wheel{animation:cheese-workshop-wheel 4.3s ease-in-out infinite}
+.cheese-arena.is-animated .cheese-workshop-lamp{animation:cheese-workshop-lamp 4.8s ease-in-out infinite}
+.cheese-arena.is-animated .cheese-workshop-drop{animation:cheese-workshop-drop 3.2s ease-in infinite}
+@keyframes cheese-workshop-paddle{from{transform:translate(-50%,-57%) rotate(0)}to{transform:translate(-50%,-57%) rotate(360deg)}}
+@keyframes cheese-workshop-nozzle{0%,100%{transform:scaleY(.65)}50%{transform:scaleY(1.05)}}
+@keyframes cheese-workshop-wheel{0%,100%{transform:translateX(0) rotate(-5deg)}50%{transform:translateX(10%) rotate(8deg)}}
+@keyframes cheese-workshop-lamp{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+@keyframes cheese-workshop-drop{0%,45%{opacity:0;transform:translateY(0)}55%{opacity:.9}95%{opacity:.75;transform:translateY(700%) scaleY(1.4)}100%{opacity:0;transform:translateY(800%)}}
+@media(prefers-reduced-motion:reduce){.cheese-workshop-props *{animation:none!important}}
+
+.cheese-arena-background{object-fit:fill}

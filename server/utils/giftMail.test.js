@@ -38,3 +38,21 @@ test('gift mail credits all poison sizes to inventory exactly once', () => {
   assert.equal(claimGiftMail(player, 'poison-mail').alreadyClaimed, true);
   assert.equal(player.weapon_inventory['small-poison'], 12);
 });
+
+
+test('pumpkin mail credits event balance once and preserves mail outside the event', () => {
+  const originalNow = Date.now;
+  try {
+    Date.now = () => Date.parse('2026-10-22T12:00:00Z');
+    const player = { gift_mail: [{ id: 'pumpkins', rewards: [{ field: 'halloween_pumpkin', amount: 7 }] }] };
+    claimGiftMail(player, 'pumpkins');
+    assert.equal(player.halloween_event.balance, 7);
+    assert.equal(claimGiftMail(player, 'pumpkins').alreadyClaimed, true);
+    assert.equal(player.halloween_event.balance, 7);
+    player.gift_mail = [{ id: 'expired', rewards: [{ field: 'premium', amount: 2 }, { field: 'halloween_pumpkin', amount: 3 }] }];
+    Date.now = () => Date.parse('2026-11-05T12:00:00Z');
+    assert.throws(() => claimGiftMail(player, 'expired'), { code: 'HALLOWEEN_CLOSED' });
+    assert.equal(player.premium, undefined);
+    assert.equal(player.gift_mail.length, 1);
+  } finally { Date.now = originalNow; }
+});

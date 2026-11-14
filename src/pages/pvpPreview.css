@@ -1,0 +1,283 @@
+.pvp-preview{--mint:#33df95;--lime:#b4eb31;box-sizing:border-box;max-width:520px;min-height:100dvh;margin:auto;padding:8px 9px 0;background-color:#182416;background-image:linear-gradient(#101b16dc,#182416e8),var(--pvp-texture);background-size:cover;color:#f1f3db;font-family:Rubik,sans-serif;display:flex;flex-direction:column;gap:7px}.pvp-preview *{box-sizing:border-box}.pvp-preview button,.pvp-preview a,.pvp-preview select{-webkit-tap-highlight-color:transparent}.pvp-preview button:focus-visible,.pvp-preview a:focus-visible,.pvp-preview select:focus-visible{outline:2px solid #e8ff82;outline-offset:3px}.pvp-preview button:disabled{cursor:not-allowed;filter:saturate(.55);opacity:.65}.pvp-local{display:flex;justify-content:space-between;align-items:center;font-size:9px;color:#a8b78d;gap:5px}.pvp-local select{font-size:10px;background:#162419;border:1px solid #426047;color:#d9ecb8;padding:2px}.pvp-title{display:flex;align-items:center;justify-content:space-between;border:1px solid #648243;background:#0b130cc9;border-radius:8px;padding:9px 8px}.pvp-title h1{margin:0;font-size:clamp(16px,4.5vw,24px);line-height:1;font-weight:900}.pvp-title a,.pvp-title button{color:#ecf2d6;display:flex;align-items:center;background:none;border:0;padding:0}.pvp-pilots{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pvp-pilot{display:flex;gap:5px;align-items:center;padding:6px 5px;border:1px solid var(--mint);border-radius:8px;background:#0a140ed9;min-width:0}.pvp-pilot>div:last-child{min-width:0;flex:1}.pvp-pilot b{display:block;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-size:clamp(10px,2.8vw,14px)}.pvp-pilot b small{padding:2px 4px;background:#a168cf;color:#201329;border-radius:3px;font-size:8px}.pvp-face{width:31px;height:42px;flex-shrink:0;background-image:url('/pvp/astronauts-v1.webp');background-size:195px 97px;background-position:-18px -4px}.pvp-face.enemy{background-position:-128px -4px}.pvp-hp{position:relative;margin-top:4px;height:20px;overflow:hidden;border-radius:5px;background:#242f18;border:1px solid #739929;color:#132006}.pvp-hp i{display:block;height:100%;background:linear-gradient(#e3ff71,#9cce25);transition:width .25s}.pvp-hp span{position:absolute;inset:0;display:grid;place-items:center;font-size:10px;font-weight:900;color:#fff8d0;text-shadow:0 1px 3px #000}.pvp-attack{display:flex;align-items:center;gap:4px;font-size:9px;color:#bed993;margin-top:3px}.pvp-round{display:flex;align-items:center;justify-content:center;gap:12px;font-size:12px;font-weight:800;text-transform:uppercase}.pvp-round>i{width:50px;height:1px;background:var(--mint)}
+.pvp-stage{position:relative;isolation:isolate;min-height:255px;flex:1;height:clamp(280px,42dvh,470px);border:1px solid var(--mint);border-radius:9px;overflow:hidden;background:radial-gradient(ellipse at 60% 55%,#56369366,transparent 55%),radial-gradient(ellipse at 20% 90%,#37357580,transparent 60%),#080b23;box-shadow:inset 0 0 35px #02030d}.pvp-stars{position:absolute;inset:-20%;background:linear-gradient(135deg,transparent 30%,#5e3c7930 45%,#1e257e70 50%,transparent 65%);transform:rotate(-12deg)}.pvp-star{position:absolute;width:2px;height:2px;background:#b6b6d5;box-shadow:0 0 4px #bebefe;animation:pvpTwinkle 3s infinite alternate}.pvp-moon{position:absolute;right:-18px;bottom:58px;width:73px;height:73px;border-radius:100%;background:radial-gradient(circle at 25% 40%,#283b3c 8%,transparent 10%),radial-gradient(circle at 65% 60%,#293235 12%,transparent 14%),linear-gradient(130deg,#52605c,#17252b 75%);opacity:.55;box-shadow:-8px -4px 15px #a6b3a21c}.pvp-help{position:absolute;right:9px;top:9px;z-index:3;width:27px;height:27px;border:1px solid var(--lime);border-radius:50%;background:#122414;color:#e6f2ca;font-weight:900;font-size:18px}.pvp-fighter{position:absolute;top:22%;width:49%;height:63%;animation:pvpFloat 3.8s ease-in-out infinite alternate}.pvp-fighter.player{left:-1%}.pvp-fighter.opponent{right:-1%;animation-delay:-1.6s}.pvp-sprite{width:100%;height:100%;background-image:url('/pvp/astronauts-v1.webp');background-repeat:no-repeat;background-size:200% 100%;filter:drop-shadow(0 5px 4px #0008)}.pvp-sprite.player{background-position:left center}.pvp-sprite.opponent{background-position:right center}.pvp-vs{position:absolute;top:49%;left:50%;transform:translate(-50%,-50%) rotate(-10deg);color:#b4f832;font-size:25px;font-weight:900;text-shadow:0 0 12px #152c07}.pvp-stage[data-winner=player] .pvp-fighter.opponent,.pvp-stage[data-winner=opponent] .pvp-fighter.player{animation:pvpRecoil .5s ease-out}.pvp-hit{position:absolute;top:8%;left:20%;font-size:28px;color:#e8ff69;font-weight:900;animation:pvpDamage .55s ease-out;text-shadow:1px 2px #111}.pvp-result{position:absolute;bottom:12px;left:4%;width:92%;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid #5e8c4c;border-radius:6px;background:#172915e8;padding:6px;font-size:10px;font-weight:800}.pvp-result img{width:29px;height:29px;object-fit:contain}.pvp-result b{color:#c4f54a;white-space:nowrap}.pvp-result.opponent b{color:#ff9674}.pvp-ai-ready{position:absolute;bottom:15px;left:10px;right:10px;text-align:center;font-size:10px;color:#b7c6a0}.pvp-start-overlay{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:#07100e91;padding:20px}.pvp-start-overlay h2{font-weight:900;font-size:21px;text-align:center;color:#eff5ce;text-shadow:1px 2px #122413}.pvp-green{border:2px solid #536d19;border-radius:8px;color:#192307;font-weight:900;background:linear-gradient(#dcfa65,#a3cb23 80%,#648416);padding:11px 20px;box-shadow:0 3px 1px #080e03;text-transform:uppercase;font-size:12px;cursor:pointer}
+.pvp-controls{text-align:center}.pvp-score{display:flex;justify-content:center;align-items:center;gap:8px;font-size:17px;font-weight:800;line-height:1.1;margin-bottom:5px}.pvp-score-win{color:#c9f76b}.pvp-score i{width:5px;height:5px;border-radius:100%;background:#9a9b86}.pvp-score i.player{background:#c8f55f}.pvp-score i.opponent{background:#ef886b}.pvp-controls h2{font-size:16px;line-height:1.2;font-weight:900;margin:0}.pvp-shared{font-size:11px;color:#c9d5a9;display:flex;justify-content:center;gap:5px;align-items:center;margin:5px 0 7px}.pvp-shared b{color:#f2f7c9}.pvp-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.pvp-action{border:2px solid #50681a;background:radial-gradient(ellipse at 12% 12%,#e4ff6880,transparent 60%),linear-gradient(#c7e53f,#9ec429 70%,#749417);border-radius:11px;box-shadow:inset 0 0 0 2px #f1ff793b,0 3px 0 #0b1306;color:#1d260c;padding:6px 2px 8px;display:flex;flex-direction:column;align-items:center;cursor:pointer;min-height:102px;transition:transform .1s,filter .1s}.pvp-action img{height:67px;width:100%;object-fit:contain;filter:drop-shadow(0 3px 1px #34401475)}.pvp-action b{font-size:clamp(10px,3vw,15px);font-weight:900;white-space:nowrap}.pvp-action:active,.pvp-action.selected{transform:translateY(2px);filter:brightness(1.2)}.pvp-error{font-size:11px;color:#ffc199;padding:5px}.pvp-error button{padding:3px 14px;border:1px solid #9aaf69;margin-left:5px}.pvp-build{font-size:10px;color:#b7c6a1;margin-top:5px;border-top:1px solid #51633d;padding-top:7px}.pvp-build summary{display:flex;gap:5px;align-items:center;cursor:pointer;font-weight:800}.pvp-build-fields{display:grid;grid-template-columns:2fr 1fr;gap:7px;margin:8px 0}.pvp-build-fields label:last-child{grid-column:1/-1}.pvp-build-fields label{display:flex;flex-direction:column;gap:3px}.pvp-build-fields select{max-width:100%;min-width:0;padding:7px;color:#e5f3c4;background:#101c14;border:1px solid #587344}.pvp-build p{margin:6px 0;color:#a0b291}.pvp-leave{padding:7px;border:1px solid #805e45;color:#ffc4a4;margin:5px 8px 5px 0}.pvp-footer{display:flex;align-items:center;justify-content:space-around;gap:12px;margin-top:4px;background:linear-gradient(transparent,#09150b);padding:6px 2px 7px;font-size:9px;font-weight:800;color:#98ae78}.pvp-footer a{display:flex;flex-direction:column;align-items:center;color:#dce7bd}.pvp-footer img{height:35px;width:38px;object-fit:contain}.pvp-dialog{max-width:min(90vw,390px);margin:auto;border:1px solid var(--mint);background:#162519;color:#e7efd1;padding:20px;border-radius:9px;font:13px/1.6 Rubik,sans-serif}.pvp-dialog::backdrop{background:#000b;backdrop-filter:blur(4px)}.pvp-dialog h2{font-size:17px;font-weight:900}.pvp-dialog p{margin:12px 0}.pvp-proof{display:block;font-size:8px;word-break:break-all;color:#92ab84;margin-bottom:12px}
+@keyframes pvpFloat{from{transform:translateY(-4px) rotate(-2deg)}to{transform:translateY(5px) rotate(1deg)}}@keyframes pvpTwinkle{from{opacity:.3}to{opacity:.9}}@keyframes pvpRecoil{0%{transform:translateX(0)}35%{transform:translateX(10px) rotate(6deg);filter:brightness(1.5)}100%{transform:translateX(0)}}@keyframes pvpDamage{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-30px)}}@media(prefers-reduced-motion:reduce){.pvp-preview *{animation:none!important;transition:none!important}}@media(max-height:740px){.pvp-stage{height:32dvh;min-height:235px}.pvp-title{padding:7px}.pvp-action{min-height:87px}.pvp-action img{height:53px}.pvp-local{font-size:8px}.pvp-footer img{height:26px}.pvp-face{display:none}}@media(max-width:350px){.pvp-title h1{font-size:15px}.pvp-pilot b{font-size:10px}.pvp-hp span{font-size:9px}.pvp-actions{gap:3px}.pvp-action b{font-size:10px}.pvp-result{font-size:8px;gap:3px}.pvp-result img{width:22px;height:22px}}
+
+.pvp-footer button{display:flex;flex-direction:column;align-items:center;border:0;background:none;color:#dce7bd;font:800 9px Rubik,sans-serif;cursor:pointer}
+
+/* Game root intentionally does not scroll; keep this local scene self-contained. */
+.pvp-preview{height:100dvh;overflow-y:auto;overscroll-behavior:contain;padding-bottom:env(safe-area-inset-bottom,0px)}
+.pvp-stage{flex:1 0 auto}
+@media(max-height:620px){.pvp-preview{gap:4px}.pvp-stage{height:29dvh;min-height:170px}.pvp-action{min-height:74px}.pvp-action img{height:43px}.pvp-footer img{height:22px}}
+/* Action rig: 4 registered poses x 2 pilots. The opponent stays idle until reveal. */
+.pvp-sprite{background-image:url('/pvp/pilot-actions-v1.webp');background-size:400% 100%;background-position-y:0%;filter:drop-shadow(0 3px 2px #0007);transition:filter .12s}
+.pvp-sprite.player{background-position-y:0%}
+.pvp-sprite.opponent{scale:-1 1}
+.pvp-face{background-image:url('/pvp/pilot-actions-v1.webp');background-size:260px auto;background-position:-18px 0}
+.pvp-face.enemy{background-position:-18px 0;scale:-1 1}
+.pvp-fighter{top:15%;height:76%;z-index:2;transform-origin:50% 52%}
+.pvp-fighter.player{left:-3%}.pvp-fighter.opponent{right:-3%}
+.pvp-preview .pvp-vs{z-index:1;opacity:.65;font-size:22px}
+.pvp-stage[data-phase=windup] .pvp-fighter.player .pvp-fighter-motion{animation:pvpAnticipate .35s ease-in-out infinite alternate}
+.pvp-stage[data-winner=player] .pvp-fighter.player .pvp-fighter-motion{animation:pvpPlayerStrike .65s ease-out}
+.pvp-stage[data-winner=opponent] .pvp-fighter.opponent .pvp-fighter-motion{animation:pvpOpponentStrike .65s ease-out}
+.pvp-stage[data-winner=player] .pvp-fighter.opponent .pvp-fighter-motion{animation:pvpTargetRight .85s ease-out}
+.pvp-stage[data-winner=opponent] .pvp-fighter.player .pvp-fighter-motion{animation:pvpTargetLeft .85s ease-out}
+.pvp-stage[data-winner=draw] .pvp-fighter .pvp-fighter-motion{animation:pvpDrawBob .55s ease-out}
+.pvp-pilot[data-hit=true]{animation:pvpHpWarning .65s ease-out}
+.pvp-preview .pvp-hit{top:22%;left:14%;z-index:8;font-size:clamp(24px,7vw,40px);font-weight:900;white-space:nowrap;letter-spacing:-1px;color:#f3ff96;text-shadow:-2px -2px #152609,2px -2px #152609,-2px 2px #152609,3px 3px #0b1006,0 0 12px #c9ef4b;animation:pvpDamageNumber 1.05s ease-out both}
+.pvp-battle-fx{position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden;border-radius:inherit}
+.pvp-outcome-wash{position:absolute;inset:0;opacity:0;animation:pvpOutcomeWash 1.05s ease-out both;background:radial-gradient(ellipse at 35% 55%,#bfff4b55,#5cdd1330 45%,transparent 78%)}
+.pvp-battle-fx.opponent .pvp-outcome-wash{background:radial-gradient(ellipse at 35% 55%,#ff442568,#cd212a40 45%,transparent 78%)}
+.pvp-battle-fx.draw .pvp-outcome-wash{background:radial-gradient(ellipse,#c9edfa30,transparent 70%)}
+.pvp-battle-fx.opponent .pvp-victory-vapor{--vapor:#ff654b}
+.pvp-stage[data-match-result=win]{box-shadow:inset 0 0 60px #73b72c35,0 0 13px #c3fa4b33;border-color:#b2ef68}
+.pvp-stage[data-match-result=loss]{box-shadow:inset 0 0 60px #da402b28,0 0 13px #d7563329;border-color:#f48562}
+.pvp-preview .pvp-stage[data-match-result] .pvp-fighter.defeated .pvp-fighter-motion{animation:pvpDefeated 1.6s ease-out forwards}
+.pvp-preview .pvp-fighter.opponent.defeated{--fall-direction:1}
+.pvp-preview .pvp-fighter.player.defeated{--fall-direction:-1}
+.pvp-fighter.victorious .pvp-sprite{filter:drop-shadow(0 0 6px #a5e44980)}
+.pvp-skunk-smoke{position:absolute;left:43%;top:61%;width:1px;height:1px;--fart-direction:-1;z-index:5;pointer-events:none}
+.pvp-fighter.opponent .pvp-skunk-smoke{left:63%;--fart-direction:1}
+.pvp-skunk-smoke i{position:absolute;left:0;top:0;width:calc(20px + var(--puff)*4px);height:calc(19px + var(--puff)*3px);border-radius:48% 52% 44% 56%;background:radial-gradient(circle at 35% 35%,#c2e93cbb,#678c18a8 60%,#36581000 78%);box-shadow:inset 0 0 4px #9bb82866;filter:blur(1px);opacity:0;animation:pvpSkunkPuff 2.8s ease-out both;animation-delay:calc(.25s + var(--puff)*.18s)}
+.pvp-skunk-smoke span{position:absolute;left:calc(var(--fart-direction)*38px);top:-12px;font-size:15px;color:#c7df59;opacity:0;animation:pvpStinkSkull 2.4s ease-out 1s both}
+.pvp-preview .pvp-finish-overlay{inset:3% 7% auto;gap:7px;border:1px solid #95be5b;border-radius:9px;padding:10px;background:#112118dc;box-shadow:0 3px 14px #0007;z-index:6;animation:pvpFinishCard .25s ease-out both}
+.pvp-finish-overlay h2{font-size:clamp(12px,3.8vw,19px)}
+.pvp-stage[data-match-result=loss] .pvp-finish-overlay{border-color:#c57559;background:#311b14df}
+.pvp-finish-overlay .pvp-green{font-size:10px;padding:8px 11px}
+@keyframes pvpAnticipate{from{transform:translateX(0) rotate(-2deg)}to{transform:translateX(-3px) rotate(-4deg)}}
+@keyframes pvpPlayerStrike{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-5px) rotate(-5deg)}48%{transform:translateX(18px) rotate(7deg)}68%{transform:translateX(8px) rotate(2deg)}}
+@keyframes pvpOpponentStrike{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(5px) rotate(5deg)}48%{transform:translateX(-18px) rotate(-7deg)}68%{transform:translateX(-8px) rotate(-2deg)}}
+@keyframes pvpTargetRight{0%,25%,100%{transform:translateX(0) rotate(0)}38%{transform:translateX(14px) rotate(10deg);filter:brightness(1.55)}46%{transform:translateX(9px) rotate(6deg)}55%{transform:translateX(14px) rotate(8deg)}80%{transform:translateX(4px) rotate(2deg)}}
+@keyframes pvpTargetLeft{0%,25%,100%{transform:translateX(0) rotate(0)}38%{transform:translateX(-14px) rotate(-10deg);filter:brightness(1.55)}46%{transform:translateX(-9px) rotate(-6deg)}55%{transform:translateX(-14px) rotate(-8deg)}80%{transform:translateX(-4px) rotate(-2deg)}}
+@keyframes pvpHpWarning{0%,100%{box-shadow:none}35%{box-shadow:0 0 16px #fb6e4a99;border-color:#fb9471}}
+@keyframes pvpDrawBob{0%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
+@keyframes pvpDamageNumber{0%{opacity:0;transform:translateY(8px) scale(.6)}18%{opacity:1;transform:translateY(-5px) scale(1.2)}65%{opacity:1;transform:translateY(-17px) scale(1)}100%{opacity:0;transform:translateY(-38px) scale(.9)}}
+@keyframes pvpOutcomeWash{0%{opacity:0}15%{opacity:1}70%{opacity:.55}100%{opacity:0}}
+@keyframes pvpCallout{0%{opacity:0;transform:translateY(-10px) scale(.8)}15%,75%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-4px)}}
+@keyframes pvpDefeated{0%{transform:translateY(0) rotate(0)}40%{transform:translateY(9px) rotate(calc(var(--fall-direction)*13deg))}100%{transform:translateY(22px) rotate(calc(var(--fall-direction)*19deg));filter:saturate(.5)}}
+@keyframes pvpSkunkPuff{0%{opacity:0;transform:translate(0,0) scale(.2)}15%{opacity:.9}60%{opacity:.65}100%{opacity:0;transform:translate(calc(var(--fart-direction)*(35px + var(--puff)*6px)),calc(-30px + var(--drift))) scale(2.3)}}
+@keyframes pvpStinkSkull{0%{opacity:0;transform:translateY(0)}25%,65%{opacity:.6}100%{opacity:0;transform:translateY(-24px)}}
+@keyframes pvpFinishCard{from{opacity:0;transform:translateY(-10px) scale(.9)}to{opacity:1;transform:none}}
+@media(max-width:350px){.pvp-round-callout{font-size:11px}.pvp-impact{width:58px;height:54px}.pvp-impact b{font-size:16px}.pvp-projectile{width:33px;height:33px}}
+@media(prefers-reduced-motion:reduce){.pvp-battle-fx .pvp-round-callout,.pvp-battle-fx .pvp-outcome-wash{opacity:1}.pvp-battle-fx .pvp-outcome-wash{opacity:.2}.pvp-battle-fx .pvp-projectile,.pvp-battle-fx .pvp-impact,.pvp-battle-fx .pvp-hand-reveal{display:none}.pvp-skunk-smoke i{opacity:.25;transform:translateX(calc(var(--fart-direction)*20px)) scale(1.2)}}
+
+.pvp-result>span{display:flex;flex-direction:column;gap:2px;text-align:center;min-width:0;flex:1}.pvp-result>span strong{color:#d5fc8b;font-size:10px}.pvp-result.opponent>span strong{color:#ffb199}.pvp-result.draw>span strong{color:#e1e5c1}.pvp-result>span small{font-size:8px;color:#b9c9aa;font-weight:500}
+
+.pvp-stage{--flight:clamp(88px,30vw,155px)}
+/* The fight and its controls share the same illustrated scene. */
+.pvp-title>span{width:21px}
+.pvp-pilot{border-color:#80a658;border-radius:4px;background:#111d15}
+.pvp-pilot{padding:5px 7px}
+.pvp-hp{background:#36241b;border-color:#ab613d;height:17px}
+.pvp-hp i{background:linear-gradient(#ff9479,#d63f30 54%,#942b25)}
+.pvp-stage{height:auto;min-height:455px;flex:1 0 auto;border-radius:4px;background:linear-gradient(#0a111720,transparent 45%,#101912aa),var(--arena-art) center 58% / cover}
+.pvp-fighter{top:9%;width:48%;height:calc(84% - 135px)}
+.pvp-fighter-motion{width:100%;height:100%;transform-origin:50% 55%}
+.pvp-preview .pvp-vs{top:37%;color:#f5e7aa;text-shadow:0 2px 5px #171d10}
+.pvp-controls{position:absolute;inset:auto 0 0;z-index:5;padding:18px 9px 7px;background:linear-gradient(transparent,#101b15e8 35%,#101b15)}
+.pvp-controls h2{font-size:12px}
+.pvp-score{font-size:13px}
+.pvp-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.pvp-action{min-height:60px;padding:2px 3px 4px;background:#111b15ae;border:1px solid #92af6670;border-radius:5px;box-shadow:0 2px 4px #0008;color:#ecf2d6}
+.pvp-action img{height:49px;width:74px;max-width:100%;filter:drop-shadow(0 3px 3px #000c)}
+.pvp-action b{font-size:clamp(9px,2.4vw,12px);text-shadow:0 1px 2px #000}
+.pvp-action.selected,.pvp-action:focus-visible{background:#35441ac9;border-color:#c6f869}
+.pvp-action:disabled{opacity:.8}
+.pvp-result,.pvp-ai-ready{bottom:129px}
+.pvp-result{z-index:3;background:#111b14eb;border-radius:4px}
+.pvp-start-overlay{bottom:118px}
+.pvp-preview .pvp-finish-overlay{bottom:auto}
+.pvp-outcome-wash{inset:0 0 116px}
+.pvp-critical-impact{position:absolute;left:73%;top:39%;width:1px;height:1px;color:#f7de78}
+.pvp-battle-fx.opponent .pvp-critical-impact{left:27%;color:#ff8363}
+.pvp-impact-ring,.pvp-impact-core{position:absolute;left:0;top:0;border-radius:50%;width:74px;height:74px;animation:pvpStrikeRing .46s .12s ease-out both}
+.pvp-impact-ring{border:3px solid currentColor;box-shadow:0 0 12px currentColor,inset 0 0 10px currentColor}
+.pvp-impact-core{background:radial-gradient(circle,#fffbd9 5%,currentColor 24%,transparent 69%);animation:pvpStrikeCore .29s .12s ease-out both}
+.pvp-critical-impact>i{position:absolute;width:25px;height:3px;background:linear-gradient(90deg,#fffbd9,currentColor,transparent);box-shadow:0 0 5px currentColor;animation:pvpStrikeRay .43s .12s ease-out both}
+.pvp-critical-impact>b{position:absolute;left:0;top:0;white-space:nowrap;padding:4px 8px;background:#0b0b08dd;border-radius:5px;font:900 clamp(13px,3.5vw,20px)/1.2 monospace;text-shadow:0 2px 3px #000;color:#e6ff8f;animation:pvpStrikeText .9s .16s ease-out both}
+.pvp-battle-fx.opponent .pvp-critical-impact>b{color:#ffae88}
+@keyframes pvpStrikeRing{from{opacity:1;transform:translate(-50%,-50%) scale(.15)}to{opacity:0;transform:translate(-50%,-50%) scale(1.65)}}
+@keyframes pvpStrikeCore{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}25%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.3)}}
+@keyframes pvpStrikeRay{from{opacity:1;transform:rotate(var(--ray)) translateX(10px)}to{opacity:0;transform:rotate(var(--ray)) translateX(65px) scaleX(.4)}}
+@keyframes pvpStrikeText{0%{opacity:0;transform:translate(-50%,0) scale(.75)}20%,65%{opacity:1;transform:translate(-50%,-30px) scale(1)}100%{opacity:0;transform:translate(-50%,-54px)}}
+@media(prefers-reduced-motion:reduce){.pvp-critical-impact>b{transform:translate(-50%,-30px)}.pvp-impact-ring,.pvp-impact-core,.pvp-critical-impact>i{display:none}}
+@media(max-height:680px){.pvp-stage{min-height:380px}.pvp-action img{height:41px}.pvp-result,.pvp-ai-ready{bottom:119px}}
+/* Each atlas frame is 543 × 724 pixels. */
+.pvp-fighter-motion{container-type:size;display:grid;grid-template: minmax(0,1fr) / minmax(0,1fr);place-items:center}
+.pvp-preview .pvp-sprite{width:min(121cqw,75cqh);height:auto;aspect-ratio:3/4;background-size:400% 100%;background-position-x:var(--frame-x,0%);justify-self:center}
+.pvp-fighter[data-ai-style] .pvp-sprite{filter:hue-rotate(var(--pilot-hue,55deg)) drop-shadow(0 3px 2px #0007)}
+.pvp-fighter[data-ai-style=counter]{--pilot-hue:100deg}
+.pvp-fighter[data-ai-style=tricky]{--pilot-hue:275deg}
+.pvp-fighter[data-pose="1"]{--frame-x:33.3333%}
+.pvp-fighter[data-pose="2"]{--frame-x:66.6667%}
+.pvp-fighter[data-pose="3"]{--frame-x:100%}
+.pvp-fighter.player{left:0}
+.pvp-fighter.opponent{right:0}
+.pvp-skunk-smoke{top:64%;left:42%}
+.pvp-fighter.opponent .pvp-skunk-smoke{left:62%}
+
+/* Match the boss HUD: red HP track, bare attack icons and a stamped verdict. */
+.pvp-preview .pvp-title h1,.pvp-preview .pvp-round,.pvp-preview .pvp-controls h2,.pvp-preview .pvp-finish-overlay h2{font-family:"Rubik Distressed",Rubik,sans-serif}
+.pvp-preview .pvp-title{background:#101611;border-color:#465541}
+.pvp-preview .pvp-pilots{gap:5px}
+.pvp-preview .pvp-pilot{background:#121812;border-color:#465143}
+.pvp-preview .pvp-pilot b{font:900 clamp(10px,2.8vw,14px)/1.2 Rubik,sans-serif;text-transform:uppercase;text-shadow:0 2px #000}
+.pvp-preview .pvp-hp{height:24px;border:1px solid #4b5045;border-radius:4px;background:#20251e;box-shadow:inset 0 0 4px #000b}
+.pvp-preview .pvp-hp i{position:relative;overflow:hidden;border-radius:3px;background:linear-gradient(#ff8877,#d93e35 45%,#7a1515);box-shadow:inset 0 1px #ffefce5c,inset 0 -2px #53000073}
+.pvp-preview .pvp-hp i::after{content:"";position:absolute;inset:0 auto 0 -18%;width:30%;background:linear-gradient(90deg,transparent,#deff9647,transparent);animation:boss-acid-shine 2.6s ease-in-out infinite}
+.pvp-preview .pvp-hp span{font:900 clamp(10px,2.5vw,13px)/1 Rubik,sans-serif;color:#f8ffe8;text-shadow:0 1px #000}
+.pvp-preview .pvp-controls{padding:12px 8px 5px;background:linear-gradient(transparent,#080e0add 35%,#080e0af5)}
+.pvp-preview .pvp-actions{gap:3px;border-radius:12px;background:#0004}
+.pvp-preview .pvp-action,.pvp-preview .pvp-action.selected{min-height:0;gap:1px;padding:1px 0 5px;border:0;background:none;box-shadow:none}
+.pvp-preview .pvp-action>div{width:clamp(48px,15vw,72px)}
+.pvp-preview .pvp-action img{width:100%;height:100%;filter:drop-shadow(0 3px 3px #000b)}
+.pvp-preview .pvp-action.selected img{filter:drop-shadow(0 0 5px #c5ed64)}
+.pvp-preview .pvp-action:disabled{opacity:1;filter:none}
+.pvp-preview .pvp-action b,.pvp-preview .pvp-shared b{padding:2px 5px;border:1px solid #8cb138bf;border-radius:7px;background:#000a;color:#efffd2;font:700 clamp(9px,2.4vw,11px)/1 monospace;text-shadow:0 0 4px #62bc2d73}
+.pvp-preview .pvp-shared{margin:3px 0 4px}
+.pvp-preview .pvp-ai-ready{inset:15px 18% auto;text-shadow:0 1px 3px #000}
+.pvp-preview .pvp-critical-impact>b{padding:0;background:none;color:#ffad4d;font:900 clamp(20px,5vw,29px)/1 monospace;text-shadow:0 2px 3px #000,0 0 6px #000}
+.pvp-preview .pvp-battle-fx.opponent .pvp-critical-impact>b{color:#ffad4d}
+.pvp-boss-flash{position:absolute;top:-36px;left:-36px;width:72px;height:72px;animation:pvpBossFlash .28s .12s ease-out both}
+@keyframes pvpBossFlash{from{opacity:1;transform:scale(.5) rotate(-12deg)}to{opacity:0;transform:scale(1.45) rotate(8deg)}}
+/* Use the boss battle's animated cloud with duel-specific colors and copy. */
+.pvp-preview .pvp-round-callout {
+  position: absolute;
+  inset: 45% auto auto 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: min(72%, 300px);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #e6ff8f;
+  font: 900 clamp(17px, 5vw, 29px)/1 "Rubik Distressed", Rubik, sans-serif;
+  text-shadow: 0 0 5px #5cdb18, 0 0 14px #63ff1ef2, 2px 2px #173d0c;
+  animation: pvpCloudPop 1.05s ease-out both;
+}
+.pvp-boss-cloud {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: brightness(1.25) saturate(1.5) drop-shadow(0 0 22px #84ff36c7);
+}
+.pvp-round-callout span {
+  position: relative;
+  animation: pvpCloudText 1.05s ease-out both;
+}
+.pvp-preview .pvp-battle-fx.opponent .pvp-round-callout {
+  color: #ffcbba;
+  text-shadow: 0 0 5px #ff5035, 0 0 14px #ff3928d9, 2px 2px #501411;
+}
+.pvp-battle-fx.opponent .pvp-boss-cloud {
+  filter: hue-rotate(-105deg) brightness(1.15) saturate(1.65) drop-shadow(0 0 22px #ff5738c7);
+}
+.pvp-preview .pvp-battle-fx.draw .pvp-round-callout {
+  color: #fff;
+  text-shadow: 0 0 8px #fff9, 0 2px 5px #0a1209;
+}
+.pvp-battle-fx.draw .pvp-boss-cloud {
+  filter: grayscale(1) brightness(2) drop-shadow(0 0 14px #fffe);
+}
+@keyframes pvpCloudPop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.45); }
+  22% { opacity: 1; transform: translate(-50%, -50%) scale(1.14); }
+  68% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.18); }
+}
+@keyframes pvpCloudText {
+  0% { opacity: 0; transform: scale(.28) rotate(-9deg); }
+  22% { opacity: 1; transform: scale(1.2) rotate(3deg); }
+  68% { opacity: 1; transform: scale(1) rotate(-2deg); }
+  100% { opacity: 0; transform: scale(1.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pvp-preview .pvp-round-callout { transform: translate(-50%, -50%); }
+  .pvp-boss-cloud, .pvp-boss-flash { display: none; }
+}
+/* The art fills the viewport. The HUD and combat layer share that backdrop. */
+.pvp-preview {
+  max-width: none;
+  width: 100%;
+  padding-inline: max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right));
+  isolation: isolate;
+  background: #0c111b;
+}
+.pvp-space-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pvp-space-art {
+  position: absolute;
+  inset: -5%;
+  background: url('../assets/optimized/all/boss/boss_1/boss1_bck/boss4/kosmo/background-kosmo.webp') center / cover no-repeat;
+  animation: pvpSpaceDrift 28s ease-in-out infinite alternate;
+}
+.pvp-space-stars {
+  position: absolute;
+  inset: -5%;
+  background:
+    radial-gradient(circle at 14% 24%, #c2ffe5 1px, transparent 2px),
+    radial-gradient(circle at 38% 43%, #f6e6ff 1px, transparent 2px),
+    radial-gradient(circle at 71% 62%, #e3f0ff 1px, transparent 2px),
+    radial-gradient(circle at 53% 18%, #cff7ff 1px, transparent 2px),
+    radial-gradient(circle at 85% 54%, #e1f7bd 1px, transparent 2px),
+    radial-gradient(circle at 29% 70%, #d1f6ff 1px, transparent 2px);
+  animation: pvpSpaceStars 9s ease-in-out infinite alternate;
+}
+.pvp-space-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #080c16cf, transparent 34%, transparent 57%, #080e0a99 85%, #080e0ae8);
+}
+@keyframes pvpSpaceDrift {
+  from { transform: translate3d(-2%, -1%, 0); }
+  to { transform: translate3d(2%, 1%, 0) scale(1.03); }
+}
+@keyframes pvpSpaceStars {
+  from { opacity: .25; transform: translate3d(0, 1%, 0); }
+  to { opacity: .85; transform: translate3d(-2%, -1%, 0); }
+}
+.pvp-preview > :not(dialog, .pvp-space-backdrop) {
+  width: 100%;
+  max-width: 680px;
+  align-self: center;
+}
+.pvp-preview .pvp-stage {
+  --deck-line: 208px;
+  flex: 1 0 auto;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.pvp-deck {
+  position: absolute;
+  inset: auto 1% var(--deck-line);
+  height: clamp(42px, 13vw, 80px);
+  transform: translateY(calc(100% - 11px));
+  background: url('/pvp/duel-deck-v1.webp') center top / 100% 100% no-repeat;
+  pointer-events: none;
+}
+.pvp-preview .pvp-fighter {
+  top: 38px;
+  bottom: var(--deck-line);
+  height: auto;
+  animation: none;
+}
+.pvp-preview .pvp-fighter-motion {
+  align-items: end;
+  transform-origin: center bottom;
+}
+.pvp-preview .pvp-footer {
+  background: none;
+}

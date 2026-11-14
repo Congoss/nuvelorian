@@ -3,6 +3,25 @@ import assert from 'node:assert/strict';
 import { getPaidPoisonPack, getShopCatalog, getShopPaymentProduct } from '../src/lib/shopCatalog.js';
 import { createPaymentService } from '../server/services/payment-service.js';
 
+test('roulette accepts Stars and NEAR with server-priced batch quantities', async () => {
+  const payment = createPaymentService({
+    fetchRates: async () => ({ nearUsd: '5.00', starsPerUsd: 100 }),
+    catalog: getShopCatalog(),
+    db: { async createTransaction(order) { return order; } },
+  });
+  for (const count of [1, 5, 10, 100]) {
+    const product = getShopPaymentProduct(`roulette_spin_${count}`, getShopCatalog());
+    assert.deepEqual(product.paymentMethods, ['telegram_stars', 'near']);
+    for (const paymentMethod of product.paymentMethods) {
+      const order = await payment.purchase({ itemId: product.id, userId: 'roulette-player', paymentMethod });
+      assert.equal(order.usd_price, (count * 0.1).toFixed(2));
+      assert.equal(order.payment_method, paymentMethod);
+      if (paymentMethod === 'telegram_stars') assert.equal(order.stars_amount_locked, count * 10);
+      else assert.ok(BigInt(order.nearAmountYocto) > 0n);
+    }
+  }
+});
+
 test('paid consumables use the agreed Stars prices and current-rate NEAR USD pricing', () => {
   const catalog = getShopCatalog();
   assert.deepEqual(catalog.paidConsumablePacks.map(({ id, stars, usd }) => ({ id, stars, usd })), [

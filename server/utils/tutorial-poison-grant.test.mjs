@@ -16,10 +16,11 @@ test('tutorial poison grant repairs an earlier empty grant, then remains one-tim
   assert.equal(player.weapon_inventory['large-poison'], 2);
 });
 
-test('tutorial poison grant raises an existing stock to five and respects disabled tutorials', () => {
+test('tutorial poison grant adds five to an existing stock and respects disabled tutorials', () => {
+  // Current rule (playerActions.js): the one-time tutorial grant adds five large poisons.
   const player = { weapon_inventory: { 'large-poison': 3 } };
   applyPlayerAction(player, { type: 'tutorial-progress', step: 'boss-poison' });
-  assert.equal(player.weapon_inventory['large-poison'], 5);
+  assert.equal(player.weapon_inventory['large-poison'], 8);
 
   const disabled = { tutorial_disabled: true, weapon_inventory: {} };
   applyPlayerAction(disabled, { type: 'tutorial-progress', step: 'boss-poison' });

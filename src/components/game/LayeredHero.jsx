@@ -1,6 +1,16 @@
+import skeletonFireZones from './skeletonFireZones.json';
+import './skeletonBattlePass.css';
+import WeaponEnhancementEffect from './WeaponEnhancementEffect';
+import {WeaponEnhancementContext,isWeaponArtLayer} from './weaponEnhancementContext';
 import { EPIC_SET_ART, EpicArmorEffects, EpicBootEffects, EpicHeadEffects, EpicWeapon, EpicRaven, EpicDemonicAura } from './EpicSetEffects';
 import HeroAccessory from './HeroAccessory';
-import { memo, useEffect, useRef, useState } from 'react';
+import LocalRabbitHeadEffects from './LocalRabbitHeadEffects';
+import LocalTvHead from './LocalTvHead';
+import LocalToasterPet from './LocalToasterPet';
+import { SHKRABAN_ENABLED } from '@/lib/shkrabanContent';
+import AnubisSetEffects from './AnubisSetEffects';
+import RegisteredWeaponCombo, { resolveRegisteredWeaponCombo } from './RegisteredWeaponCombo';
+import { memo, useContext, useEffect, useId, useRef, useState } from 'react';
 import { useAnimationsEnabled, useSceneAnimationsEnabled } from '@/lib/animationPreference';
 import heroBase from '@/assets/hero/set1-body.png';
 import trousers from '@/assets/hero/set1-legs.png';
@@ -11,6 +21,12 @@ import { LEGENDARY_SET_ART, LegendaryBack, LegendaryGlow, LegendaryAura } from '
 import epicHandsWithFirstWeaponArt from '@/assets/hero/bp epic set/setbp1-hands+bpepichands.png';
 import weapon from '@/assets/hero/set1-weap1.png';
 import head from '@/assets/hero/set1-head.png';
+import halloweenArmorHeart from '@/assets/hero/halloween-set/hellow-set-armor-heart-bottom54.png';
+import halloweenPantsAnim from '@/assets/hero/halloween-set/hellow-set-pants-anim-bottom54.png';
+import halloweenWeaponAnim from '@/assets/hero/halloween-set/hellow-set-hands-weap-anim-bottom54.png';
+import halloweenHeadEyes from '@/assets/hero/halloween-set/hellow-set-head-eyes-bottom54.png';
+import halloweenHeadAnim from '@/assets/hero/halloween-set/hellow-set-head-anim-bottom54.png';
+import halloweenFullHead from '@/assets/hero/halloween-set/hellow-set-head.png';
 import nightArmor from '@/assets/hero/night-disinfector/set2-armor.png';
 import nightLegs from '@/assets/hero/night-disinfector/set2-legs.png';
 import nightBoots from '@/assets/hero/night-disinfector/set2-boots.png';
@@ -39,6 +55,11 @@ import nuvelorHead from '@/assets/hero/nuvelor/set3-head.png';
 import nuvelorLens from '@/assets/hero/nuvelor/set3-effect-lens.png';
 import nuvelorLegs from '@/assets/hero/nuvelor/set3-legs.png';
 import firstHandsWithThirdWeaponArt from '../../assets/hero/nuvelor/set3-weap3.png';
+import anubisHandsWithPigClubArt from '@/assets/hero/anubis/hands-pig-club-v1.png';
+import anubisOriginalHandsArt from '@/assets/hero/anubis/hands.png';
+import legendaryPigClubArt from '@/assets/hero/bp leg set/hands-pig-club-v1.png';
+import piratePigClubArt from '@/assets/hero/halloween-set/hands-pig-club-v1.png';
+import pirateOriginalHandsArt from '@/assets/hero/halloween-set/hellow-set-hands-bottom54.png';
 import nuvelorHandsWithThirdWeaponArt from '../../assets/hero/nuvelor/set3-hands-weap1-pet.png';
 import set5HandsWithThirdWeaponArt from '../../assets/hero/set5-hands-weap3extra-hands.png';
 import set5HandsWithFirstWeaponArt from '../../assets/hero/set5-hands-weap1.png';
@@ -156,8 +177,65 @@ function useWander(active, xRange, yRange, phase = 0) {
   return point;
 }
 
-function HeroLayer({ src, alt, className = '', style = undefined }) {
-  return <img src={src} alt={alt} style={style} className={`absolute inset-0 h-full w-full object-contain select-none ${className}`} draggable="false" />;
+function PigClubHands({ original, grip, x = 0, y = 0, width = 500, height = 896 }) {
+  return <svg role="img" aria-label="Gloves holding pig club" viewBox="0 0 500 896" preserveAspectRatio="xMidYMax meet" className="pointer-events-none absolute inset-0 h-full w-full select-none">
+    <svg x="0" y="0" width="500" height="465" viewBox="0 0 500 465" overflow="hidden"><image href={original} width="500" height="896" /></svg>
+    <svg x="225" y="465" width="275" height="431" viewBox="225 465 275 431" overflow="hidden"><image href={original} width="500" height="896" /></svg>
+    <svg x="0" y="465" width="225" height="431" viewBox="0 465 225 431" overflow="hidden"><image href={grip} x={x} y={y} width={width} height={height} /></svg>
+    <svg x="225" y="520" width="275" height="376" viewBox="225 520 275 376" overflow="hidden"><image href={grip} x={x} y={y} width={width} height={height} /></svg>
+  </svg>;
+}
+
+const skeletonBodyRegions = {
+  head: '130,0 370,0 370,163 130,163',
+  armor: '180,164 327,164 339,332 311,339 311,398 198,398 198,339 162,339|230,151 276,151 282,181 224,181',
+  hands: '145,324 185,324 192,403 199,460 198,549 126,549 126,475 135,422|317,324 353,324 365,433 371,482 371,549 302,549 304,465 311,403',
+  legs: '190,390 320,390 330,811 186,811',
+  boots: '140,799 365,799 365,896 140,896',
+};
+
+function SkeletonFlames({ slots, weapon }) {
+  if (!slots.length && !weapon) return null;
+  return <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[3] grid place-items-center">
+    <div className="skeleton-bp-effects">
+      {skeletonFireZones.filter(zone => zone.slot === 'weapon' ? weapon : slots.includes(zone.slot)).map(zone =>
+        <div key={zone.asset} className="skeleton-bp-contour" style={{ maskImage: 'url(/skeleton-bp/' + zone.asset + ')' }}>
+          <i className="skeleton-bp-tongues" style={zone.style}/>
+        </div>)}
+      {slots.includes('head') && <><i className="skeleton-bp-eye left-[43.95%]"/><i className="skeleton-bp-eye left-[53.1%]"/></>}
+    </div>
+  </div>;
+}
+
+function HeroLayer({ src, alt, className = '', style = undefined, hideHead = false, hideLeftHand = false, hideRightHand = false, offsetY = 0, skeletonSlots = [] }) {
+  const enhancement=useContext(WeaponEnhancementContext);
+  const handMaskId = useId();
+  if (hideLeftHand || hideRightHand || skeletonSlots.length) return <svg role="img" aria-label={alt} viewBox="0 0 500 896" preserveAspectRatio="xMidYMax meet" className={`absolute inset-0 h-full w-full select-none ${className}`}>
+    <defs><mask id={handMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="896">
+      <rect width="500" height="896" fill="white" />
+      {hideLeftHand ? <rect x="145" y="475" width="48" height="65" fill="black" /> : null}
+      {hideRightHand ? <rect x="310" y="475" width="48" height="65" fill="black" /> : null}
+      {hideHead ? <rect width="500" height="161" fill="black" /> : null}
+      {skeletonSlots.flatMap(slot => skeletonBodyRegions[slot].split('|')).map(points => <polygon key={points} points={points} fill="black" />)}
+    </mask></defs>
+    <image href={src} width="500" height="896" mask={`url(#${handMaskId})`} />
+  </svg>;
+  if(enhancement.visible&&enhancement.level>=4&&isWeaponArtLayer(alt)){
+    return <div className={'absolute inset-0 '+className} style={style}>
+      <img src={src} alt={alt} className="absolute inset-0 h-full w-full object-contain object-bottom select-none" draggable="false"/>
+      <WeaponEnhancementEffect src={src} level={enhancement.level} paused={enhancement.paused} variant={enhancement.variant}/>
+    </div>;
+  }
+
+  if (offsetY) return <svg role="img" aria-label={alt} viewBox="0 0 500 896" preserveAspectRatio="xMidYMax meet" className={`absolute inset-0 h-full w-full select-none overflow-visible ${className}`}><image href={src} x="0" y={offsetY} width="500" height="896" /></svg>;
+  if (hideHead) return <svg role="img" aria-label={alt} viewBox="0 0 500 896" preserveAspectRatio="xMidYMax meet" className={`absolute inset-0 h-full w-full select-none ${className}`}>
+    <svg x="0" y="161" width="500" height="735" viewBox="0 161 500 735" overflow="hidden"><image href={src} x="0" y="0" width="500" height="896" /></svg>
+  </svg>;
+  return <img src={src} alt={alt} style={style} className={`absolute inset-0 h-full w-full object-contain object-bottom select-none ${className}`} draggable="false" />;
+}
+
+function HalloweenRespiratorBreath() {
+  return <div className="pointer-events-none absolute inset-0" aria-hidden="true"><i className="halloween-breath halloween-breath-one" /><i className="halloween-breath halloween-breath-two" /><i className="halloween-breath halloween-breath-three" /></div>;
 }
 
 function Set5Laser({ src, alt }) {
@@ -203,7 +281,7 @@ function Set5Laser({ src, alt }) {
 }
 
 function AlignedCanvas({ children, className = '', style = undefined }) {
-  return <div style={style} className={`absolute left-1/2 top-1/2 aspect-[500/896] w-full max-h-full -translate-x-1/2 -translate-y-1/2 ${className}`}>{children}</div>;
+  return <div style={style} className={`absolute bottom-0 left-1/2 aspect-[500/896] w-full max-h-full -translate-x-1/2 ${className}`}>{children}</div>;
 }
 
 function MaskedPupil({ src, maskSrc, point, alt }) {
@@ -350,10 +428,12 @@ export function LegendaryCapeLayer({ className = '' }) {
   return <div className={`aspect-[284/950] pointer-events-none ${className}`} aria-hidden="true"><AlignedCanvas><HeroLayer src={LEGENDARY_SET_ART['armor-manta']} alt=""/></AlignedCanvas></div>;
 }
 
-function LayeredHero({ className = '', visibleSlots = null, baseOverride = null, layerOverrides = null }) {
+function LayeredHero({ className = '', visibleSlots = null, baseOverride = null, layerOverrides = null, weaponEnhancementLevel = null }) {
   const sceneRoot = useRef(null);
   const animationsActive = useSceneAnimationsEnabled(sceneRoot);
-  const visualSet = (set) => layerOverrides?.accessory && set ? { ...set, head: false } : set;
+  const enhancementLevel=Number(weaponEnhancementLevel ?? layerOverrides?.weaponEnhancementLevel ?? 0);
+  const registeredCombo = resolveRegisteredWeaponCombo(layerOverrides?.equippedHandsId, layerOverrides?.equippedWeaponId);
+  const visualSet = (set) => set ? { ...set, ...(layerOverrides?.accessory ? { head: false } : {}), ...(registeredCombo ? { hands: false, weapon: false } : {}) } : set;
   const epic = visualSet(layerOverrides?.bpEpic) || null;
   const legendary = visualSet(layerOverrides?.bpLegendary) || {};
   const night = visualSet(layerOverrides?.nightDisinfector) || null;
@@ -361,6 +441,7 @@ function LayeredHero({ className = '', visibleSlots = null, baseOverride = null,
   const set5 = visualSet(layerOverrides?.set5) || null;
   const set4 = visualSet(layerOverrides?.set4) || null;
   const newbiePackII = visualSet(layerOverrides?.newbiePackII) || null;
+  const halloween = registeredCombo ? { ...layerOverrides?.halloween, hands: false, weapon: false } : layerOverrides?.halloween || {};
   const hasNightHands = Boolean(night?.weapon || night?.hands);
   const hasNuvelorHands = Boolean(nuvelor?.weapon || nuvelor?.hands);
   const hasFirstWeapon = layerOverrides?.equippedWeaponId === 'cardboard_weapon';
@@ -377,7 +458,11 @@ function LayeredHero({ className = '', visibleSlots = null, baseOverride = null,
       && (layerOverrides?.equippedWeaponId === 'nuvelor_weapon' || nuvelor?.weapon),
   );
   const nuvelorHandsWithThirdWeapon = Boolean(nuvelor?.hands && nuvelor?.weapon);
-  const handsWithThirdWeapon = firstHandsWithThirdWeapon || nuvelorHandsWithThirdWeapon;
+  const anubisHandsWithThirdWeapon = Boolean(layerOverrides?.equippedHandsId === 'anubis_hands' && layerOverrides?.equippedWeaponId === 'nuvelor_weapon');
+  const legendaryHandsWithThirdWeapon = Boolean(legendary.hands && layerOverrides?.equippedWeaponId === 'nuvelor_weapon');
+  const pirateHandsWithThirdWeapon = Boolean(halloween.hands && layerOverrides?.equippedWeaponId === 'nuvelor_weapon');
+  const newPigClubCombo = anubisHandsWithThirdWeapon || legendaryHandsWithThirdWeapon || pirateHandsWithThirdWeapon;
+  const handsWithThirdWeapon = firstHandsWithThirdWeapon || nuvelorHandsWithThirdWeapon || newPigClubCombo;
   const nightHandsWithNewbiePackWeapon = Boolean(night?.hands && newbiePackII?.weapon && !newbiePackII?.hands);
   const newbiePackHandsWithFirstWeapon = Boolean(newbiePackII?.hands && layerOverrides?.equippedWeaponId === 'cardboard_weapon');
   const newbiePackHandsWithSecondWeapon = Boolean(newbiePackII?.hands && night?.weapon);
@@ -431,14 +516,14 @@ function LayeredHero({ className = '', visibleSlots = null, baseOverride = null,
       : night?.hands
         ? nightHands
         : null;
-  const slotVisible = (slot) => !(slot === 'head' && layerOverrides?.accessory) && !((slot==='weapon'||slot==='hands') && legendary[slot]) && !(slot === 'weapon' && (epic?.weapon || epicHandsWithFirstWeapon)) && !(slot === 'hands' && epic?.hands) && !(slot === 'hands' && hideFirstHandsWithSet4Armor)
+  const slotVisible = (slot) => !(registeredCombo && (slot === 'weapon' || slot === 'hands')) && !(slot === 'weapon' && (layerOverrides?.rearWeapon || halloween.weapon)) && !(slot === 'head' && layerOverrides?.accessory) && !((slot==='weapon'||slot==='hands') && legendary[slot]) && !(slot === 'weapon' && (epic?.weapon || epicHandsWithFirstWeapon)) && !(slot === 'hands' && epic?.hands) && !(slot === 'hands' && hideFirstHandsWithSet4Armor)
     && (!visibleSlots || slot === 'base' || Boolean(visibleSlots[slot]));
   const baseLayers = BASE_LAYERS.filter((layer) => slotVisible(layer.slot));
   const armorLayer = baseLayers.find((layer) => layer.slot === 'armor');
   const nonArmorLayers = baseLayers
     .filter((layer) => layer.slot !== 'armor')
     .sort((a, b) => {
-      const order = epic?.boots || newbiePackII?.boots || set4?.boots || (set5?.boots && !set5?.legs) || (night?.boots && !night?.legs)
+      const order = layerOverrides?.bootsOverLegs || epic?.boots || newbiePackII?.boots || set4?.boots || (set5?.boots && !set5?.legs) || (night?.boots && !night?.legs)
         ? { base: 0, legs: 1, boots: 2 }
         : { base: 0, boots: 1, legs: 2 };
       return (order[a.slot] ?? 10) - (order[b.slot] ?? 10);
@@ -474,7 +559,9 @@ function LayeredHero({ className = '', visibleSlots = null, baseOverride = null,
           : newbiePackII?.hands
             ? newbiePack2Hands
             : layerOverrides?.hands || hands;
-  const renderHands = () => epicHandsWithFirstWeapon ? null : newbiePackII?.weapon && newbiePackII?.hands ? (
+  const renderHands = () => halloween.hands ? null : halloween.weapon ? (
+    slotVisible('hands') ? <HeroLayer src={selectedHandsLayer} alt="Selected gloves over pirate hook" /> : null
+  ) : epicHandsWithFirstWeapon ? null : newbiePackII?.weapon && newbiePackII?.hands ? (
     <HeroLayer src={newbiePack2WeaponHandsExtra} alt="Newbie Pack II weapon with both gloves" />
   ) : nightHandsWithNewbiePackWeapon ? (
     <HeroLayer src={nightHandsWithNewbiePackWeaponArt} alt="Set 2 gloves with Newbie Pack weapon" />
@@ -511,16 +598,35 @@ function LayeredHero({ className = '', visibleSlots = null, baseOverride = null,
     </>
   );
 
+  const skeletonSlots = Object.keys(skeletonBodyRegions).filter(slot =>
+    (!visibleSlots || visibleSlots[slot]) && layerOverrides?.[slot]?.startsWith('/skeleton-bp/'));
+  if (Object.values(layerOverrides || {}).some(value => typeof value === 'string' && ((SHKRABAN_ENABLED && value.startsWith('/shkraban/hero/')) || (import.meta.env.DEV && (value.startsWith('/local-rabbit/') || value === '/local-tv/head.svg'))))) {
+    const fallback = { legs: trousers, boots, armor, hands, weapon, head };
+    return <div ref={sceneRoot} className={`relative aspect-[284/950] ${className}`}><HeroLayer src={baseOverride || heroBase} alt="Hero body" skeletonSlots={skeletonSlots} hideHead={layerOverrides?.hideBaseHead && slotVisible('head')} /><svg viewBox="0 0 500 896" preserveAspectRatio="xMidYMax meet" className="absolute inset-0 h-full w-full select-none overflow-visible" aria-label="Робозаєць — локальна примірка">
+
+      {['legs', 'hands', 'armor', 'boots', 'weapon', 'head'].filter(slot => !visibleSlots || visibleSlots[slot]).map(slot => {
+        if (slot === 'head' && (layerOverrides?.localTvHead || layerOverrides?.head === '/local-tv/head.svg' || layerOverrides?.head === '/shkraban/hero/head.svg')) return <LocalTvHead key={slot} active={animationsActive} channelIndex={layerOverrides.tvChannelIndex} onChannelChange={layerOverrides.onTvChannelChange} auto={layerOverrides.tvAuto !== false} />;
+        const src = layerOverrides?.[slot] || fallback[slot];
+        const local = src?.startsWith('/local-rabbit/') || src?.startsWith('/shkraban/hero/');
+        return <image key={slot} href={src} x="0" y={local ? -224 : 0} width="500" height={local ? 1120 : 896} />;
+      })}
+      {(!visibleSlots || visibleSlots.head) && !layerOverrides?.localTvHead && layerOverrides?.head?.startsWith('/local-rabbit/') ? <LocalRabbitHeadEffects active={animationsActive} /> : null}
+      {layerOverrides?.localTvPet ? layerOverrides.localTvPetKind === 'toaster' ? <LocalToasterPet key={layerOverrides.localTvPetReset || 0} active={animationsActive} /> : <image className={animationsActive ? 'local-tv-pet-idle' : ''} href="/local-tv/pet-tv-robot.webp" x="320" y="650" width="200" height="245" preserveAspectRatio="xMidYMax meet" aria-label="TV-робот — пет сету Шкрябана" /> : null}
+    </svg>{animationsActive && <SkeletonFlames slots={skeletonSlots} weapon={(!visibleSlots || visibleSlots.weapon) && layerOverrides?.weapon?.startsWith('/skeleton-bp/')} />}{(!visibleSlots || visibleSlots.weapon) && enhancementLevel >= 4 && ['/local-rabbit/weapon.webp','/shkraban/hero/weapon.webp'].includes(layerOverrides?.weapon) ? <WeaponEnhancementEffect src="/shkraban/hero/weapon-aligned.svg" level={enhancementLevel} paused={!animationsActive} /> : null}</div>;
+  }
   return (
-    <div ref={sceneRoot} className={`relative aspect-[284/950] ${className}`}>
-      <AlignedCanvas>{layerOverrides?.bpLegendaryAura && <LegendaryAura/>}<LegendaryBack slots={layerOverrides?.separateLegendaryCape ? {...legendary,armor:false} : legendary}/></AlignedCanvas>
+    <WeaponEnhancementContext.Provider value={{variant:layerOverrides?.weaponEnhancementVariant||'base',level:enhancementLevel,paused:!animationsActive,visible:!visibleSlots||visibleSlots.weapon}}><div ref={sceneRoot} className={`relative aspect-[284/950] ${className}`}>
+      {layerOverrides?.rearWeapon && (!visibleSlots || visibleSlots.weapon) ? <HeroLayer src={layerOverrides.rearWeapon} alt="Hero back weapon" className={animationsActive && layerOverrides?.anubisEffects ? 'anubis-rear-weapon' : ''} /> : null}
+      <AlignedCanvas>{layerOverrides?.bpLegendaryAura && <LegendaryAura/>}<LegendaryBack enhancementLevel={enhancementLevel} enhancementVariant={layerOverrides?.weaponEnhancementVariant||'base'} enhancementPaused={!animationsActive} slots={layerOverrides?.separateLegendaryCape ? {...legendary,armor:false} : legendary}/></AlignedCanvas>
       {layerOverrides?.bpEpicAura ? <EpicDemonicAura /> : null}
       {layerOverrides?.bpEpicPet ? <EpicRaven className="absolute inset-0 h-full w-full" /> : null}
       {nonArmorLayers.map((layer) => (
-        <HeroLayer key={layer.id} src={layerSource(layer)} alt={layer.alt} />
+        <HeroLayer key={layer.id} src={layerSource(layer)} alt={layer.alt} skeletonSlots={layer.slot === 'base' ? skeletonSlots : undefined} hideLeftHand={layer.slot === 'base' && (newPigClubCombo || (registeredCombo && !registeredCombo.right))} hideRightHand={layer.slot === 'base' && registeredCombo?.right} hideHead={layer.slot === 'base' && layerOverrides?.hideBaseHead && slotVisible('head')} />
       ))}
+      {animationsActive && halloween.legs ? <HeroLayer src={halloweenPantsAnim} alt="" aria-hidden="true" className="halloween-acid-glow" /> : null}
+      {halloween.hands && !pirateHandsWithThirdWeapon ? <HeroLayer src={layerOverrides.hands} alt="Halloween hands" /> : null}
       {epic?.hands ? <HeroLayer src={epicHandsWithFirstWeapon ? epicHandsWithFirstWeaponArt : EPIC_SET_ART.hands} alt={epicHandsWithFirstWeapon ? 'Epic Battle Pass gloves with first weapon' : 'Epic Battle Pass gloves under jacket'} /> : null}
-      {legendary.hands && <HeroLayer src={LEGENDARY_SET_ART.hands} alt="Legendary gloves"/>}
+      {legendary.hands && !legendaryHandsWithThirdWeapon && <HeroLayer src={LEGENDARY_SET_ART.hands} alt="Legendary gloves"/>}
       {set4?.armor ? <>
         <HeroLayer src={set4ArmorBack} alt="Set 4 back tanks" />
         <HeroLayer src={set4ArmorBackEye} alt="Set 4 back eye" />
@@ -536,15 +642,24 @@ function LayeredHero({ className = '', visibleSlots = null, baseOverride = null,
       {!hasSet5HandsOrWeapon && !hasSet4HandsOrWeapon && nuvelorHandsWithFirstWeapon ? <HeroLayer src={nuvelorHandsWeaponOne} alt="NUVELOR gloves with first weapon" /> : null}
       {!hasSet5HandsOrWeapon && !hasSet4HandsOrWeapon && nuvelor?.hands && !nuvelor?.weapon && !nuvelorHandsWithFirstWeapon && !nuvelorHandsWithSecondWeapon && slotVisible('weapon') ? <HeroLayer src={layerOverrides?.weapon || weapon} alt="Hero weapon" /> : null}
       {!hasSet5HandsOrWeapon && !hasSet4HandsOrWeapon && nuvelor?.hands && !nuvelorHandsWithFirstWeapon && !nuvelorHandsWithSecondWeapon && !handsWithThirdWeapon ? <HeroLayer src={nuvelorHands} alt="NUVELOR hands" /> : null}
-      {!hasSet5HandsOrWeapon && !hasSet4HandsOrWeapon && night?.armor && !hasNuvelorHands ? renderHands() : null}
       {armorLayer && !set4?.armor ? <HeroLayer src={layerSource(armorLayer)} alt={armorLayer.alt} /> : null}
+      {!hasSet5HandsOrWeapon && !hasSet4HandsOrWeapon && night?.armor && !hasNuvelorHands ? renderHands() : null}
+      {animationsActive && halloween.armor ? <HeroLayer src={halloweenArmorHeart} alt="" aria-hidden="true" className="halloween-heartbeat" /> : null}
       {epic?.armor ? <EpicArmorEffects /> : null}
       {epic?.boots ? <EpicBootEffects /> : null}
       {!hasSet5HandsOrWeapon && !hasSet4HandsOrWeapon && nuvelor?.weapon && !nightHandsWithThirdWeapon && !handsWithThirdWeapon && !newbiePackHandsWithThirdWeapon ? <HeroLayer src={nuvelorWeapon} alt="NUVELOR weapon" /> : null}
-      {!hasSet5HandsOrWeapon && !hasSet4HandsOrWeapon && nightHandsWithThirdWeapon ? <HeroLayer src={nightHandsWithThirdWeaponArt} alt="Set 2 gloves with NUVELOR weapon" /> : null}
+      {!hasSet5HandsOrWeapon && !hasSet4HandsOrWeapon && nightHandsWithThirdWeapon ? <>
+        <HeroLayer src={nightHandsWithThirdWeaponArt} alt="Set 2 gloves with NUVELOR weapon" />
+        {slotVisible('hands') ? <svg role="img" aria-label="Set 2 free-hand glove" viewBox="0 0 500 896" preserveAspectRatio="xMidYMax meet" className="pointer-events-none absolute inset-0 h-full w-full select-none">
+          <svg x="250" y="0" width="250" height="896" viewBox="250 0 250 896" overflow="hidden"><image href={nightHands} width="500" height="896" /></svg>
+        </svg> : null}
+      </> : null}
       {!hasSet5HandsOrWeapon && !hasSet4HandsOrWeapon && nuvelorHandsWithSecondWeapon ? <HeroLayer src={nuvelorHandsWithSecondWeaponArt} alt="NUVELOR gloves with Set 2 weapon" /> : null}
       {!hideFirstHandsWithSet4Armor && !hasSet5HandsOrWeapon && !hasSet4HandsOrWeapon && firstHandsWithThirdWeapon ? <HeroLayer src={firstHandsWithThirdWeaponArt} alt="Set 1 gloves with NUVELOR weapon" /> : null}
       {!hasSet5HandsOrWeapon && !hasSet4HandsOrWeapon && nuvelorHandsWithThirdWeapon ? <HeroLayer src={nuvelorHandsWithThirdWeaponArt} alt="NUVELOR gloves with NUVELOR weapon" /> : null}
+      {anubisHandsWithThirdWeapon && slotVisible('hands') && slotVisible('weapon') ? <PigClubHands original={anubisOriginalHandsArt} grip={anubisHandsWithPigClubArt} x={13} y={-8} /> : null}
+      {legendaryHandsWithThirdWeapon && (!visibleSlots || (visibleSlots.hands && visibleSlots.weapon)) ? <PigClubHands original={LEGENDARY_SET_ART.hands} grip={legendaryPigClubArt} x={50} y={80} width={450} height={806.4} /> : null}
+      {pirateHandsWithThirdWeapon && (!visibleSlots || (visibleSlots.hands && visibleSlots.weapon)) ? <PigClubHands original={pirateOriginalHandsArt} grip={piratePigClubArt} x={15} y={10} /> : null}
       {!hasSet5HandsOrWeapon && !hasSet4HandsOrWeapon && newbiePackHandsWithThirdWeapon ? <HeroLayer src={newbiePackHandsWithThirdWeaponArt} alt="Newbie Pack gloves with NUVELOR weapon" style={{ transform: 'translate(0.5%, -2%)' }} /> : null}
       {!hideFirstHandsWithSet4Armor && !hasSet5HandsOrWeapon && !hasSet4HandsOrWeapon && firstHandsWithThirdWeapon ? <HeroLayer src={selectedHandsLayer} alt="Set 1 gloves over NUVELOR weapon combo" /> : null}
       {hasSet5HandsOrWeapon ? (
@@ -606,8 +721,13 @@ function LayeredHero({ className = '', visibleSlots = null, baseOverride = null,
         </>
       ) : null}
 
-      {epic?.weapon ? <EpicWeapon withHands={Boolean(epic?.hands)} /> : null}
-      {slotVisible('head') ? <HeroLayer src={legendary?.head ? LEGENDARY_SET_ART.head : epic?.head ? EPIC_SET_ART.head : set4?.head ? set4Head : set5?.head ? set5Head : nuvelor?.head ? nuvelorHead : night?.head ? nightHead : layerOverrides?.head || head} alt="Hero headgear" /> : null}
+      {epic?.weapon ? <EpicWeapon enhancementVariant={layerOverrides?.weaponEnhancementVariant||'base'} enhancementLevel={enhancementLevel} enhancementPaused={!animationsActive} withHands={Boolean(epic?.hands)} /> : null}
+      {slotVisible('head') ? <HeroLayer src={halloween.head ? halloweenFullHead : legendary?.head ? LEGENDARY_SET_ART.head : epic?.head ? EPIC_SET_ART.head : set4?.head ? set4Head : set5?.head ? set5Head : nuvelor?.head ? nuvelorHead : night?.head ? nightHead : layerOverrides?.head || head} offsetY={halloween.head ? -54 : 0} alt="Hero headgear" /> : null}
+      {animationsActive && halloween.head && slotVisible('head') ? <>
+        <HeroLayer src={halloweenHeadEyes} alt="" aria-hidden="true" className="halloween-eye-fire" />
+        <HalloweenRespiratorBreath />
+        <HeroLayer src={halloweenHeadAnim} alt="" aria-hidden="true" className="halloween-acid-glow" />
+      </> : null}
       {newbiePackII?.head && slotVisible('head') ? <>
         <HeroLayer src={newbiePack2HeadEye} alt="Newbie Pack II burning eyes glow" className="newbie-pack2-hellfire-eyes-aura" />
         <HeroLayer src={newbiePack2HeadEye} alt="" className="newbie-pack2-hellfire-eyes" />
@@ -643,9 +763,30 @@ function LayeredHero({ className = '', visibleSlots = null, baseOverride = null,
         electricPulses[index] ? <HeroLayer key={`night-electric-${index}-${electricPulses[index]}`} src={src} alt="Electric impulse" className="night-disinfector-electric" /> : null
       )) : null}
 
-      <AlignedCanvas><LegendaryGlow slots={legendary}/></AlignedCanvas>
+      {registeredCombo && (!visibleSlots || (visibleSlots.hands && visibleSlots.weapon)) ? <RegisteredWeaponCombo {...registeredCombo} /> : null}
+      <AlignedCanvas><LegendaryGlow slots={registeredCombo ? {...legendary, hands: Boolean(layerOverrides?.bpLegendary?.hands)} : legendary}/></AlignedCanvas>
+      {animationsActive && <SkeletonFlames slots={skeletonSlots} weapon={(!visibleSlots || visibleSlots.weapon) && layerOverrides?.weapon?.startsWith('/skeleton-bp/')} />}
       <HeroAccessory src={layerOverrides?.accessory} />
+      {halloween.weapon && (!visibleSlots || visibleSlots.weapon) ? (
+        <svg role="img" aria-label="Pirate hook over gloves" viewBox="0 0 500 896" preserveAspectRatio="xMidYMax meet" className="pointer-events-none absolute inset-0 h-full w-full select-none">
+          <svg x="0" y="0" width="250" height="896" viewBox="0 0 250 896" overflow="hidden">
+            <image href={layerOverrides.weapon} width="500" height="896" />
+            {animationsActive ? <image href={halloweenWeaponAnim} width="500" height="896" className="halloween-acid-glow" /> : null}
+          </svg>
+        </svg>
+      ) : null}
+      {animationsActive && layerOverrides?.anubisEffects ? <AnubisSetEffects key={layerOverrides?.accessory ? 'crown' : 'head'} slots={visualSet(layerOverrides.anubisSlots || visibleSlots || {head:true,armor:true,hands:true,weapon:true})} frontMask={layerOverrides.anubisFrontMask} /> : null}
       <style>{`
+          @keyframes halloween-heartbeat { 0%, 100% { opacity: .72; transform: scale(1); } 12% { opacity: 1; transform: scale(1.08); } 24% { opacity: .82; transform: scale(1.02); } 36% { opacity: 1; transform: scale(1.1); } 52% { opacity: .72; transform: scale(1); } }
+          @keyframes halloween-acid-glow { 0%, 100% { opacity: .45; filter: brightness(.9) drop-shadow(0 0 1px #48ff75); } 50% { opacity: 1; filter: brightness(1.55) drop-shadow(0 0 7px #38ff6f); } }
+          @keyframes halloween-eye-fire { 0%, 100% { opacity: .6; filter: brightness(1) drop-shadow(0 0 2px #ff2400); } 45% { opacity: 1; filter: brightness(1.8) drop-shadow(0 0 8px #ff1b00) drop-shadow(0 0 14px #8d0000); } }
+          @keyframes halloween-respirator { 0%, 38%, 100% { opacity: 0; transform: translate(0, 0) scale(.45); } 48% { opacity: .9; } 78% { opacity: .18; transform: translate(22px, 3px) scale(1.55); } }
+          .halloween-heartbeat { animation: halloween-heartbeat 1.15s ease-in-out infinite; transform-origin: 51% 34%; }
+          .halloween-acid-glow { animation: halloween-acid-glow 2.1s ease-in-out infinite; }
+          .halloween-eye-fire { animation: halloween-eye-fire 1.45s ease-in-out infinite; }
+          .halloween-breath { position: absolute; left: 57%; top: 19%; width: 10px; height: 6px; border-radius: 999px; background: rgba(74,255,117,.72); filter: blur(2px) drop-shadow(0 0 5px #30ff68); animation: halloween-respirator 3.2s ease-out infinite; }
+          .halloween-breath-two { animation-delay: .14s; width: 8px; height: 5px; }
+          .halloween-breath-three { animation-delay: .28s; width: 6px; height: 4px; }
         @keyframes night-disinfector-smoke { 0% { opacity: 0; transform: translate(0, 8px) scale(.98); } 16% { opacity: .72; } 65% { opacity: .52; transform: translate(-3px, -14px) scale(1.02); } 100% { opacity: 0; transform: translate(4px, -24px) scale(1.04); } }
         @keyframes night-disinfector-aero { 0% { opacity: 0; transform: translate(-10px, 1px) scale(.9); } 12% { opacity: .9; } 78% { opacity: .35; transform: translate(14px, -2px) scale(1.12); } 100% { opacity: 0; transform: translate(22px, -3px) scale(1.17); } }
         @keyframes night-disinfector-electric { 0% { opacity: 0; filter: brightness(1) drop-shadow(0 0 0 rgba(57,217,255,0)); } 16% { opacity: 1; filter: brightness(1.8) drop-shadow(0 0 7px #39d9ff) drop-shadow(0 0 15px rgba(57,217,255,.75)); } 46% { opacity: .38; filter: brightness(1.2) drop-shadow(0 0 3px #39d9ff); } 67% { opacity: .88; filter: brightness(1.65) drop-shadow(0 0 9px #39d9ff); } 100% { opacity: 0; filter: brightness(1) drop-shadow(0 0 0 rgba(57,217,255,0)); } }
@@ -698,7 +839,7 @@ function LayeredHero({ className = '', visibleSlots = null, baseOverride = null,
         .nuvelor-smoke-right { animation: nuvelor-smoke-right .82s ease-out both; transform-origin: 59% 50%; --nuvelor-smoke-progress: 59%; mask-image: linear-gradient(to right, transparent calc(var(--nuvelor-smoke-progress) - var(--nuvelor-smoke-band)), #000 var(--nuvelor-smoke-progress), transparent calc(var(--nuvelor-smoke-progress) + var(--nuvelor-smoke-band))); -webkit-mask-image: linear-gradient(to right, transparent calc(var(--nuvelor-smoke-progress) - var(--nuvelor-smoke-band)), #000 var(--nuvelor-smoke-progress), transparent calc(var(--nuvelor-smoke-progress) + var(--nuvelor-smoke-band))); }
         @media (prefers-reduced-motion: reduce) { .night-disinfector-smoke, .night-disinfector-aero-one, .night-disinfector-aero-two, .night-disinfector-electric, .nuvelor-money-glow, .nuvelor-cow-glow, .nuvelor-bubble, .nuvelor-lens-fog-canvas, .nuvelor-smoke-left, .nuvelor-smoke-right, .set5-black-hole, .set5-antenna-signal, .set5-yellow-light, .set5-laser { animation: none; opacity: .72; } .set5-laser { --set5-laser-reveal: 94%; } .set4-glow, .set4-acid-glow, .set4-bubble, .set4-fog-canvas { animation: none; } }
       `}</style>
-    </div>
+    </div></WeaponEnhancementContext.Provider>
   );
 }
 

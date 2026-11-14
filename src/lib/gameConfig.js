@@ -4,7 +4,7 @@
 
 export const GAME_CONFIG = {
   // Energy
-  ENERGY_REGEN_PER_MIN: 1 / 3,
+  ENERGY_REGEN_PER_MIN: 2,
   MAX_ENERGY_BASE: 100,
 
   // Passive tentacles income
@@ -91,8 +91,8 @@ export const GAME_CONFIG = {
     { id: 'boss4', name: 'Глиста', names: { ru: 'Глиста', ua: 'Глиста', en: 'Worm' }, location: 'whale', maxHp: 100000, icon: '🐋', color: '#f97316', minLevel: 40, keycardLocation: 'whale', reward: { tentacles: 0 } },
     { id: 'boss5', name: 'Споргол', names: { ru: 'Споргол', ua: 'Споргол', en: 'Sporgol' }, location: 'spore', maxHp: 500000, icon: '🍄', color: '#dc2626', minLevel: 55, keycardLocation: 'spore', reward: { tentacles: 0 } },
     { id: 'boss6', name: 'Засмокт', names: { ru: 'Засос', ua: 'Засмокт', en: 'Suckhole' }, location: 'blackhole025', maxHp: 2000000, icon: '🕳️', color: '#7c3aed', minLevel: 70, keycardLocation: 'blackhole025', reward: { tentacles: 0 } },
-    { id: 'boss7', name: 'Перешкода', names: { ru: 'Помеха', ua: 'Перешкода', en: 'Static' }, location: 'teletron', maxHp: 3000000, icon: '📺', color: '#0891b2', minLevel: 80, keycardLocation: 'teletron', reward: { tentacles: 0 } },
-    { id: 'boss8', name: 'Шкрябан', names: { ru: 'Шкрябан', ua: 'Шкрябан', en: 'Shkraban' }, location: 'playground404', maxHp: 4000000, icon: '🛝', color: '#16a34a', minLevel: 90, keycardLocation: 'playground404', reward: { tentacles: 0 } },
+    { id: 'boss7', name: 'Клеопатреш', names: { ru: 'Клеопатреш', ua: 'Клеопатреш', en: 'Cleopatrash' }, location: 'teletron', maxHp: 3000000, icon: '🐍', color: '#c99b42', minLevel: 80, keycardLocation: 'teletron', reward: { tentacles: 0 } },
+    { id: 'boss8', name: 'Шкрябан', names: { ru: 'Шкрябан', ua: 'Шкрябан', en: 'Shkraban' }, location: 'playground404', maxHp: 7000000, icon: '🛝', color: '#16a34a', minLevel: 90, keycardLocation: 'playground404', reward: { tentacles: 0 } },
     { id: 'boss9', name: 'Грюмбо', names: { ru: 'Грюмбо', ua: 'Грюмбо', en: 'Grumbo' }, location: 'playground404v2', maxHp: 5000000, icon: '🛝', color: '#be123c', minLevel: 100, keycardLocation: 'playground404v2', reward: { tentacles: 0 } },
   ],
 
@@ -347,3 +347,8 @@ export const SKILL_BASES = {
   },
 };
 
+
+export function getBaseEnergyRegenRate(player = {}) {
+  const savedBase = Number(player.energy_regen_base_rate) || Number(player.energy_regen_rate) / (1 + Number(player.equipment_energy_regen_pct || 0));
+  return Math.max(GAME_CONFIG.ENERGY_REGEN_PER_MIN, Number.isFinite(savedBase) ? savedBase : 0);
+}

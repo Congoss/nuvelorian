@@ -1,6 +1,6 @@
 
 .bp-set-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
-.bp-set-canvas{position:absolute;left:50%;top:50%;width:100%;aspect-ratio:500/896;max-height:100%;translate:-50% -50%;pointer-events:none}
+.bp-set-canvas{position:absolute;left:50%;bottom:0;width:100%;aspect-ratio:500/896;max-height:100%;translate:-50% 0;pointer-events:none}
 .bp-set-pet{position:absolute;aspect-ratio:500/896;pointer-events:none}
 .bp-set-glow{mix-blend-mode:screen;animation:bp-set-glow 4.6s ease-in-out infinite}
 .bp-set-acid{filter:brightness(1.6) drop-shadow(0 0 3px #a5ff1d)}
@@ -38,16 +38,16 @@ html[data-game-hidden="true"] [class*="bp-set-"]{animation-play-state:paused!imp
 
 
 .bp-set-demonic-aura{isolation:isolate;overflow:visible;pointer-events:none}
-.bp-set-raven-vortex{overflow:visible;filter:drop-shadow(0 0 1px #8c819511)}
-.bp-set-crow-wing,.bp-set-crow-body{fill:#8e90a0;stroke:#b5b5c344;stroke-width:.9;stroke-linejoin:round}
+.bp-set-raven-vortex{overflow:visible}
+.bp-set-crow-wing,.bp-set-crow-body{fill:#201c2b;stroke:#c4bdd6b3;stroke-width:1.7;stroke-linejoin:round}
 .bp-set-crow-wing{transform-origin:0 2px;animation:bp-set-crow-flap 5s ease-in-out infinite}
 .bp-set-crow-wing-right{animation-direction:reverse}
-.bp-set-vortex-bird{opacity:.3;animation:bp-set-crow-arc 20s ease-in-out infinite}
+.bp-set-vortex-bird{opacity:.85;animation:bp-set-crow-arc 20s ease-in-out infinite}
 .bp-set-ink-stream{fill:#17131fb3;stroke:#81718e55;stroke-width:.7;animation:bp-set-ink-flow 19s ease-in-out infinite;transform-origin:50% 50%}
 .bp-set-ink-streams{filter:blur(1.2px)}
 .bp-set-vortex-feather{animation:bp-set-feather-float 12s ease-in-out infinite}
 .bp-set-vortex-dust{animation:bp-set-ash 9s ease-out infinite}
-@keyframes bp-set-crow-arc{0%,100%{transform:translate(0,0) rotate(-3deg)}28%{transform:translate(var(--arc-x),var(--arc-y)) rotate(7deg)}62%{transform:translate(calc(var(--arc-x)*.25),calc(var(--arc-y)*1.4)) rotate(-7deg)}82%{transform:translate(calc(var(--arc-x)*-.3),calc(var(--arc-y)*.55)) rotate(2deg)}}
+@keyframes bp-set-crow-arc{0%,100%{transform:translate(0,0) rotate(-3deg)}28%{transform:translate(var(--arc-x),var(--arc-y)) rotate(7deg)}62%{transform:translate(var(--arc-mid-x),var(--arc-mid-y)) rotate(-7deg)}82%{transform:translate(var(--arc-end-x),var(--arc-end-y)) rotate(2deg)}}
 @keyframes bp-set-crow-flap{0%,100%{transform:scaleY(1) rotate(-3deg)}44%{transform:scaleY(.72) rotate(5deg)}72%{transform:scaleY(.91) rotate(-1deg)}}
 @keyframes bp-set-ink-flow{0%,100%{opacity:.25;transform:translate(0,9px) skewX(-2deg) scaleX(.95)}42%{opacity:.6;transform:translate(5px,-14px) skewX(3deg) scaleX(1.03)}75%{opacity:.38;transform:translate(-4px,-22px) skewX(-1deg) scaleX(.98)}}
 @keyframes bp-set-feather-float{0%,100%{opacity:.12;transform:translate(0,12px) rotate(-12deg)}35%{opacity:.7;transform:translate(8px,-5px) rotate(8deg)}72%{opacity:.3;transform:translate(-5px,-22px) rotate(23deg)}}

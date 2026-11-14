@@ -106,12 +106,12 @@
     "claimed": "Claimed",
     "friends_list": "Invited friends",
     "rewards_title": "Referral rewards",
-    "reward_line": "{{count}} active friend: {{reward}}",
+    "reward_line": "{{count}} level 20 friends: {{reward}}",
     "no_friends": "No invited friends yet",
-    "friend_status_joined": "joined",
-    "friend_status_active": "active",
-    "friend_status_reward_ready": "reward_ready",
-    "friend_status_claimed": "claimed"
+    "friend_status_joined": "level 1 · not counted yet",
+    "friend_status_active": "leveling to 20",
+    "friend_status_reward_ready": "level 20 · chest ready",
+    "friend_status_claimed": "counted · claimed"
   },
   "chat_panel": {
     "clan_tab": "Clan",
@@ -168,7 +168,7 @@
     "codeUsed": "This code is already activated",
     "activated": "Activated",
     "walletLink": "Wallet link",
-    "walletStatus": "TON live / NEAR soon",
+    "walletStatus": "TON and NEAR wallets",
     "nearSoon": "NEAR SOON",
     "achievements": "Achievements",
     "futureBonuses": "future bonuses",
@@ -437,7 +437,7 @@
     "season": "SEASON 01 · 28 DAYS",
     "season_title": "PATH OF SURVIVAL",
     "season_subtitle": "50 levels. Your story.",
-    "season_art": "SEASON ART · PLACEHOLDER",
+    "season_art": "SEASON ART",
     "level": "LEVEL {{level}}",
     "days_left": "{{days}} days left",
     "inactive": "Season inactive",
@@ -448,8 +448,8 @@
     "loading": "Loading season…",
     "tasks_aria": "Battle Pass tasks",
     "tasks_title": "BATTLE PASS TASKS",
-    "tasks_hint": "XP is credited automatically. Daily tasks reset at 00:00 UTC, weekly tasks on Monday at 00:00 UTC.",
-    "boss_victory_xp": "10–30 XP per win · up to 3/day · fight owner only",
+    "tasks_hint": "XP is credited automatically. Daily tasks reset at midnight Kyiv time. Weekly tasks reset at the start of each season week.",
+    "boss_victory_xp": "10–30 XP per win · up to 3/day · fight owner only · ship boss — contributors",
     "done": "Done",
     "claim": "Claim",
     "claimed": "claimed",
@@ -469,6 +469,7 @@
       "season": "Season · 1,800 XP"
     },
     "rewards": {
+      "spin": "Spins",
       "epic_background": "Epic background",
       "legendary_background": "Legendary background",
       "dm": "tentacles",
@@ -484,7 +485,7 @@
       "head": "Headgear",
       "weapon": "Weapon",
       "animated": "Animation",
-      "pet": "Season Pet",
+      "pet": "Voidling",
       "legendary_boots": "Legendary Boots",
       "legendary_legs": "Legendary Pants",
       "legendary_hands": "Legendary Gloves",
@@ -538,7 +539,7 @@
     "ok": "OK",
     "used": "Used",
     "ton_wallet": "TON Wallet",
-    "ton_wallet_desc": "Official TonConnect UI is live. Backend stores the linked wallet and a proof-session scaffold for the next verification step.",
+    "ton_wallet_desc": "Connect your TON wallet to use supported wallet features.",
     "connected": "connected",
     "not_linked": "not linked",
     "loading_wallet_state": "Loading wallet state...",
@@ -571,7 +572,7 @@
   "talentTree": {
     "title": "TALENTS",
     "tree": "VERTICAL TREE",
-    "progress": "Next point: {{current}}/{{goal}} · spent: {{spent}}",
+    "progress": "Poison damage: {{current}}/{{goal}} · spent: {{spent}}",
     "progressHintLabel": "Talent progress explanation",
     "progressHint": "The talent bar shows progress toward the next level. Fill it in combat, earn talent points, and spend them in the Talents tab to strengthen your hero.",
     "sector": "SECTOR {{id}} · {{name}}",
@@ -589,7 +590,7 @@
     "unlockPointsProgress": "Points spent: {{spent}}/{{points}}",
     "upgrade": "Upgrade {{name}}",
     "level": "Level: {{level}}/{{max}}",
-    "nextLevel": "Next level: {{level}}/{{max}} · cost 1 ★",
+    "nextLevel": "Next level: {{level}}/{{max}} · cost {{cost}} ★",
     "maxLevel": "Maximum level",
     "requirements": "Requirements: {{requirements}}",
     "none": "none",
@@ -781,7 +782,7 @@
       },
       "t47": {
         "name": "Long Fight",
-        "description": "Clan boss active time +30 minutes."
+        "description": "Each level adds 30 minutes to your boss fights, including the current fight. Raid bosses are not extended."
       },
       "t48": {
         "name": "Catch Your Breath",
@@ -836,5 +837,8 @@
         "description": "If the boss is bleeding and has 5 toxic marks, all attacks deal 20 more damage per level. Poison flask consumes the marks after the hit."
       }
     }
+  },
+  "common": {
+    "close": "Close"
   }
 }

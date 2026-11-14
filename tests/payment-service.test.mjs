@@ -43,6 +43,16 @@ test('uses a fixed Telegram Stars amount for a catalog item', () => {
   assert.equal(amounts.starsAmountLocked, 299);
 });
 
+test('fixed Stars orders are independent of crypto quotes', async () => {
+  const service = createPaymentService({
+    catalog: { gemPacks: [{ id: 'fixed-stars', usd: 2.99, stars: 299 }] },
+    fetchRates: async () => { throw new Error('quote service unavailable'); },
+    db: { createTransaction: async order => order },
+  });
+  const order = await service.purchase({ itemId: 'fixed-stars', userId: 'p', paymentMethod: 'telegram_stars' });
+  assert.equal(order.starsAmountLocked, 299);
+});
+
 test('processes the same successful transaction only once', async () => {
   let rewardCalls = 0;
   const transactions = new Map();

@@ -8,21 +8,12 @@ export function getQuestTutorialRecoveryStep({ questRowCount, hasLocationPicker 
   return null;
 }
 
-const FIRST_QUEST_TUTORIAL_TASKS = [
-  ['scout', 3, 4], ['loot', 4, 5], ['repair', 4, 5], ['trade', 5, 6],
-  ['fight', 6, 6], ['cache', 7, 7], ['final', 8, 8],
-];
-
-export const FIRST_QUEST_TUTORIAL_ENERGY = FIRST_QUEST_TUTORIAL_TASKS.reduce((sum, [, energy, target]) => sum + energy * target, 0);
-
+export const FIRST_QUEST_TUTORIAL_ENERGY = 12;
 export function canSpendTutorialEnergyOnMission(profile, missionId) {
-  const step = profile?.tutorial_step;
-  if (!['welcome', 'quests', 'task-location', 'quest-sector'].includes(step)) return true;
-  if (step !== 'quest-sector') return false;
-  const expectedMission = FIRST_QUEST_TUTORIAL_TASKS.find(([slug, , target]) => (
-    Math.floor(Number(profile?.task_completions?.[`p4-u00-${slug}`] || 0) / target) < 1
-  ));
-  return Boolean(expectedMission && missionId === `p4-u00-${expectedMission[0]}`);
+ if(profile?.tutorial_disabled||profile?.tutorial_level_eight_reward_claimed)return true;
+ const step=profile?.tutorial_step;
+ if(!['welcome','quests','task-location','quest-sector'].includes(step))return true;
+ return step==='quest-sector'&&missionId==='p4-u00-scout';
 }
 
 export const TUTORIAL_STEPS = new Set([

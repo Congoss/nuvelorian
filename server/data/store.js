@@ -1,7 +1,12 @@
+import { saveWorldSnapshot, mergeWorldCombatSnapshot } from './world-combat-checkpoint.js';
+import { randomUUID } from 'node:crypto';
 import { RAID_BOSS_EVENT_KEY, RAID_BOSS_MAX_HP, isCurrentRaidBoss, migrateRaidBossHealth } from '../../src/lib/raidBossConfig.js';
 import { EVENT_SCHEDULE } from '../../src/lib/eventSchedule.js';
 import { getPostgresSql } from './postgres.js';
 import { readLocalState, saveLocalState } from './local-state.js';
+import {restoreLocalMarketState} from '../utils/localMarketState.js';
+import { createWriteQueue } from '../utils/writeQueue.js';
+import { saveCombatBatch, commitCombatWrite, combatWriteQueue, enqueueBackgroundCombatWrite } from './combat-write.js';
 
 const DATABASE_URL_KEYS = [
   'DATABASE_URL',
@@ -17,8 +22,10 @@ const runtime = {
   sql: null,
   store: null,
   saveTimer: null,
-  savePromise: Promise.resolve(),
   initPromise: null,
+  combatCheckpoints: new Map(),
+  pendingClanIds: new Set(),
+  clanSaveTimer: null,
 };
 
 function getDatabaseUrl() {
@@ -53,6 +60,9 @@ function cloneEmptyState() {
     promoCodes: [],
     customLootBoxes: [],
     partners: [],
+    newsCampaigns: [],
+    cardGames: {},
+    supportReports: [],
     adminMailLog: [],
     nftHolderCampaign: null,
     nftHolderDrops: [],
@@ -91,6 +101,9 @@ function normalizeState(parsed, fallback = cloneEmptyState()) {
     promoCodes: Array.isArray(parsed?.promoCodes) ? parsed.promoCodes : [],
     customLootBoxes: Array.isArray(parsed?.customLootBoxes) ? parsed.customLootBoxes : [],
     partners: Array.isArray(parsed?.partners) ? parsed.partners : [],
+    newsCampaigns: Array.isArray(parsed?.newsCampaigns) ? parsed.newsCampaigns : [],
+    supportReports: Array.isArray(parsed?.supportReports)?parsed.supportReports:[],
+    cardGames: parsed?.cardGames && typeof parsed.cardGames==='object' ? parsed.cardGames : {},
     adminMailLog: Array.isArray(parsed?.adminMailLog) ? parsed.adminMailLog : [],
     nftHolderCampaign: parsed?.nftHolderCampaign && typeof parsed.nftHolderCampaign === 'object' ? parsed.nftHolderCampaign : null,
     nftHolderDrops: Array.isArray(parsed?.nftHolderDrops) ? parsed.nftHolderDrops : [],
@@ -119,6 +132,9 @@ function applyStateToStore(target, state) {
   target.promoCodes = next.promoCodes;
   target.customLootBoxes = next.customLootBoxes;
   target.partners = next.partners;
+  target.newsCampaigns = next.newsCampaigns;
+  target.cardGames = next.cardGames;
+  target.supportReports=next.supportReports;
   target.adminMailLog = next.adminMailLog;
   target.nftHolderCampaign = next.nftHolderCampaign;
   target.nftHolderDrops = next.nftHolderDrops;
@@ -128,7 +144,7 @@ function applyStateToStore(target, state) {
 
 function getPersistentStateSnapshot(source) {
   return normalizeState({
-    clans: source.clans,
+    clans: source.clans.map(({ship, ...clan}) => clan),
     bossFights: source.bossFights,
     bossDamageLogs: source.bossDamageLogs,
     attackLogs: source.attackLogs,
@@ -142,6 +158,9 @@ function getPersistentStateSnapshot(source) {
     promoCodes: source.promoCodes,
     customLootBoxes: source.customLootBoxes,
     partners: source.partners,
+    newsCampaigns: source.newsCampaigns,
+    cardGames: source.cardGames,
+    supportReports:source.supportReports,
     adminMailLog: source.adminMailLog,
     nftHolderCampaign: source.nftHolderCampaign,
     nftHolderDrops: source.nftHolderDrops,
@@ -158,31 +177,64 @@ async function ensureSchema() {
       updated_at TIMESTAMP NOT NULL DEFAULT now()
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS world_combat_state (
+      state_key TEXT NOT NULL, entity_type TEXT NOT NULL, entity_id TEXT NOT NULL,
+      state JSONB NOT NULL, revision TEXT NOT NULL, updated_at TIMESTAMP NOT NULL DEFAULT now(),
+      PRIMARY KEY (state_key,entity_type,entity_id)
+    )
+  `;
 }
 
 async function loadState() {
   const sql = getSql();
+  // Ship history has its own durable table; keep only current combat state here.
+  await sql`CREATE TABLE IF NOT EXISTS clan_ship_state (clan_id TEXT PRIMARY KEY,state JSONB NOT NULL DEFAULT '{}'::jsonb,updated_at TIMESTAMP NOT NULL DEFAULT now())`;
   const rows = await sql`
-    SELECT state
+    SELECT state, COALESCE((SELECT jsonb_agg(jsonb_build_object('entity_type',entry.entity_type,'entity_id',entry.entity_id,'state',entry.state,'revision',entry.revision))
+      FROM world_combat_state AS entry WHERE entry.state_key=${STATE_KEY}), '[]'::jsonb) AS combat
     FROM game_state
     WHERE key = ${STATE_KEY}
     LIMIT 1
   `;
-  return rows[0]?.state || cloneEmptyState();
+  const state = rows[0]?.state || cloneEmptyState();
+  for (const entry of rows[0]?.combat || []) runtime.combatCheckpoints.set(entry.entity_type + ':' + entry.entity_id, entry.revision);
+  mergeWorldCombatSnapshot(state, rows[0]?.combat || []);
+  const ships = await sql`SELECT clan_id,state FROM clan_ship_state`;
+  const shipsById = new Map(ships.map(row => [String(row.clan_id),row.state]));
+  for (const clan of state.clans || []) {
+    if (shipsById.has(String(clan.id))) clan.ship = shipsById.get(String(clan.id));
+    else if (clan.ship) {
+      // Preserve a legacy ship before excluding its duplicate from world saves.
+      await sql`INSERT INTO clan_ship_state (clan_id,state) VALUES (${String(clan.id)},${JSON.stringify(clan.ship)}::jsonb) ON CONFLICT (clan_id) DO NOTHING`;
+    }
+  }
+  return state;
 }
 
 async function saveState(state) {
   const sql = getSql();
   const snapshot = normalizeState(state, cloneEmptyState());
-  await sql`
-    INSERT INTO game_state (key, state, updated_at)
-    VALUES (${STATE_KEY}, ${JSON.stringify(snapshot)}::jsonb, now())
-    ON CONFLICT (key) DO UPDATE SET
-      state = EXCLUDED.state,
-      updated_at = EXCLUDED.updated_at
-  `;
+  // Completed combat history is immutable and already present in the base
+  // snapshot. New and changed fight rows live in world_combat_state, so a
+  // routine save never serializes ~94 MB of historical fights and damage logs.
+  const compact = compactWorldSnapshot(snapshot);
+  await saveWorldSnapshot(sql, STATE_KEY, compact);
   return snapshot;
 }
+
+export function compactWorldSnapshot(snapshot) {
+  const compact = { ...snapshot };
+  delete compact.bossFights;
+  delete compact.bossDamageLogs;
+  return compact;
+}
+
+const queueStateSave = createWriteQueue(async () => {
+  await saveState(getPersistentStateSnapshot(store));
+  return true;
+});
+
 
 export const store = {
   players: [],
@@ -203,6 +255,9 @@ export const store = {
   nftHolderCampaign: null,
   nftHolderDrops: [],
   nftPetClaims: [],
+  newsCampaigns: [],
+  cardGames: {},
+    supportReports: [],
   generateId,
   async init() {
     if (runtime.initPromise) return runtime.initPromise;
@@ -214,6 +269,7 @@ export const store = {
         const state = readLocalState() || cloneEmptyState();
         const resetRaidBoss = !isCurrentRaidBoss(state.raidBoss);
         applyStateToStore(this, state);
+        restoreLocalMarketState(this,state);
         this.players = Array.isArray(state.players) ? state.players : [];
         runtime.store = this;
         if (resetRaidBoss) await this.persistNow();
@@ -226,28 +282,88 @@ export const store = {
       runtime.store = this;
       if (resetRaidBoss) await this.persistNow();
       return state;
-    })();
+    })().catch(error => {
+      runtime.initPromise = null;
+      throw error;
+    });
     return runtime.initPromise;
   },
   async persistNow() {
+    // An explicit save already includes changes waiting for the background
+    // timer. Cancel that redundant pass before capturing the current snapshot.
+    // Calls arriving during this save can still schedule their own next pass.
+    if(runtime.saveTimer){clearTimeout(runtime.saveTimer);runtime.saveTimer=null;}
     if (!getDatabaseUrl()) return saveLocalState(this);
-    runtime.savePromise = runtime.savePromise.catch(() => {}).then(async () => {
-      const snapshot = getPersistentStateSnapshot(this);
-      await saveState(snapshot);
-      return true;
+    return queueStateSave();
+  },
+  queueCombatCommit(work) {
+    return combatWriteQueue.exclusive(() => work(async (draft, players, changes) => {
+      if (getDatabaseUrl()) {
+        const batch = { mode: 'world', stateKey: STATE_KEY, stateChanged: changes.length > 0,
+          state: changes, players, revision: randomUUID() };
+        const sql = getSql();
+        await commitCombatWrite(sql, () => saveCombatBatch(sql, batch), () => batch);
+        return () => { for (const entry of changes) runtime.combatCheckpoints.set(entry.entity_type + ':' + entry.entity_id, batch.revision); };
+      } else if (process.env.LOCAL_GAME_STATE_PATH && !saveLocalState(draft)) {
+        throw new Error('Combat state could not be saved');
+      }
+    }));
+  },
+  // Legacy response mode is restricted to a single authoritative game process.
+  queueCombatInBackground(work) {
+    return work(async (_draft, players, changes) => {
+      const batch = structuredClone({ mode: 'world', stateKey: STATE_KEY, stateChanged: changes.length > 0,
+        state: changes, players, revision: randomUUID() });
+      void enqueueBackgroundCombatWrite(players.map(player => player.id), async () => {
+        if (getDatabaseUrl()) {
+          const sql = getSql();
+          await commitCombatWrite(sql, () => saveCombatBatch(sql, batch), () => batch);
+          for (const entry of changes) runtime.combatCheckpoints.set(entry.entity_type + ':' + entry.entity_id, batch.revision);
+        } else if (process.env.LOCAL_GAME_STATE_PATH && !saveLocalState(store)) {
+          throw new Error('Combat state could not be saved');
+        }
+      }, batch.players).catch(error => console.error('[combat] background world write failed', error));
     });
-    return runtime.savePromise;
+  },
+  persistWorldEntities(entries) {
+    if (!Array.isArray(entries) || !entries.length || this.combatDraft) return;
+    const changes = entries.map(entry => structuredClone(entry));
+    void this.queueCombatInBackground(async save => {
+      await save(this, [], changes);
+    }).catch(error => console.error('[world-checkpoint] background write failed', error));
+  },
+  persistClanSoon(clanId) {
+    if (this.combatDraft) return;
+    if (!getDatabaseUrl()) { this.persistSoon(); return; }
+    runtime.pendingClanIds.add(String(clanId));
+    if (runtime.clanSaveTimer) return;
+    runtime.clanSaveTimer = setTimeout(() => {
+      runtime.clanSaveTimer = null;
+      const ids = [...runtime.pendingClanIds]; runtime.pendingClanIds.clear();
+      void this.queueCombatCommit(async save => {
+        const changes = ids.map(id => this.clans.find(clan => String(clan.id) === id)).filter(Boolean)
+          .map(({ship, ...clan}) => ({ entity_type: 'clans', entity_id: String(clan.id), state: JSON.parse(JSON.stringify(clan)) }));
+        if (!changes.length) return;
+        const register = await save(this, [], changes); register?.();
+      }).catch(error => {
+        console.error('[clan-checkpoint]', error.message);
+        for (const id of ids) this.persistClanSoon(id);
+      });
+    }, 100);
+    runtime.clanSaveTimer.unref?.();
   },
   async refreshRaidBoss() {
     if (!getDatabaseUrl()) return this.raidBoss;
+    const previous = this.raidBoss;
     const sql = getSql();
     const rows = await sql`
-      SELECT state->'raidBoss' AS raid_boss
+      SELECT COALESCE((SELECT state FROM world_combat_state WHERE state_key=${STATE_KEY} AND entity_type='raidBoss' AND entity_id='raidBoss'),state->'raidBoss') AS raid_boss
       FROM game_state
       WHERE key = ${STATE_KEY}
       LIMIT 1
     `;
     const raidBoss = rows[0]?.raid_boss;
+    if (this.raidBoss !== previous) return this.raidBoss;
     if (raidBoss && typeof raidBoss === 'object') {
       const reset = !isCurrentRaidBoss(raidBoss);
       this.raidBoss = migrateRaidBossHealth(raidBoss);
@@ -256,6 +372,7 @@ export const store = {
     return this.raidBoss;
   },
   persistSoon(delayMs = 350) {
+    if (this.combatDraft) return;
     if (runtime.saveTimer) return;
     runtime.saveTimer = setTimeout(() => {
       runtime.saveTimer = null;

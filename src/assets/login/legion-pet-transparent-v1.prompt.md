@@ -1,0 +1,1 @@
+Built-in image_gen background-extraction. Reference: original legion-pet-icon.webp. Preserve the teal dragon, pose, clothing, colors and dark outlines. Remove all external black matte and rectangular sidebars, including gaps between tail and body. Full silhouette on transparent alpha; no redesign, text or backdrop.

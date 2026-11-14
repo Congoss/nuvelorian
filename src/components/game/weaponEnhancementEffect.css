@@ -1,0 +1,3 @@
+.weapon-enhancement-effect{position:absolute;inset:0;pointer-events:none;overflow:visible;contain:layout style}
+.weapon-enhancement-effect>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.weapon-enhancement-effect>canvas{position:absolute;left:-32px;top:-32px;width:calc(100% + 64px);height:calc(100% + 64px);pointer-events:none}

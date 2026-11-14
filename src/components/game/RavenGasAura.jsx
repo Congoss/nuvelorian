@@ -32,7 +32,7 @@ export default function RavenGasAura() {
     if (!ctx) return undefined;
     const sprites = cachedSprites ||= ['123,126,138', '182,185,198', '226,228,236'].map(smokeSprite);
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let raf = 0, lastFrame = 0, lastStep = 0, visible = true, disposed = false;
+    let raf = 0, lastFrame = 0, lastStep = 0, visible = true, disposed = false, contextLost = false;
     const makeParticle = (initial = false) => {
       const side = Math.random() < .43 ? -1 : 1;
       const life = 6 + Math.random() * 5;
@@ -51,8 +51,8 @@ export default function RavenGasAura() {
       canvas.width = width; canvas.height = Math.round(width * 896 / 500);
       ctx.setTransform(canvas.width / 500, 0, 0, canvas.height / 896, 0, 0);
     };
-    const paused = () => document.documentElement.dataset.animationsOff === 'true' || document.hidden || !visible || Boolean(canvas.closest('.preview-paused'))
-      || canvas.closest('.game-app')?.dataset.modalOpen === 'true';
+    const paused = () => contextLost || document.documentElement.dataset.animationsOff === 'true' || document.hidden || !visible || Boolean(canvas.closest('.preview-paused'))
+      || (Boolean(canvas.closest('.animated-camp-scene')) && canvas.closest('.game-app')?.dataset.modalOpen === 'true');
     const paint = (dt) => {
       ctx.clearRect(0, 0, 500, 896);
       for (let i = 0; i < particles.length; i += 1) {
@@ -87,15 +87,30 @@ export default function RavenGasAura() {
       else if (!raf) raf = requestAnimationFrame(frame);
     };
     resize(); paint(0);
-    const resizeObserver = new ResizeObserver(() => { resize(); paint(0); }); resizeObserver.observe(canvas);
-    const intersection = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; sync(); }); intersection.observe(canvas);
+    const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => { if (!contextLost) { resize(); paint(0); } }); resizeObserver?.observe(canvas);
+    const intersection = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; sync(); }); intersection?.observe(canvas);
     const mutation = new MutationObserver(sync);
     // Only ancestors can change whether this aura is paused.
     for (let ancestor = canvas.parentElement; ancestor; ancestor = ancestor.parentElement) {
       mutation.observe(ancestor, { attributes: true, attributeFilter: ['class', 'data-game-hidden', 'data-modal-open', 'data-animations-off'] });
     }
-    document.addEventListener('visibilitychange', sync); reduced.addEventListener('change', sync); sync();
-    return () => { disposed = true; cancelAnimationFrame(raf); resizeObserver.disconnect(); intersection.disconnect(); mutation.disconnect(); document.removeEventListener('visibilitychange', sync); reduced.removeEventListener('change', sync); };
+    const loseContext = event => { event.preventDefault(); contextLost = true; sync(); };
+    const restoreContext = () => { contextLost = false; resize(); paint(0); sync(); };
+    const onResize = () => { if (!contextLost) { resize(); paint(0); } sync(); };
+    canvas.addEventListener('contextlost', loseContext);
+    canvas.addEventListener('contextrestored', restoreContext);
+    window.addEventListener('resize', onResize);
+    document.addEventListener('visibilitychange', sync);
+    if (reduced.addEventListener) reduced.addEventListener('change', sync);
+    else reduced.addListener?.(sync);
+    sync();
+    return () => {
+      disposed = true; cancelAnimationFrame(raf); resizeObserver?.disconnect(); intersection?.disconnect(); mutation.disconnect();
+      canvas.removeEventListener('contextlost', loseContext); canvas.removeEventListener('contextrestored', restoreContext);
+      window.removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', sync);
+      if (reduced.removeEventListener) reduced.removeEventListener('change', sync);
+      else reduced.removeListener?.(sync);
+    };
   }, []);
   return <canvas ref={ref} className="bp-set-layer bp-set-gas-aura" aria-hidden="true" />;
 }

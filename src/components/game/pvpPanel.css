@@ -1,0 +1,255 @@
+/* Overrides so the standalone pvp-preview styles (built for a full page at /pvp-preview) fit
+   inside the game's modal shell instead. The base .pvp-preview rules in pvpPreview.css are
+   untouched, so the dev-only /pvp-preview route keeps rendering as before. */
+.pvp-panel{height:100%;min-height:0;max-width:none;margin:0;padding:6px 8px 6px}
+.pvp-panel .pvp-close{width:30px;height:30px;border-radius:999px;background:#0f1a0fb3;display:flex;align-items:center;justify-content:center}
+
+/* Keep the embedded screen within its shell, above the game navigation. */
+.pvp-preview.pvp-panel{width:100%;min-width:0;overflow-x:hidden;overflow-y:auto;scrollbar-width:none}
+.pvp-panel::-webkit-scrollbar{display:none}
+.pvp-panel> *{flex-shrink:0}
+
+/* The scaled navigation art extends above its measured bar. Keep it over the
+   PvP scene without a separate navigation background. */
+.game-shell:has(.pvp-panel) .void-flush-bottom-nav > div {
+  z-index: 70;
+  overflow: visible;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+/* Scroll content clear of the floating icons; the scene itself fills the shell. */
+.pvp-preview.pvp-panel { padding-bottom: calc(var(--bottom-nav-space, 104px) + 20px); scroll-padding-bottom: calc(var(--bottom-nav-space, 104px) + 20px); }
+/* One continuous lobby scene, including the space behind floating navigation. */
+.pvp-panel:has(.pvp-lobby) {
+  background: linear-gradient(180deg, #07100bd9 0%, #09110bc4 48%, #080e1670 75%, #080e16a6 100%),
+    url('../../assets/optimized/all/boss/boss_1/boss1_bck/boss4/kosmo/background-kosmo.webp') center / cover no-repeat;
+}
+.pvp-panel .pvp-title.pvp-lobby-title,
+.pvp-panel .pvp-lobby-rank-card {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.pvp-panel .pvp-lobby { gap: 12px; }
+.pvp-panel .pvp-lobby-leaderboard {
+  background: none !important;
+  box-shadow: none !important;
+}
+.pvp-panel .pvp-lobby-leaderboard > svg { display: none; }
+.pvp-panel .pvp-build { border-top: 0; }
+.pvp-panel .pvp-lobby-rating,
+.pvp-panel .pvp-lobby-leaderboard h2 { text-shadow: 0 2px 4px #000; }
+/* First arena trial: the painted deck is part of the scene, not a second overlay. */
+.pvp-panel .pvp-stage {
+  --deck-line: 48%;
+  min-height: 600px;
+  background: url('/pvp/snail-stop-v1.webp') center / 100% 100% no-repeat;
+}
+.pvp-panel .pvp-stage .pvp-deck { display: none; }
+.pvp-panel .pvp-stage .pvp-fighter { top: 36px; bottom: var(--deck-line); }
+.pvp-panel .pvp-stage .pvp-vs { top: 30%; }
+.pvp-panel .pvp-stage .pvp-controls {
+  background: linear-gradient(transparent, #092124bd 35%, #081a20e8);
+}
+/* Battle fills the available screen; the scenery continues behind the HUD/nav. */
+.pvp-preview.pvp-panel:has(.pvp-stage) {
+  container-type: size;
+  background: url('/pvp/snail-stop-v1.webp') center top / 100% 140% no-repeat;
+}
+.pvp-panel .pvp-stage {
+  min-height: 400px;
+  flex: 1 0 400px;
+  background: none;
+  overflow: visible;
+}
+.pvp-panel .pvp-stage .pvp-fighter {
+  top: 0;
+  bottom: 148px;
+  width: 50%;
+}
+.pvp-panel .pvp-stage .pvp-sprite { width: min(145cqw, 75cqh); }
+.pvp-panel .pvp-stage .pvp-controls {
+  padding-top: 4px;
+  background: linear-gradient(transparent, #092124a6 45%, #081a20c9);
+}
+.pvp-panel:has(.pvp-stage) .pvp-title,
+.pvp-panel:has(.pvp-stage) .pvp-pilot { background: #0a171bcc; }
+
+/* ===== Liveliness pass: idle breathing, HP bar drain trail, button shine, ambient scene drift.
+   Additive only — nothing above this line is touched, so the hand-tuned layout stays as is. ===== */
+
+/* --- Idle fighters: the sprite is one flat drawing per pose (no separate limb layers, no spare
+   idle frames in the atlas), so scale()/rotate() just warps the whole image — that reads as
+   stretching, not a knee bend. A clean vertical bob (translateY only, no distortion) is the
+   honest version of "alive" available without new art. Real squat/arm movement needs either
+   extra hand-drawn idle frames in pilot-actions-v1.webp or the character cut into layered parts
+   (head/torso/arm/leg) animated around their own pivots — ask for that as a follow-up art task.
+   Replaces the base .pvp-fighter float entirely inside the panel, so there is exactly one idle
+   motion. Battle animations override this the instant a phase fires. */
+.pvp-panel .pvp-stage .pvp-fighter{animation:none}
+@keyframes pvpIdleBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.pvp-panel .pvp-stage[data-phase=idle] .pvp-fighter .pvp-fighter-motion{animation:pvpIdleBob 2.6s ease-in-out infinite}
+.pvp-panel .pvp-stage[data-phase=idle] .pvp-fighter.opponent .pvp-fighter-motion{animation-delay:-1.3s}
+.pvp-panel .pvp-stage .pvp-sprite{transition:filter .2s}
+
+/* Ambient scene: slow drifting mist + light sweep behind the fighters, pure CSS (no new markup). */
+@keyframes pvpSceneDrift{0%{background-position:50% 50%}50%{background-position:46% 54%}100%{background-position:50% 50%}}
+@keyframes pvpLightSweep{0%{opacity:.08;transform:translateX(-20%) rotate(8deg)}50%{opacity:.22;transform:translateX(20%) rotate(8deg)}100%{opacity:.08;transform:translateX(-20%) rotate(8deg)}}
+.pvp-panel .pvp-stage{position:relative}
+.pvp-panel .pvp-stage::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:radial-gradient(ellipse at 30% 70%,#3a6b5f26,transparent 55%),radial-gradient(ellipse at 75% 25%,#6a8fae22,transparent 50%);
+  background-size:140% 140%;animation:pvpSceneDrift 14s ease-in-out infinite}
+.pvp-panel .pvp-stage::after{content:'';position:absolute;inset:-10% -40%;pointer-events:none;z-index:1;
+  background:linear-gradient(100deg,transparent 40%,#cfe9ff 48%,transparent 56%);mix-blend-mode:screen;
+  animation:pvpLightSweep 9s ease-in-out infinite}
+/* One continuous lobby scene gets the same slow drift so it is never a flat still frame. */
+.pvp-panel:has(.pvp-lobby){background-size:112% 112%;animation:pvpSceneDrift 22s ease-in-out infinite}
+
+/* --- HP bars: a fast top layer drains instantly; a slower, warm-coloured trail layer lags
+   behind it and catches up, so lost HP reads as a visible "wound" for about a second. A shimmer
+   sweeps across the current fill, and low HP pulses the whole bar red. */
+.pvp-hp{overflow:hidden}
+.pvp-hp .pvp-hp-trail,.pvp-hp .pvp-hp-fill{position:absolute;inset:0;height:100%;display:block}
+.pvp-hp .pvp-hp-trail{background:linear-gradient(#ff8a63,#c6391f);transition:width 1.05s cubic-bezier(.16,1,.3,1) .12s}
+.pvp-hp .pvp-hp-fill{background:linear-gradient(#e3ff71,#9cce25);transition:width .22s ease-out;overflow:hidden}
+.pvp-hp .pvp-hp-fill::after{content:'';position:absolute;inset:0;width:40%;
+  background:linear-gradient(100deg,transparent,#ffffffb0,transparent);
+  animation:pvpHpShimmer 2.4s ease-in-out infinite}
+@keyframes pvpHpShimmer{0%{transform:translateX(-120%)}60%,100%{transform:translateX(280%)}}
+@keyframes pvpHpLowPulse{0%,100%{box-shadow:inset 0 0 0 1px #ff5a3a55,0 0 0 0 #ff2e1a66}50%{box-shadow:inset 0 0 0 1px #ff5a3aaa,0 0 10px 1px #ff2e1a99}}
+.pvp-hp[data-low="true"]{animation:pvpHpLowPulse 1.3s ease-in-out infinite}
+.pvp-hp[data-critical="true"]{animation:pvpHpLowPulse .7s ease-in-out infinite}
+.pvp-hp[data-low="true"] .pvp-hp-fill{background:linear-gradient(#ffcf6a,#e2742a)}  /* specificity note: equal to .pvp-hp i, same declared-order wins; fine since both target fill */
+.pvp-hp[data-critical="true"] .pvp-hp-fill{background:linear-gradient(#ff8a63,#d93a1f)}
+
+/* --- Action buttons: the icon art already carries its own grey impact-smoke backdrop, which
+   read as a stray dark patch floating on the bare control bar. Framing it as a themed glass
+   badge (matching the title/pilot panels) makes that backdrop look intentional instead of
+   accidental, each move tinted by its own colour so the row isn't three identical blobs.
+   No shine sweep here (removed on request) — only the icon's own small ready-bounce stays. */
+.pvp-action{position:relative;overflow:visible;border-radius:14px;transition:transform .12s,filter .12s,box-shadow .12s}
+.pvp-action>div{position:relative;border-radius:50%;background:radial-gradient(ellipse at 50% 32%,var(--move-tint,#2c4a3a)66,transparent 72%),#0d1812b3;box-shadow:inset 0 0 0 1px var(--move-ring,#6b8f6a66),0 2px 6px #0007;padding:6px}
+.pvp-action:nth-child(1){--move-tint:#4a6a3c;--move-ring:#9ad87c88}
+.pvp-action:nth-child(2){--move-tint:#6a5a2c;--move-ring:#e0c86a88}
+.pvp-action:nth-child(3){--move-tint:#6a2c2c;--move-ring:#e07a7a88}
+.pvp-action.selected>div{box-shadow:inset 0 0 0 2px var(--move-ring,#9ad87c),0 0 14px 1px var(--move-tint,#9ad87c)}
+@keyframes pvpActionReady{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+.pvp-action:not(:disabled) img{animation:pvpActionReady 2.4s ease-in-out infinite}
+.pvp-action:nth-child(1) img{animation-delay:0s}
+.pvp-action:nth-child(2) img{animation-delay:.3s}
+.pvp-action:nth-child(3) img{animation-delay:.6s}
+.pvp-action:disabled img{animation:none}
+@keyframes pvpActionPop{0%{transform:scale(1)}40%{transform:scale(1.08)}100%{transform:scale(1)}}
+.pvp-action.selected{animation:pvpActionPop .35s ease-out;box-shadow:inset 0 0 0 2px #f1ff793b,0 0 14px 2px #d8ff6a99,0 3px 0 #0b1306}
+
+/* --- VS: moved clear of the round counter, given the same distressed display font as the rest
+   of the HUD (title/round text), a thick painted-on stroke and a slow idle pulse so it reads as
+   a stamped impact mark rather than plain small type. */
+.pvp-panel .pvp-stage .pvp-vs{
+  top:18%;
+  font-family:"Rubik Distressed",Rubik,sans-serif;
+  font-size:clamp(30px,9vw,46px);
+  letter-spacing:.02em;
+  color:#ffe9a8;
+  -webkit-text-stroke:2px #1a0f06;
+  paint-order:stroke fill;
+  text-shadow:0 0 10px #ff7a2e99,0 3px 0 #1a0f06,0 0 22px #ff7a2e55;
+  transform:translate(-50%,-50%) rotate(-7deg);
+  animation:pvpVsPulse 2.6s ease-in-out infinite;
+}
+@keyframes pvpVsPulse{0%,100%{transform:translate(-50%,-50%) rotate(-7deg) scale(1)}50%{transform:translate(-50%,-50%) rotate(-7deg) scale(1.08)}}
+@media(prefers-reduced-motion:reduce){
+  .pvp-panel .pvp-stage[data-phase=idle] .pvp-fighter .pvp-fighter-motion,
+  .pvp-panel .pvp-stage::before,.pvp-panel .pvp-stage::after,.pvp-panel:has(.pvp-lobby),
+  .pvp-hp-fill::after,.pvp-action:not(:disabled) img,.pvp-hp[data-low="true"],.pvp-hp[data-critical="true"],
+  .pvp-panel .pvp-vs{animation:none!important}
+}
+
+/* Open arena HUD: reuse the game's illustrated weapons without enclosing cards. */
+.pvp-preview.pvp-panel .pvp-pilots{grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr);gap:8px;align-items:center;padding:3px 2px 5px}
+.pvp-preview.pvp-panel .pvp-pilot{padding:0;border:0;border-radius:0;background:none;box-shadow:none;min-width:0}
+.pvp-preview.pvp-panel .pvp-pilot[data-enemy=true]{text-align:right}
+.pvp-preview.pvp-panel .pvp-pilot b{font:900 clamp(10px,2.8vw,14px)/1.4 Rubik,sans-serif;color:#fff0c7;letter-spacing:.02em;text-shadow:0 2px 2px #071714}
+.pvp-preview.pvp-panel .pvp-pilot b small{padding:0 2px;border:0;background:none;color:#b8cba6;font-size:8px}
+.pvp-preview.pvp-panel .pvp-hp{height:22px;margin-top:3px;border:0;border-radius:2px 6px 3px 5px;background:#0b1919b3;box-shadow:inset 0 1px 3px #0009}
+.pvp-preview.pvp-panel .pvp-hp .pvp-hp-fill{border-radius:2px;background:linear-gradient(#dce89b,#9caf59 50%,#637a37);box-shadow:inset 0 1px #f5ffd17a,inset 0 -2px #405426}
+.pvp-preview.pvp-panel .pvp-pilot[data-enemy=true] .pvp-hp-fill{background:linear-gradient(#efa58a,#c96c58 50%,#8f443a);box-shadow:inset 0 1px #ffe0bb77,inset 0 -2px #66302a}
+.pvp-preview.pvp-panel .pvp-pilot[data-enemy=true] .pvp-hp i{left:auto;right:0}
+.pvp-preview.pvp-panel .pvp-hp[data-low=true] .pvp-hp-fill{background:linear-gradient(#ffd28a,#c0803e)}
+.pvp-preview.pvp-panel .pvp-hp[data-critical=true] .pvp-hp-fill{background:linear-gradient(#f29372,#a73f34)}
+.pvp-preview.pvp-panel .pvp-hp span{font-size:clamp(9px,2.5vw,12px);text-shadow:0 1px 2px #000}
+.pvp-preview.pvp-panel .pvp-round{flex-direction:column;gap:0;color:#f3e4b7;text-shadow:0 2px 2px #102018}
+.pvp-preview.pvp-panel .pvp-round span{font:800 8px/14px Rubik,sans-serif;letter-spacing:.04em}
+.pvp-preview.pvp-panel .pvp-round strong{font:28px/28px 'Rubik Distressed',Rubik,sans-serif}
+.pvp-preview.pvp-panel .pvp-stage .pvp-controls{padding:8px 4px 6px;background:linear-gradient(transparent,#09201955 45%,#081a1777)}
+.pvp-preview.pvp-panel .pvp-controls h2{font-size:11px;letter-spacing:.06em;color:#f2e7bc;text-shadow:0 2px 2px #07130e}
+.pvp-preview.pvp-panel .pvp-shared{gap:4px;margin:5px 0 0;color:#dedeb6}
+.pvp-preview.pvp-panel .pvp-shared b{padding:0;border:0;border-radius:0;background:none;color:#f2e7bc;font:900 12px/1 Rubik,sans-serif;text-shadow:0 1px 2px #000}
+.pvp-preview.pvp-panel .pvp-actions{gap:8px;padding:0 2px;background:none;border:0;border-radius:0;box-shadow:none}
+.pvp-preview.pvp-panel .pvp-action,.pvp-preview.pvp-panel .pvp-action.selected{min-height:96px;gap:3px;padding:5px 0 7px;background:none;border:0;border-radius:0;box-shadow:none;animation:none;transition:transform .12s,opacity .12s}
+.pvp-preview.pvp-panel .pvp-action>div,.pvp-preview.pvp-panel .pvp-action.selected>div{width:clamp(58px,18vw,82px);max-width:82px;padding:0;background:none;border:0;border-radius:0;box-shadow:none}
+.pvp-preview.pvp-panel .pvp-action img{animation:none;filter:drop-shadow(0 3px 2px #0009);transition:filter .12s,transform .12s}
+.pvp-preview.pvp-panel .pvp-action b{padding:0;border:0;border-radius:0;background:none;color:#f3e7bf;font:900 clamp(9px,2.4vw,12px)/1.2 Rubik,sans-serif;text-shadow:0 2px 2px #07130e;white-space:normal}
+.pvp-preview.pvp-panel .pvp-action:not(:disabled):hover img{transform:translateY(-3px);filter:drop-shadow(0 3px 3px #d8df8b88)}
+.pvp-preview.pvp-panel .pvp-action:not(:disabled):active,.pvp-preview.pvp-panel .pvp-action.selected{transform:translateY(2px);background:none;box-shadow:none}
+.pvp-preview.pvp-panel .pvp-action.selected img{filter:drop-shadow(0 0 7px #e2ee9a);transform:scale(1.06)}
+.pvp-preview.pvp-panel .pvp-action:disabled:not(.selected){opacity:.62;filter:saturate(.7)}
+@media(max-width:360px){.pvp-preview.pvp-panel .pvp-pilots{grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr);gap:6px}.pvp-preview.pvp-panel .pvp-action{min-height:86px}}
+
+/* Painted result locker, medical HUD and illustrated pilot guide. */
+.pvp-result-scrim{position:absolute;inset:0;z-index:12;display:grid;place-items:center;background:radial-gradient(ellipse,#08161230,#06120b8a);padding:8px}
+.pvp-result-card{width:min(90%,330px);min-height:350px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:38px 28px 32px;background-size:100% 100%;background-repeat:no-repeat;text-align:center;filter:drop-shadow(0 12px 18px #000a);animation:pvpResultReveal .25s ease-out both}
+.pvp-result-card>small{font:800 8px/1.4 Rubik,sans-serif;letter-spacing:.12em;color:#a8ba89}
+.pvp-result-card h2{margin:4px 0 0;font:clamp(24px,7vw,31px)/1.2 'Rubik Distressed',Rubik,sans-serif;color:#e8f5a9;text-shadow:0 3px #111a0d}
+.pvp-result-card[data-result=loss] h2{color:#f8ab88}
+.pvp-result-rank{position:relative;display:grid;place-items:center;width:126px;height:126px;margin:4px auto;background:radial-gradient(ellipse,#c6ec542a,transparent 68%)}
+.pvp-result-rank img{width:116px;height:116px;object-fit:contain;filter:drop-shadow(0 4px 5px #000b)}
+.pvp-result-points{font:900 36px/1 Rubik,sans-serif;color:#c9f56b;text-shadow:0 3px 0 #1e2b0d}
+.pvp-result-card[data-result=loss] .pvp-result-points{color:#ef9a7c}
+.pvp-result-card>p{margin:0;font:700 10px/1.4 Rubik,sans-serif;color:#c6d4ac}
+.pvp-result-total{font:700 10px/1.4 Rubik,sans-serif;color:#9da78d;margin:2px 0 9px}
+.pvp-result-card .pvp-result-close{width:100%;height:44px;flex-shrink:0}
+.pvp-result-close>span:not([aria-hidden]),.pvp-rules-close>span:not([aria-hidden]){position:relative;z-index:1;font:900 11px/1 Rubik,sans-serif;color:#17230c}
+.pvp-knockout{position:absolute;left:50%;top:42%;width:min(86%,360px);transform:translate(-50%,-50%);z-index:8;animation:pvpKnockout .95s ease-out both;filter:drop-shadow(0 5px 6px #0008)}
+.pvp-knockout img{display:block;width:100%;height:auto}
+.pvp-preview.pvp-panel .pvp-hp{height:27px;overflow:visible;border:2px solid #24362e;border-radius:4px 9px 11px 5px;transform:skewX(-5deg);background:#071614e6;box-shadow:0 1px #c2c78366,inset 0 2px 4px #0008;margin-left:6px;margin-top:5px}
+.pvp-preview.pvp-panel .pvp-hp .pvp-hp-fill{background:linear-gradient(95deg,#da653e,#ed9b4b 65%,#f0cb6d);box-shadow:inset 0 1px #ffe9b6,inset 0 -2px #6e3b1c;border-radius:2px 7px 9px 3px;overflow:hidden}
+.pvp-preview.pvp-panel .pvp-pilot[data-enemy=true] .pvp-hp-fill{background:linear-gradient(95deg,#b64b3b,#dd8550 65%,#edb965);box-shadow:inset 0 1px #ffcf9c,inset 0 -2px #6e3b1c}
+.pvp-preview.pvp-panel .pvp-hp .pvp-hp-trail{background:#f4dfae88}
+.pvp-preview.pvp-panel .pvp-hp i{position:absolute;top:0;bottom:0;left:0;height:100%}
+.pvp-preview.pvp-panel .pvp-hp span{z-index:3;left:13px;right:1px;transform:skewX(5deg);font:900 clamp(8px,2.25vw,11px)/1 Rubik,sans-serif;color:#fff4d4;text-shadow:0 1px 2px #291b10,0 0 4px #1c1d10}
+.pvp-heartbeat{position:absolute;inset:0;width:100%;height:100%;z-index:2;opacity:.43;overflow:hidden;pointer-events:none}
+.pvp-heartbeat path{fill:none;stroke:#fff0ab;stroke-width:1.2;vector-effect:non-scaling-stroke;stroke-dasharray:240 140;animation:pvpHeartbeat 3.5s linear infinite}
+.pvp-vital-sign{position:absolute;z-index:4;left:-9px;top:50%;width:26px;height:26px;display:grid;place-items:center;transform:translateY(-50%) skewX(5deg);border:2px solid #9bd8cb;border-radius:50%;background:#0b2424;box-shadow:0 0 6px #8ad0bb55;color:#b1ead8}
+.pvp-vital-sign svg{width:17px;height:17px}
+.pvp-preview .pvp-rules-dialog{padding:0;border:0;border-radius:8px;width:min(94vw,400px);max-height:86dvh;overflow:auto;background:#101b12;box-shadow:0 15px 65px #000b;color:#e7edce}
+.pvp-rules-content{padding:34px 32px 42px;background-size:100% 100%;background-repeat:no-repeat;text-align:center}
+.pvp-rules-content>small{font:800 8px/1.5 Rubik,sans-serif;letter-spacing:.12em;color:#a8bd8a}
+.pvp-rules-content h2{font:22px/1.3 'Rubik Distressed',Rubik,sans-serif;color:#e8f5a9;margin:6px 0 10px;padding-left:32px}
+.pvp-counter-diagram{display:grid;gap:3px}
+.pvp-counter-row{display:grid;grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr);align-items:center;gap:5px;padding:4px;background:#152318a6;border:1px solid #697f4266;border-radius:8px}
+.pvp-counter-row>div{min-width:0;display:grid;justify-items:center;gap:2px}
+.pvp-counter-row>div>div{width:47px;max-width:47px}
+.pvp-counter-row b{font:800 10px/1.2 Rubik,sans-serif;color:#fff0c0}
+.pvp-counter-row>span{display:grid;justify-items:center;gap:0;color:#c9df78}
+.pvp-counter-row>span svg{width:30px;height:20px}
+.pvp-counter-row>span small{font:800 8px/1.2 Rubik,sans-serif;text-transform:uppercase}
+.pvp-rule-notes{display:grid;gap:8px;margin:13px 0;text-align:left}
+.pvp-rule-notes p{margin:0;display:grid;grid-template-columns:17px minmax(0,1fr);gap:7px;font:500 11px/1.45 Rubik,sans-serif;color:#c4cfad}
+.pvp-rule-notes svg{width:16px;height:16px;color:#aaca71;margin-top:1px}
+.pvp-rules-content .pvp-rules-close{width:100%;height:42px}
+@keyframes pvpHeartbeat{to{stroke-dashoffset:-380}}
+@keyframes pvpResultReveal{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes pvpKnockout{0%{opacity:0;transform:translate(-50%,-50%) scale(1.8) rotate(-8deg)}18%,75%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-3deg)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.05) rotate(-3deg)}}
+@media(max-height:660px){.pvp-result-card{min-height:285px;width:min(84%,290px);padding:24px}.pvp-result-rank{width:90px;height:90px}.pvp-result-rank img{width:86px;height:86px}.pvp-result-points{font-size:30px}.pvp-result-card h2{font-size:23px}.pvp-rules-content{padding:26px 24px}.pvp-counter-row>div>div{width:38px}}
+@media(prefers-reduced-motion:reduce){.pvp-heartbeat path,.pvp-result-card,.pvp-knockout{animation:none}.pvp-knockout{opacity:1;transform:translate(-50%,-50%)}}
+.pvp-search-button{font-variant-numeric:tabular-nums}.pvp-search-button b{margin-left:6px;white-space:nowrap}
+.pvp-rank-reward-trigger{position:relative;display:grid;place-items:center;width:100%;padding:0;border:0;background:none;gap:2px;color:#c7d4a5}
+.pvp-rank-reward-trigger>small{font:800 8px/1 Rubik,sans-serif}
+.pvp-rank-reward-ready{position:absolute;right:1px;top:0;width:8px;height:8px;border:1px solid #243810;border-radius:50%;background:#d8fa71;box-shadow:0 0 7px #c5f45199}
+.pvp-reward-summary{display:grid;gap:4px;margin:9px 0 2px;padding:9px;border:1px solid #8b9f4e66;border-radius:6px;background:#0c180faa;text-align:left;font:700 10px/1.4 Rubik,sans-serif;color:#d5e6a8}
+.pvp-reward-summary small{font:700 10px/1.3 Rubik,sans-serif;color:#9fb58a}
+.pvp-preview.pvp-panel .pvp-title .pvp-refill-button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:32px;min-width:32px;height:34px;border:1px solid #91a85a66;border-radius:7px;background:#172616;color:#d4ec95}
+.pvp-refill-button small{font:800 8px/1 Rubik,sans-serif}

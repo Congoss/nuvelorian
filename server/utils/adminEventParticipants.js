@@ -1,0 +1,4 @@
+export function eventParticipantRows(players,{min=0,search='',account='all',minLevel=0}={}){
+ const q=String(search).toLowerCase();
+ return players.map(p=>{const h=p.halloween_event?.id==='halloween-2026'?p.halloween_event:{};return {id:p.id,nickname:p.nickname||p.username||'',telegramId:p.telegram_id||'',telegramUsername:p.telegram_username||'',near:p.near_wallet_id||'',level:Number(p.level)||1,collected:Math.max(Number(h.activityTotal)||0,Number(h.earned)||0),activity:Number(h.activityEarned)||0,balance:Number(h.balance)||0};}).filter(p=>p.collected>=min&&p.level>=minLevel&&(account!=='telegram'||p.telegramId)&&(account!=='near'||p.near)&&`${p.id} ${p.nickname} ${p.telegramId} ${p.near}`.toLowerCase().includes(q)).sort((a,b)=>b.collected-a.collected||String(a.id).localeCompare(String(b.id)));
+}

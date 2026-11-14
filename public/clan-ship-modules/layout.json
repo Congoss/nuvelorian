@@ -1,0 +1,80 @@
+{
+  "source": {
+    "width": 1054,
+    "height": 1493
+  },
+  "modules": {
+    "toilet": {
+      "x": 0,
+      "y": 0,
+      "width": 434,
+      "height": 524
+    },
+    "bar": {
+      "x": 401,
+      "y": 0,
+      "width": 408,
+      "height": 529
+    },
+    "radar": {
+      "x": 766,
+      "y": 0,
+      "width": 288,
+      "height": 539
+    },
+    "habitat": {
+      "x": 0,
+      "y": 421,
+      "width": 454,
+      "height": 408
+    },
+    "reactor": {
+      "x": 416,
+      "y": 416,
+      "width": 368,
+      "height": 503
+    },
+    "bridge": {
+      "x": 726,
+      "y": 441,
+      "width": 328,
+      "height": 473
+    },
+    "lab": {
+      "x": 0,
+      "y": 776,
+      "width": 469,
+      "height": 318
+    },
+    "garden": {
+      "x": 696,
+      "y": 826,
+      "width": 358,
+      "height": 288
+    },
+    "hangar": {
+      "x": 24,
+      "y": 911,
+      "width": 495,
+      "height": 288
+    },
+    "core": {
+      "x": 451,
+      "y": 871,
+      "width": 291,
+      "height": 333
+    },
+    "portal": {
+      "x": 701,
+      "y": 966,
+      "width": 333,
+      "height": 268
+    },
+    "engine": {
+      "x": 0,
+      "y": 1166,
+      "width": 1054,
+      "height": 327
+    }
+  }
+}

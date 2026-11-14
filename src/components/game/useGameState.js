@@ -3,7 +3,6 @@ import { calculateEnergy } from '@/lib/gameConfig';
 import { seedProfileFromAuth, mergeSavedProfile } from '@/lib/profileSnapshots';
 import i18n from '@/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { platformConfig } from '@/lib/platform/config';
 import { getGameBootstrap } from '@/services/authApi';
 import { findPlayerProfiles, updatePlayerProfile } from '@/services/gameApi';
 import { getXpForLevel } from '@/lib/gameConfig';
@@ -23,6 +22,16 @@ import pet2Full from '@/assets/hero/pet-2-full.png';
 import pet4Full from '@/assets/hero/pet-4-full.png';
 import { clearLocalTesterTutorialState, getLocalTesterResetUpdates, isLocalTesterProfile } from '@/lib/localTesterReset';
 import { DEFAULT_EQUIPMENT_ITEMS, SET4_SET_ID } from './equipmentData';
+
+function sameProfileFields(current, snapshot) {
+  for (const key of Object.keys(snapshot)) {
+    const before = current[key], after = snapshot[key];
+    if (before === after) continue;
+    if (!before || !after || typeof before !== 'object' || typeof after !== 'object') return false;
+    if (JSON.stringify(before) !== JSON.stringify(after)) return false;
+  }
+  return true;
+}
 
 function consumeBootstrapCache() {
   if (typeof window === 'undefined') return null;
@@ -328,6 +337,10 @@ export function useGameState() {
   const pendingMutationsRef = useRef(0);
   const refreshSequenceRef = useRef(0);
   const refreshInFlightRef = useRef(false);
+  const latestProfileRef = useRef(profile);
+  latestProfileRef.current = profile;
+  const latestUserRef = useRef(user);
+  latestUserRef.current = user;
   const displayProfile = useMemo(() => hydrateDerivedPlayerState(profile), [profile, energyTick]);
 
   const retryInit = useCallback(async () => {
@@ -396,8 +409,9 @@ export function useGameState() {
         return;
       }
       const isLocalDevHost = ['localhost', '127.0.0.1', '::1'].includes(String(window.location.hostname || '').toLowerCase());
-      const guideResetKey = 'guide_test_reset_v56';
-      if (import.meta.env.DEV && isLocalDevHost && window.localStorage.getItem(guideResetKey) !== '1') {
+      const guideResetKey = 'guide_test_reset_v58';
+      const localBossPreview = import.meta.env.DEV && isLocalDevHost && new URLSearchParams(window.location.search).get('localBoss') === 'boss7';
+      if (import.meta.env.DEV && isLocalDevHost && isLocalTesterProfile(currentProfile) && !localBossPreview && window.localStorage.getItem(guideResetKey) !== '1') {
         const resetUpdates = getLocalTesterResetUpdates();
         clearLocalTesterTutorialState();
         await updatePlayerProfile(currentProfile.id, resetUpdates);
@@ -445,39 +459,11 @@ export function useGameState() {
           currentProfile = { ...currentProfile, ...previewUpdates };
         }
       }
-      const boostedProfile = currentProfile;
       if (import.meta.env.DEV && isLocalDevHost && window.localStorage.getItem('local_tester_reset_v43') !== '1') {
         window.localStorage.setItem('local_tester_reset_v43', '1');
       }
 
-      if (!platformConfig.telegram.useMock && JSON.stringify(boostedProfile) !== JSON.stringify(currentProfile)) {
-        await updatePlayerProfile(currentProfile.id, {
-          tentacles: boostedProfile.tentacles,
-          premium: boostedProfile.premium,
-          energy: boostedProfile.energy,
-          max_energy: boostedProfile.max_energy,
-          last_energy_update: boostedProfile.last_energy_update,
-          level: boostedProfile.level,
-          xp: boostedProfile.xp,
-          xp_to_next_level: boostedProfile.xp_to_next_level,
-          hero_tier: boostedProfile.hero_tier,
-          keycards: boostedProfile.keycards,
-        collection_boxes: boostedProfile.collection_boxes,
-        inventory_items: boostedProfile.inventory_items,
-        equipped_items: boostedProfile.equipped_items,
-        selected_camp_background: boostedProfile.selected_camp_background,
-        unlocked_backgrounds: boostedProfile.unlocked_backgrounds,
-        talent_points: boostedProfile.talent_points,
-        talent_progress: boostedProfile.talent_progress,
-        talent_progress_goal: boostedProfile.talent_progress_goal,
-        boss_talent_progress: boostedProfile.boss_talent_progress,
-        boss_talent_progress_goal: boostedProfile.boss_talent_progress_goal,
-        talent_levels: boostedProfile.talent_levels,
-        });
-        if (!isCurrentRun()) return;
-      }
-
-      setProfile({ ...boostedProfile });
+      setProfile({ ...currentProfile });
       setBootProgress(1);
       setBootStage('ready');
       setBootDebug({
@@ -559,11 +545,12 @@ export function useGameState() {
   }, [initError, retryInit]);
 
   const refreshProfile = useCallback(async () => {
-    if (!user && !profile) return;
+    const currentProfile=latestProfileRef.current,currentUser=latestUserRef.current;
+    if (!currentUser && !currentProfile) return;
     if (pendingMutationsRef.current || refreshInFlightRef.current) return;
     const revision = profileRevisionRef.current;
     const sequence = ++refreshSequenceRef.current;
-    const lookupKey = user?.email || profile?.telegram_id || profile?.telegramId || profile?.id || null;
+    const lookupKey = currentUser?.email || currentProfile?.telegram_id || currentProfile?.telegramId || currentProfile?.id || null;
     if (!lookupKey) return;
     refreshInFlightRef.current = true;
     try {
@@ -578,12 +565,15 @@ export function useGameState() {
     } finally {
       refreshInFlightRef.current = false;
     }
-  }, [profile, user]);
+  }, []);
 
+  useEffect(()=>{const refresh=event=>{if(Array.isArray(event.detail?.inventory_items)&&String(event.detail.playerId)===String(profile?.id)){profileRevisionRef.current++;setProfile(current=>current&&String(current.id)===String(event.detail.playerId)?{...current,inventory_items:event.detail.inventory_items,enhancement_gums:event.detail.enhancement_gums??current.enhancement_gums,player_achievements:event.detail.player_achievements??current.player_achievements}:current);}else if(!event.detail?.playerId)void refreshProfile();};window.addEventListener('equipment-forge-committed',refresh);return()=>window.removeEventListener('equipment-forge-committed',refresh);},[refreshProfile,profile?.id]);
   const syncProfile = useCallback((snapshot) => {
     if (!snapshot || typeof snapshot !== 'object') return;
     profileRevisionRef.current += 1;
-    setProfile((current) => current && String(current.id) === String(snapshot.id)
+    // Combat replies repeat most fields. Keep the same profile object when
+    // nothing changed so the whole game tree does not re-render on every hit.
+    setProfile((current) => current && String(current.id) === String(snapshot.id) && !sameProfileFields(current, snapshot)
       ? { ...current, ...snapshot }
       : current);
   }, []);
@@ -654,6 +644,9 @@ export function useGameState() {
       spinRoulette: _spinRoulette,
       battlePassAction: _battlePassAction,
       talentUpgrade: _talentUpgrade,
+      advancedAttack: _advancedAttack,
+      armorIntroSeen: _armorIntroSeen,
+      equipProfileHeaderTheme: _equipProfileHeaderTheme,
       playerAction: _playerAction,
       mailAction: _mailAction,
       ...safeUpdates

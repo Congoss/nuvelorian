@@ -1,0 +1,90 @@
+{
+  "width": 941,
+  "height": 1672,
+  "map": {
+    "engine": {
+      "sourceLayer": "Шар 3",
+      "left": 280,
+      "top": 1362,
+      "right": 652,
+      "bottom": 1558
+    },
+    "portal": {
+      "sourceLayer": "Шар 6",
+      "left": 675,
+      "top": 1038,
+      "right": 921,
+      "bottom": 1323
+    },
+    "hangar": {
+      "sourceLayer": "Шар 4",
+      "left": 46,
+      "top": 1053,
+      "right": 441,
+      "bottom": 1323
+    },
+    "core": {
+      "sourceLayer": "Шар 5",
+      "left": 388,
+      "top": 954,
+      "right": 726,
+      "bottom": 1286
+    },
+    "lab": {
+      "sourceLayer": "Шар 8",
+      "left": 595,
+      "top": 890,
+      "right": 921,
+      "bottom": 1099
+    },
+    "garden": {
+      "sourceLayer": "Шар 7",
+      "left": 27,
+      "top": 864,
+      "right": 468,
+      "bottom": 1177
+    },
+    "reactor": {
+      "sourceLayer": "Шар 11",
+      "left": 411,
+      "top": 739,
+      "right": 645,
+      "bottom": 1006
+    },
+    "habitat": {
+      "sourceLayer": "Шар 9",
+      "left": 15,
+      "top": 627,
+      "right": 451,
+      "bottom": 1006
+    },
+    "bridge": {
+      "sourceLayer": "Шар 10",
+      "left": 623,
+      "top": 548,
+      "right": 934,
+      "bottom": 948
+    },
+    "radar": {
+      "sourceLayer": "Шар 13",
+      "left": 456,
+      "top": 74,
+      "right": 907,
+      "bottom": 661
+    },
+    "toilet": {
+      "sourceLayer": "Шар 14",
+      "left": 60,
+      "top": 166,
+      "right": 587,
+      "bottom": 536
+    },
+    "bar": {
+      "sourceLayer": "Шар 12",
+      "left": 370,
+      "top": 496,
+      "right": 642,
+      "bottom": 812
+    }
+  }
+}

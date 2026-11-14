@@ -45,7 +45,7 @@ export const serverConfig = {
   nearReceiver: process.env.NEAR_RECEIVER || 'nuvelorian.near',
   starsPerUsd: Number(process.env.STARS_PER_USD || 100),
   nearNetwork: process.env.NEAR_NETWORK || process.env.VITE_NEAR_NETWORK || 'mainnet',
-  telegramUseMock: String(process.env.VITE_TELEGRAM_USE_MOCK || 'false') === 'true',
+  telegramUseMock: String(process.env.VITE_TELEGRAM_USE_MOCK || (process.env.NODE_ENV === 'production' ? 'false' : 'true')) === 'true',
   xClientId: process.env.X_CLIENT_ID || '',
   xClientSecret: process.env.X_CLIENT_SECRET || '',
   xApiBearerToken: process.env.X_API_BEARER_TOKEN || '',

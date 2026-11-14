@@ -3,6 +3,24 @@ import assert from 'node:assert/strict';
 import {captureDailyTaskProgress,getTaskState,getDayTasks} from '../src/lib/questNotifications.js';
 const meta=(day)=>({currentWeekKey:'2026-10-05',currentDateKey:'2026-10-0'+(4+day),currentDayIndex:day});
 const task=(day,key)=>getDayTasks(day).find(t=>t.baseId===key);
+test('fishing replaces both raid tasks in three languages and preserves claimed rewards',()=>{
+ const titles={uk:'Злови будь-яку рибу',en:'Catch any fish',ru:'Поймай любую рыбу'};
+ for(const day of [6,7]) for(const [lang,title] of Object.entries(titles)) {
+  const t=getDayTasks(day,lang).find(t=>t.baseId==='catchFish');
+  assert.equal(t.title,title);
+  assert.equal(t.id,`day-${day}-raidBoss-6`);
+  assert.equal(getTaskState({},t,day,day,[t.id]).claimed,true);
+ }
+ const p={currentWeekKey:meta(6).currentWeekKey};
+ captureDailyTaskProgress(p,meta(6));
+ p.cosmo_fishing_caught_total=1;captureDailyTaskProgress(p,meta(6));
+ assert.equal(getTaskState(p,task(6,'catchFish'),6,6,[]).claimable,true);
+ assert.equal(getTaskState(p,task(7,'catchFish'),7,6,[]).claimable,false);
+ captureDailyTaskProgress(p,meta(7));
+ assert.equal(getTaskState(p,task(7,'catchFish'),7,7,[]).claimable,false);
+ p.cosmo_fishing_caught_total++;captureDailyTaskProgress(p,meta(7));
+ assert.equal(getTaskState(p,task(7,'catchFish'),7,7,[]).claimable,true);
+});
 test('today cannot complete future days; old days retain their own progress',()=>{
  const p={currentWeekKey:meta(1).currentWeekKey,total_tasks_today:5,energy_spent_today:30,collection_item_counts:{a:1}};
  captureDailyTaskProgress(p,meta(1));
@@ -41,7 +59,7 @@ test('day two replaces starter fragments with a tracked 1000 boss damage task in
   const replacement=getDayTasks(2,language).find(item=>item.baseId==='bossDamage'&&item.goal===1000);
   assert.ok(replacement);
   assert.equal(replacement.title,title);
-  assert.equal(replacement.xp,5);assert.equal(replacement.tentacles,10);assert.equal(replacement.energyBonus,20);
+  assert.equal(replacement.xp,5);assert.equal(replacement.tentacles,1000);assert.equal(replacement.energyBonus,20);
  }
  const p={currentWeekKey:meta(2).currentWeekKey,boss_damage_today:0};
  captureDailyTaskProgress(p,meta(2));
@@ -65,7 +83,8 @@ test('server captures newly earned boss damage before validating the daily claim
  }finally{Date.now=savedNow;}
 });
 
-test('server reports an unknown daily task separately from an already-claimed task',()=>{
+test('server reports an unknown daily task separately from an already-claimed task',(t)=>{
+ t.mock.method(Date,'now',()=>Date.parse('2026-10-06T12:00:00Z'));
  const p={level:3,xp:0,currentWeekKey:meta(2).currentWeekKey};
  assert.throws(
   ()=>applyPlayerAction(p,{type:'daily-task',day:2,taskId:'day-2-not-a-real-task'}),
@@ -100,4 +119,22 @@ test('unchanged daily metrics never dirty the player profile on repeated reads',
  assert.equal(writes,before);
  p.total_tasks_today++;captureDailyTaskProgress(p,meta(1));
  assert.equal(p.daily_task_progress.days[1].missions,6);
+});
+
+
+test('server credits all Tuesday tasks on Wednesday once, except checkin',(t)=>{
+ t.mock.method(Date,'now',()=>Date.parse('2026-10-07T12:00:00Z'));
+ const p={level:3,xp:0,currentWeekKey:meta(2).currentWeekKey};
+ captureDailyTaskProgress(p,meta(2));captureDailyTaskProgress(p,meta(3));
+ Object.assign(p,{total_tasks_today:10,energy_spent_today:60,collection_item_counts:{a:2},boss_damage_today:1000,newbie_stats:{small_poison_uses:1}});
+ for(const item of getDayTasks(2)){
+  const action={type:'daily-task',day:2,taskId:item.id};
+  if(item.baseId==='checkin')assert.throws(()=>applyPlayerAction(p,action),e=>e.code==='DAILY_TASK_INCOMPLETE');
+  else {
+   assert.ok(applyPlayerAction(p,action).reward);
+   assert.equal(applyPlayerAction(p,action).alreadyClaimed,true);
+  }
+ }
+ assert.equal(p.roulette_bonus_spins,6);
+ for(const item of getDayTasks(4))assert.equal(getTaskState(p,item,4,3,[]).claimable,false);
 });

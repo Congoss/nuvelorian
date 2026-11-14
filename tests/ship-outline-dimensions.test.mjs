@@ -1,0 +1,2 @@
+import {fileURLToPath} from 'node:url';import test from 'node:test';import assert from 'node:assert/strict';import sharp from 'sharp';import {SHIP_PARTS,SHIP_ART_DIMENSIONS} from '../src/lib/clanShipPreview.js';
+test('unbuilt placeholders keep the exact dimensions of every sector and worker image',async()=>{for(const part of SHIP_PARTS){const m=await sharp(fileURLToPath(new URL('../public/clan-ship-preview/'+part.id+'-mobile.webp',import.meta.url))).metadata();assert.deepEqual(SHIP_ART_DIMENSIONS[part.id],[m.width,m.height],part.id)}});

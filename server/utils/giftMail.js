@@ -1,6 +1,10 @@
+import { grantHalloweenPumpkins, halloweenActive } from '../../src/lib/halloweenEvent.js';
+import { BOSS_KEY_REWARDS, getBossKeyReward } from '../../src/lib/bossKeyRewards.js';
 export const GIFT_REWARD_FIELDS = new Set([
-  'tentacles', 'xp', 'premium', 'energy', 'stat_strength',
-  'small_poison', 'medium_poison', 'large_poison',
+  'enhancement_gum_normal','enhancement_gum_improved','enhancement_gum_premium',
+  'halloween_pumpkin', 'tentacles', 'xp', 'premium', 'energy', 'stat_strength',
+  'small_poison', 'medium_poison', 'large_poison', 'roulette_bonus_spins',
+  ...BOSS_KEY_REWARDS.map(reward=>reward.field),
 ]);
 
 function localizedMailText(value, language, depth = 0) {
@@ -49,14 +53,21 @@ export function claimGiftMail(player, mailId, grantXp = () => {}) {
   if (!mail) return { alreadyClaimed: true, rewards: [] };
 
   const rewards = Array.isArray(mail.rewards) && mail.rewards.length ? normalizeGiftRewards(mail.rewards) : [];
+  if (rewards.some(row => row.field === 'halloween_pumpkin') && !halloweenActive()) {
+    throw Object.assign(new Error('Halloween pumpkin reward is only available during the event'), { statusCode: 400, code: 'HALLOWEEN_CLOSED' });
+  }
   for (const { field, amount } of rewards) {
-    if (field.endsWith('_poison')) {
+    const bossKey=getBossKeyReward(field);
+    if(bossKey){player.keycards={...(player.keycards||{}),[bossKey.location]:Number(player.keycards?.[bossKey.location]||0)+amount};}
+    else if(field.startsWith('enhancement_gum_')){const gum=field.slice('enhancement_gum_'.length);player.enhancement_gums={...player.enhancement_gums,[gum]:Number(player.enhancement_gums?.[gum]||0)+amount};}
+    else if (field.endsWith('_poison')) {
       const inventoryKey = field.replace('_', '-');
       player.weapon_inventory = {
         ...(player.weapon_inventory || {}),
         [inventoryKey]: Number(player.weapon_inventory?.[inventoryKey] || 0) + amount,
       };
-    } else if (field === 'xp') grantXp(player, amount);
+    } else if (field === 'halloween_pumpkin') grantHalloweenPumpkins(player, amount);
+    else if (field === 'xp') grantXp(player, amount);
     else player[field] = Number(player[field] || 0) + amount;
   }
   player.gift_mail = mails.filter((entry) => String(entry?.id || '') !== id);

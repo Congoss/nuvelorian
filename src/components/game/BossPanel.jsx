@@ -1,5 +1,44 @@
-import { RaidRankPrize, RaidRankRewardsGuide } from './RaidRankPrizes';
-import { RaidBossTwo, RaidBossTwoBackground } from './RaidBossTwo';
+import { getFriday13BossName } from '@/lib/raidBossConfig';
+import { readShipScene } from '@/lib/shipSceneCache';
+import { combatSnapshotDecision, isOlderCombatSnapshot } from '@/lib/combatSnapshotOrder';
+import {combatResponseMeta,recordCombatHpTransition} from '@/lib/combatHpTrace';
+import { warmFirstFrameImages } from '@/lib/sceneAssets';
+import rosterBg_heli from '@/assets/optimized/boss-roster/bg-heli.webp?inline';
+import rosterBg_tank from '@/assets/optimized/boss-roster/bg-tank.webp?inline';
+import rosterBg_chinook from '@/assets/optimized/boss-roster/bg-chinook.webp?inline';
+import rosterBg_boss4 from '@/assets/optimized/boss-roster/bg-boss4.webp';
+import rosterBg_boss5 from '@/assets/optimized/boss-roster/bg-boss5.webp';
+import rosterBg_boss6 from '@/assets/optimized/boss-roster/bg-boss6.webp';
+import rosterBg_boss8 from '@/assets/optimized/boss-roster/bg-boss8.webp';
+import {instantDamageRow} from '@/lib/instantDamageLeaderboard.js';
+import { getCombatPoisonSlot } from '@/lib/combatPoison.js';
+import { effectDialogClass, effectCloseClass } from './combatEffectStyles';
+import BossArmorStatus from './BossArmorStatus';
+import ShkrabanScene from './ShkrabanScene.jsx';
+import BoneCurseStatus from './BoneCurseStatus';
+import BoneCurseEffect from './BoneCurseEffect';
+import CombatLoader from './CombatLoader';
+import {getPlayerPassTier} from '@/lib/playerPassTier';
+import { pendingBossHp, pendingBossStock } from '@/lib/pendingBossAttack';
+import { createPoisonAttackQueue, canCombinePoisonTaps } from '@/lib/poisonAttackQueue';
+import { settleCombatRecovery } from '@/lib/combatRecovery.js';
+import { projectPoisonTap, rebasePoisonQueue } from '@/lib/instantPoisonCombat';
+import { confirmAttackFeedback, confirmedCriticalHit, ATTACK_FEEDBACK_MS } from '@/lib/attackFeedback';
+import {getShipBossPortrait} from '@/lib/shipBossPresentation';
+import { SHIP_MODULES } from '@/lib/clanShipPreview';
+import { getShipBossName } from '@/lib/shipBattleText';
+import BossPortraitHp from './BossPortraitHp';
+import {hasPersonalBossVictory} from '@/lib/personalBossVictory';
+import {CHEESE_BOSS_MEDALS, SOLDIER_BOSS_MEDALS, KANGAROO_BOSS_MEDALS, GUM_QUEEN_BOSS_MEDALS} from '@/lib/shipBossMedals';
+import WeaponIcon from './BossWeaponIcon';
+import { isBossReleased } from '@/lib/bossAvailability';
+import CleopatraScene from './CleopatraScene';
+import cleopatraAvatar from '@/assets/boss/avatars/cleopatrash.png';
+import bronzeCleopatraMedal from '@/assets/boss-ui/bronze-cleopatrash.png';
+import silverCleopatraMedal from '@/assets/boss-ui/silver-cleopatrash.png';
+import goldCleopatraMedal from '@/assets/boss-ui/gold-cleopatrash.png';
+import { RaidRankPrize, RaidGuildRankPrize, RaidRankRewardsGuide } from './RaidRankPrizes';
+import { RaidBossTwo, RaidBossTwoBackground, RaidBossTwoForeground } from './RaidBossTwo';
 import { RAID_BOSS_MAX_HP } from '@/lib/raidBossConfig.js';
 import { translateUiText } from '@/lib/uiTextTranslations';
 import { resolveTalentAttack } from '@/lib/talentCombat';
@@ -11,10 +50,10 @@ import mothStatic from '@/assets/optimized/boss-mobile/moth-static.webp';
 import { EVENT_SCHEDULE, eventPhase } from '@/lib/eventSchedule.js';
 import { serverNow } from '@/lib/serverClock.js';
 import { getBossEscapeCooldownRemaining } from '@/lib/bossEscapeCooldown.js';
-import { memo, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, memo, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Clock, Loader2, RefreshCw, X } from 'lucide-react';
+import { Clock, RefreshCw, Users, UserRound, X } from 'lucide-react';
 import ScrambleLockHint from './ScrambleLockHint';
 import { useTranslation } from 'react-i18next';
 import { GAME_CONFIG, getLocalizedBossName } from '@/lib/gameConfig';
@@ -65,6 +104,14 @@ import boss2Portrait from '@/assets/optimized/all/boss/bos2.webp';
 import boss3Portrait from '@/assets/optimized/all/boss/bos3.webp';
 import bossIco from '@/assets/optimized/all/boss/boss-ico.webp';
 import underweightAvatar from '@/assets/optimized/boss-mobile/3c5eca0b6d15.webp';
+import rosterHeli from '@/assets/optimized/boss-roster/heli.webp?inline';
+import rosterTank from '@/assets/optimized/boss-roster/tank.webp?inline';
+import rosterChinook from '@/assets/optimized/boss-roster/chinook.webp?inline';
+import rosterBoss4 from '@/assets/optimized/boss-roster/boss4.webp';
+import rosterBoss5 from '@/assets/optimized/boss-roster/boss5.webp';
+import rosterBoss6 from '@/assets/optimized/boss-roster/boss6.webp';
+import rosterBoss7 from '@/assets/optimized/boss-roster/boss7.webp';
+import rosterBoss8 from '@/assets/optimized/boss-roster/boss8.webp';
 import mothAvatar from '@/assets/optimized/boss-mobile/7130af0068f1.webp';
 import shorkAvatar from '@/assets/optimized/boss-mobile/12258247a0bd.webp';
 import wormAvatar from '@/assets/optimized/boss-mobile/0b48d455dd8d.webp';
@@ -238,12 +285,14 @@ import shorkEyesLayer from '@/assets/optimized/boss-mobile/739a93032478.webp';
 import heroIcon from '@/assets/optimized/nav-hero.webp';
 import bossDmgTopIcon from '@/assets/optimized/boss-mobile/d69799252324.webp';
 import dmgBossIcon from '@/assets/optimized/boss-mobile/78f23bfe7041.webp';
+import poisonX5Icon from '@/assets/optimized/all/ui/poison-x5.webp';
 import poisonX10Icon from '@/assets/optimized/boss-mobile/087cc23f17f6.webp';
 import poisonX100Icon from '@/assets/optimized/boss-mobile/44366e236ee4.webp';
 import bossRunIcon from '@/assets/optimized/boss-mobile/98f16709bc43.webp';
 import bossEscapeGuideIcon from '@/assets/optimized/boss-mobile/804176624061.webp';
 import topDamageBanner from '@/assets/optimized/boss-mobile/b572b40dcd01.webp';
 import MarkerFrame from './MarkerFrame';
+import victoryArena from '@/assets/boss-reward-backgrounds/victory-arena.webp';
 import AssetStage from './AssetStage';
 import poisonCritGif from '@/assets/boss/poision.gif';
 import LootBoxModal from './LootBoxModal';
@@ -272,7 +321,9 @@ import {
   sendChatMessage,
 } from '@/services/gameApi';
 
+const ResumeShipBossBattle = lazy(() => import('./ServerShipBossBattle'));
 const BOSS_BACKGROUNDS = {
+  boss8: '/shkraban/boss-rooftop-city-v2.webp',
   heli: bossLabBackground,
   tank: boss2BgBase,
   chinook: boss3Background,
@@ -329,10 +380,12 @@ const BOSS_PORTRAITS = {
   boss4: wormAvatar,
   boss5: sporgolAvatar,
   boss6: suckholeAvatar,
-  boss7: shkrabanAvatar,
+  boss7: cleopatraAvatar,
   boss8: shkrabanAvatar,
   boss9: bossIco,
 };
+const ROSTER_BACKGROUNDS = { heli: rosterBg_heli, tank: rosterBg_tank, chinook: rosterBg_chinook, boss4: rosterBg_boss4, boss5: rosterBg_boss5, boss6: rosterBg_boss6, boss8: rosterBg_boss8, boss7: rosterBg_chinook };
+const ROSTER_PORTRAITS = { heli: rosterHeli, tank: rosterTank, chinook: rosterChinook, boss4: rosterBoss4, boss5: rosterBoss5, boss6: rosterBoss6, boss7: rosterBoss7, boss8: rosterBoss8 };
 
 const BOSS_KEY_ICONS = {
   heli: 1,
@@ -384,13 +437,7 @@ const LOCATION_CHEST_ICONS = {
   playground404v2: grayBox,
 };
 
-const WEAPON_ICON_MAP = {
-  fist: slapIcon,
-  knuckle: forkStrikeIcon,
-  satchel: smallPoisonIcon,
-  f4: mediumPoisonIcon,
-  c4: largePoisonIcon,
-};
+
 
 const HELI_MEDAL_ASSETS = {
   bronze: bronzeMedalBos1,
@@ -399,12 +446,17 @@ const HELI_MEDAL_ASSETS = {
 };
 
 const BOSS_MEDAL_ASSETS = {
+  'ship-hull': CHEESE_BOSS_MEDALS,
+  'ship-engine': SOLDIER_BOSS_MEDALS,
+  'ship-hangar': KANGAROO_BOSS_MEDALS,
+  'ship-portal': GUM_QUEEN_BOSS_MEDALS,
   heli: HELI_MEDAL_ASSETS,
   tank: { bronze: bronzeMothMedal, silver: silverMothMedal, gold: goldMothMedal },
   chinook: { bronze: bronzeShorkMedal, silver: silverShorkMedal, gold: goldShorkMedal },
   boss4: { bronze: bronzeWormMedal, silver: silverWormMedal, gold: goldWormMedal },
   boss5: { bronze: bronzeSporgolMedal, silver: silverSporgolMedal, gold: goldSporgolMedal },
   boss6: { bronze: bronzeSuckholeMedal, silver: silverSuckholeMedal, gold: goldSuckholeMedal },
+  boss7: { bronze: bronzeCleopatraMedal, silver: silverCleopatraMedal, gold: goldCleopatraMedal },
   boss8: { bronze: bronzeShkrabanMedal, silver: silverShkrabanMedal, gold: goldShkrabanMedal },
 };
 
@@ -420,17 +472,14 @@ function getBossPhaseImg(hpPct) {
   return BOSS_PHASE_IMGS.low;
 }
 
-function getBossSceneImage(bossId) {
+function getBossSceneImage(bossId, hpPct = 100) {
+  if (bossId === 'boss8') return { src: '/shkraban/source-boss.webp', isVideo: false };
   const portrait = BOSS_PORTRAITS[bossId] || getBossPhaseImg(hpPct);
   return { src: portrait, isVideo: false };
 }
 
 function getWeaponStock(profile, weapon) {
-  const poisonInventoryId = {
-    satchel: 'small-poison',
-    f4: 'medium-poison',
-    c4: 'large-poison',
-  }[weapon.id];
+  const poisonInventoryId = getCombatPoisonSlot(weapon.id);
   if (poisonInventoryId) return Math.max(0, Number((profile?.weapon_inventory || {})[poisonInventoryId] || 0));
   if (weapon.costType === 'free') return null;
   if (weapon.costType === 'tentacles') {
@@ -440,7 +489,7 @@ function getWeaponStock(profile, weapon) {
 }
 
 function isPoisonWeapon(weapon) {
-  return ['satchel', 'f4', 'c4'].includes(weapon.id);
+  return Boolean(getCombatPoisonSlot(weapon.id));
 }
 
 function getClanAssistSummary(clanAssists) {
@@ -465,8 +514,7 @@ function getClanAssistSummary(clanAssists) {
   const declaredDamage = Math.max(0, Number(clanAssists?.damage ?? clanAssists?.totalDamage ?? clanAssists?.total_damage ?? 0));
   const names = assists
     .map((assist) => String(assist?.player_name || assist?.playerName || assist?.username || assist?.nickname || assist?.name || '').trim())
-    .filter(Boolean)
-    .slice(0, 2);
+    .filter(Boolean);
 
   return {
     count: Math.max(declaredCount, assists.length),
@@ -475,69 +523,6 @@ function getClanAssistSummary(clanAssists) {
   };
 }
 
-function WeaponIcon({ weapon, cooldownLeft = 0, stock = null, muted = false }) {
-  const iconSrc = WEAPON_ICON_MAP[weapon.id] || weapon.icon;
-  const hasCooldown = weapon.cooldownMin > 0;
-  const isCoolingDown = hasCooldown && cooldownLeft > 0;
-  const remainingCooldownProgress = hasCooldown
-    ? Math.min(1, Math.max(0, cooldownLeft / Math.max(weapon.cooldownMin, 1)))
-    : 0;
-  const recoveredProgress = hasCooldown ? 1 - remainingCooldownProgress : 1;
-  const recoveredPct = Math.round(Math.max(0, Math.min(1, recoveredProgress)) * 100);
-  const recoveredDeg = Math.max(0, Math.min(360, recoveredProgress * 360));
-  const cooldownSecondsLeft = Math.max(0, Math.ceil(cooldownLeft * 60));
-  const cooldownLabel = `${String(Math.floor(cooldownSecondsLeft / 60)).padStart(2, '0')}:${String(cooldownSecondsLeft % 60).padStart(2, '0')}`;
-
-  return (
-    <div className="relative mx-auto aspect-square w-full max-w-[76px]">
-      {isCoolingDown ? (
-        <>
-          <img
-            src={iconSrc}
-            alt={weapon.name}
-            className="absolute inset-0 z-[1] block h-full w-full object-contain"
-            style={{ filter: 'grayscale(1) brightness(0.58)' }}
-          />
-          <img
-            src={iconSrc}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 z-[2] block h-full w-full object-contain"
-            style={{
-              WebkitMaskImage: `conic-gradient(from -90deg, #000 0deg ${recoveredDeg}deg, transparent ${recoveredDeg}deg 360deg)`,
-              maskImage: `conic-gradient(from -90deg, #000 0deg ${recoveredDeg}deg, transparent ${recoveredDeg}deg 360deg)`,
-            }}
-          />
-        </>
-      ) : (
-        <img
-          src={iconSrc}
-          alt={weapon.name}
-          className="absolute inset-0 block h-full w-full object-contain transition duration-300"
-          style={muted ? { filter: 'grayscale(1) brightness(0.72)' } : undefined}
-        />
-      )}
-
-      {isCoolingDown ? (
-        <div className="absolute inset-0 z-[6] flex items-center justify-center">
-          <span className="rounded-[6px] bg-black/70 px-1.5 py-0.5 font-mono text-[11px] font-black leading-none text-[#f2f6ed] [text-shadow:0_1px_0_rgba(0,0,0,0.9)]">
-            {cooldownLabel}
-          </span>
-        </div>
-      ) : null}
-
-      {stock !== null ? (
-        <div className="absolute -right-1 -top-1 z-[7] min-w-[20px] rounded-full border border-[#ffd3d3] bg-[#ff3b30] px-1.5 py-[2px] text-center font-sans text-[10px] font-black leading-none text-white shadow-[0_2px_6px_rgba(0,0,0,0.45)]">
-          {stock}
-        </div>
-      ) : null}
-
-      <div className="absolute bottom-0 left-0 z-[5] rounded-[7px] border border-[rgba(140,177,56,0.75)] bg-[rgba(0,0,0,0.65)] px-1.5 py-0.5 font-mono text-[11px] font-bold leading-none text-[#efffd2] [text-shadow:0_0_4px_rgba(98,188,45,0.45)]">
-        {weapon.damage}
-      </div>
-    </div>
-  );
-}
 
 const BONUS_TRACK_STEPS = [
   { pct: 25, label: '25%', reward: '+EXP', icon: getResourceIcon('xp') },
@@ -672,9 +657,9 @@ function buildClanDamageLeaderboard(leaderboard = []) {
   return [...clans.values()].sort((a, b) => b.damage - a.damage || b.hits - a.hits);
 }
 
-function BossClanDamageRow({ log, rank, subtitle }) {
+function BossClanDamageRow({ log, rank, subtitle, language }) {
   return (
-    <LeaderboardRow rank={rank} compactRank mediaKind="logo" mediaSrc={GUILD_LOGO_BY_ID[log.clan_logo_id] || DEFAULT_GUILD_LOGO} title={log.clan_name} subtitle={subtitle} rightNode={<LeaderboardValuePill value={log.damage} icon={bossDmgTopIcon} compact />} />
+    <LeaderboardRow rank={rank} compactRank mediaKind="logo" mediaSrc={GUILD_LOGO_BY_ID[log.clan_logo_id] || DEFAULT_GUILD_LOGO} title={log.clan_name} subtitle={subtitle} rightActions={rank <= 100 ? <RaidGuildRankPrize rank={rank} language={language} /> : null} rightNode={<LeaderboardValuePill value={log.damage} icon={bossDmgTopIcon} compact />} />
   );
 }
 
@@ -720,33 +705,44 @@ const BOSS_VICTORY_COPY = {
   en: { stamp: 'DEFEATED', failedStamp: 'FAILED', status: 'YOUR FIRST BOSS IS DEAD!', tutorial: 'You’re not as hopeless as you look. The boss is dead, the reward is yours, and the galaxy is pretending not to worry. Claim the loot — you earned every suspicious piece of it.', guideTitle: 'THE BOSS IS DEAD. YOU’RE NOT!', guideText: 'Surprisingly decent result. Grab the reward before it gets cold — there are still plenty of buttons and questionable decisions ahead.', title: 'TOP DAMAGE', reward: 'REWARD', subtitle: 'top damage dealers', next: 'CLAIM REWARD' },
 };
 
-function BossVictoryModal({ bossId, bossName, leaderboard, language, outcome = 'defeated', onClaim, onOpenPlayerProfile, tutorialEnabled = true, bossKills = 0 }) {
+function BossVictoryModal({ bossId, bossName, portrait, leaderboard, language, outcome = 'defeated', preparing = false, claimQueued = false, onClaim, onOpenPlayerProfile, tutorialEnabled = true, bossKills = 0, criticalDamage }) {
   const copy = BOSS_VICTORY_COPY[language === 'ru' || language === 'en' ? language : 'uk'];
   const failed = outcome === 'failed';
   const stampText = failed ? 'DEFEAT' : 'DEFEATED';
   const topThree = (leaderboard || []).slice(0, 3);
-  const showTutorialHint = tutorialEnabled && !failed && String(bossId) === String(GAME_CONFIG.BOSSES[0]?.id);
-  const medalProgress = getBossMedalProgress(bossKills);
+  const showTutorialHint = !preparing && tutorialEnabled && !failed && String(bossId) === String(GAME_CONFIG.BOSSES[0]?.id);
+  const medalProgress = getBossMedalProgress(bossKills, language);
   const unlockedMedals = getUnlockedBossMedals(bossKills);
-  const medalSet = BOSS_MEDAL_ASSETS[bossId] || DEFAULT_MEDAL_ASSETS;
+  const shipModuleId = String(bossId || '').startsWith('ship-') ? String(bossId).slice(5) : null;
+  const resolvedName = shipModuleId ? getShipBossName(shipModuleId, language) : bossName;
+  const resolvedPortrait = portrait || (shipModuleId ? getShipBossPortrait(shipModuleId) : BOSS_PORTRAITS[bossId]) || bossIco;
+  const shipMedals = {hull:CHEESE_BOSS_MEDALS,engine:SOLDIER_BOSS_MEDALS,hangar:KANGAROO_BOSS_MEDALS,portal:GUM_QUEEN_BOSS_MEDALS};
+  const medalSet = shipMedals[shipModuleId] || BOSS_MEDAL_ASSETS[bossId] || DEFAULT_MEDAL_ASSETS;
+  const statusText = showTutorialHint ? copy.status : language === 'ru' ? 'БОСС ПОВЕРЖЕН!' : language === 'en' ? 'BOSS DEFEATED!' : 'БОСА ПЕРЕМОЖЕНО!';
   return (
     <motion.div
       initial={false}
       animate={{ opacity: 1, scale: 1 }}
       className="absolute inset-0 z-[80] flex min-h-0 items-center justify-center overflow-hidden bg-black/80 p-3 backdrop-blur-sm"
+      style={{ bottom: 'var(--bottom-nav-space, calc(104px + env(safe-area-inset-bottom, 0px)))' }}
     >
-      <MarkerFrame className="flex h-full min-h-0 w-full max-w-[640px] flex-col" innerClassName="relative flex min-h-0 flex-1 flex-col overflow-hidden p-3" variant="dark">
+      {criticalDamage > 0 && (
+        <div role="status" className="pointer-events-none absolute left-1/2 top-3 z-30 -translate-x-1/2 whitespace-nowrap rounded-md bg-black/80 px-3 py-1 font-mono text-base font-black text-[#e6ff8f]">
+          {language === 'en' ? 'CRIT!' : 'КРИТ!'} −{criticalDamage}
+        </div>
+      )}
+      <MarkerFrame className="flex h-full min-h-0 w-full max-w-[640px] flex-col" innerClassName="relative flex min-h-0 flex-1 flex-col overflow-hidden p-3" variant="dark" backgroundImage={failed ? undefined : victoryArena}>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y">
         <div className="mb-3 grid shrink-0 grid-cols-2 gap-3">
           <div className="flex min-w-0 flex-col items-center">
             <div className="relative flex h-[218px] w-full items-center justify-center">
-              <p className="absolute top-1 z-[3] max-w-[94%] truncate font-mono text-[18px] font-black uppercase tracking-[0.06em] text-[#fff4d4] [text-shadow:0_2px_0_rgba(0,0,0,0.9)]">{bossName || 'Boss'}</p>
+              <p className="absolute top-1 z-[3] max-w-[94%] truncate font-mono text-[18px] font-black uppercase tracking-[0.06em] text-[#fff4d4] [text-shadow:0_2px_0_rgba(0,0,0,0.9)]">{resolvedName || 'Boss'}</p>
               <div className="absolute left-1/2 top-10 z-[1] h-40 w-40 -translate-x-1/2 sm:h-44 sm:w-44">
-                <img src={BOSS_PORTRAITS[bossId] || bossIco} alt={bossName || 'Boss'} className="h-full w-full border-2 border-[#28ee90] bg-[#10170d] object-contain" />
+                <img src={resolvedPortrait} alt={resolvedName || 'Boss'} className="h-full w-full border-2 border-[#28ee90] bg-[#10170d] object-contain" />
                 <span className="boss-victory-stamp absolute left-1/2 top-1/2 z-[2] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-none border-[3px] border-[#ff3b30] bg-[#4a0606]/35 px-2 py-1 font-rubik-distressed text-[clamp(27px,7vw,46px)] leading-[0.82] tracking-[0.02em] text-[#ff2a22] [text-shadow:0_1px_0_#750000,0_0_7px_rgba(255,45,35,0.7)]">{stampText}</span>
               </div>
             </div>
-            <p className="font-mono text-[9px] font-black uppercase tracking-[0.16em] text-[#9bd96b]">{copy.status}</p>
+            <p className="font-mono text-[9px] font-black uppercase tracking-[0.16em] text-[#9bd96b]">{statusText}</p>
             <div className="mt-3 flex w-full flex-col items-center pt-2">
               <p className="font-mono text-[11px] font-black uppercase tracking-[0.12em] text-[#fff4d4]">{copy.reward}</p>
               <div className="boss-victory-chest-wrap mt-1 h-28 w-28 sm:h-32 sm:w-32">
@@ -758,10 +754,10 @@ function BossVictoryModal({ bossId, bossName, leaderboard, language, outcome = '
             <h2 className="mt-0 w-full px-2 py-2 text-center font-mono text-[17px] font-black uppercase text-[#fff4d4] sm:text-[20px]">{copy.title}</h2>
             <BossVictoryTopDamageCard row={topThree[0]} onOpenPlayerProfile={onOpenPlayerProfile} />
             <div className="mt-2 flex w-full flex-col items-center gap-0.5">
-              <div className="flex items-center justify-center gap-1">
-                {(['bronze', 'silver', 'gold']).map((tier) => <img key={tier} src={medalSet[tier]} alt={`${tier} medal`} className={`h-14 w-14 object-contain ${unlockedMedals[tier] ? '' : 'grayscale opacity-45'}`} />)}
+              <div className="flex w-full min-w-0 items-center justify-center gap-1">
+                {(['bronze', 'silver', 'gold']).map((tier) => <img key={tier} data-medal-tier={tier} src={medalSet[tier]} alt={`${tier} medal`} className={`aspect-square min-w-0 max-w-14 flex-1 object-contain ${unlockedMedals[tier] ? '' : 'grayscale opacity-45'}`} />)}
               </div>
-              <span className="font-mono text-[10px] font-black text-[#d6e7bf]">{bossKills}/{medalProgress.target} {medalProgress.label}</span>
+              <span className="w-full text-center font-mono text-[10px] font-black text-[#d6e7bf]">{medalProgress.current}/{medalProgress.target} {medalProgress.label}</span>
             </div>
           </div>
         </div>
@@ -783,8 +779,8 @@ function BossVictoryModal({ bossId, bossName, leaderboard, language, outcome = '
             </div>
           </div>
         </> : null}
-        <GameTextureButton type="button" data-tutorial-target={showTutorialHint ? 'tutorial-boss-victory' : undefined} onClick={onClaim} className={`relative mt-3 h-11 w-full shrink-0 ${showTutorialHint ? 'z-30 ring-2 ring-[#ffd21f] ring-offset-2 ring-offset-[#11170f]' : ''}`}>
-          <span className="relative z-10 font-mono text-[12px] font-black uppercase text-[#15220b]">{copy.next}</span>
+        <GameTextureButton type="button" data-tutorial-target={showTutorialHint ? 'tutorial-boss-victory' : undefined} onClick={onClaim} disabled={claimQueued} className={`relative mt-3 h-11 w-full shrink-0 ${showTutorialHint ? 'z-30 ring-2 ring-[#ffd21f] ring-offset-2 ring-offset-[#11170f]' : ''}`}>
+          <span className="relative z-10 font-mono text-[12px] font-black uppercase text-[#15220b]">{claimQueued ? (language === 'ru' ? 'Готовим награду…' : language === 'en' ? 'Preparing reward…' : 'Готуємо нагороду…') : copy.next}</span>
         </GameTextureButton>
         <style>{`
           .boss-victory-stamp {
@@ -839,7 +835,7 @@ const CRITICAL_DAMAGE_COPY = {
   en: 'CRITICAL DAMAGE',
 };
 
-function CritCloud({ language = 'uk' }) {
+function CritCloud({ language = 'uk', damage, armor, onComplete }) {
   const label = CRITICAL_DAMAGE_COPY[language === 'ru' || language === 'en' ? language : 'uk'];
   return (
     <motion.div
@@ -847,17 +843,21 @@ function CritCloud({ language = 'uk' }) {
       animate={{ opacity: [0, 1, 1, 0], scale: [0.45, 1.14, 1, 1.18] }}
       exit={{ opacity: 0 }}
       transition={{ duration: 1.05, ease: 'easeOut' }}
+      onAnimationComplete={onComplete}
       className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center"
     >
       <div className="relative flex h-[250px] w-[250px] items-center justify-center sm:h-[300px] sm:w-[300px]">
-        <img src={poisonCritGif} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain brightness-125 saturate-150 drop-shadow-[0_0_22px_rgba(132,255,54,0.78)]" />
+        <img src={poisonCritGif} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain brightness-125 saturate-150 drop-shadow-[0_0_22px_rgba(132,255,54,0.78)]" style={armor ? { filter: 'hue-rotate(175deg) saturate(1.5) drop-shadow(0 0 22px #b066ff)' } : undefined} />
         <motion.span
           initial={{ opacity: 0, scale: 0.28, rotate: -9 }}
           animate={{ opacity: [0, 1, 1, 0], scale: [0.28, 1.2, 1, 1.08], rotate: [-9, 3, -2, 0] }}
           transition={{ duration: 1.05, times: [0, 0.22, 0.68, 1], ease: 'easeOut' }}
           className="relative z-10 max-w-[240px] text-center font-serif text-[25px] font-black leading-[0.9] tracking-[0.08em] text-[#e6ff8f] [text-shadow:0_0_5px_#5cdb18,0_0_14px_rgba(99,255,30,0.95),2px_2px_0_#173d0c] sm:max-w-[290px] sm:text-[31px]"
         >
-          {label}
+          {armor ? <span className="flex justify-center gap-2 text-sm tracking-normal text-[#f4dfff] [text-shadow:0_2px_4px_#240835]">
+            {armor.blocked && <span className="flex flex-col items-center gap-1"><img src="/skills/advanced/armor-active-v6.webp" alt="" className="h-14 w-14 rounded-md"/>{language === 'en' ? 'BLOCK' : 'БЛОК'}</span>}
+            {armor.breached && <span className="flex flex-col items-center gap-1"><img src="/skills/advanced/armor-broken-v7.webp" alt="" className="h-14 w-14 rounded-md"/>{language === 'en' ? 'ARMOR BREACHED' : language === 'ru' ? 'БРОНЯ ПРОБИТА' : 'БРОНЮ ПРОБИТО'}</span>}
+          </span> : <><span className="block mb-2 font-mono text-[32px] text-[#fff5ba]">−{damage}</span>{label}</>}
         </motion.span>
       </div>
     </motion.div>
@@ -865,6 +865,7 @@ function CritCloud({ language = 'uk' }) {
 }
 
 function BossOneComposite({ hitToken }) {
+  const [bodyReady, setBodyReady] = useState(false);
   const rootRef = useRef(null);
   const resetTimerRef = useRef(null);
 
@@ -883,10 +884,11 @@ function BossOneComposite({ hitToken }) {
 
   return (
     <div ref={rootRef} className="boss1-composite relative h-[405px] w-[270px] sm:h-[510px] sm:w-[340px]" aria-label="boss">
+      {!bodyReady && <img src={rosterHeli} alt="" aria-hidden="true" className="absolute inset-0 m-auto w-40 rounded-xl object-contain" />}
       <div className="boss1-rig boss1-hand-rig">
         <img src={boss1HandLayer} alt="" aria-hidden="true" className="boss1-layer" />
       </div>
-      <img src={boss1BodyLayer} alt="boss" className="boss1-layer boss1-new-body drop-shadow-[0_28px_44px_rgba(0,0,0,0.5)]" />
+      <img src={boss1BodyLayer} alt="boss" fetchpriority="high" onLoad={() => setBodyReady(true)} className="boss1-layer boss1-new-body drop-shadow-[0_28px_44px_rgba(0,0,0,0.5)]" />
       <div className="boss1-rig boss1-head-rig">
         <img src={boss1HeadLayer} alt="" aria-hidden="true" className="boss1-layer" />
         <img src={boss1HeadLabelLayer} alt="" aria-hidden="true" className="boss1-layer boss1-head-label" />
@@ -2008,20 +2010,117 @@ const StableSuckholeComposite = memo(SuckholeComposite);
 const StableShorkComposite = memo(ShorkComposite);
 
 const acknowledgedBossVictories = new Map();
+const confirmedFightOnReturn = new Map();
+const fightReturnListeners = new Set();
+const pendingFightRequests = new Map();
 
-export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdateProfile, onSyncProfile = null, onOpenPlayerProfile = null, onOpenClan = null, suppressLootModal = false, raidMode = false, onBackToEvents = null, joinedBossFight = null }) {
+function chooseFightSnapshot(source, previous, next, metaCarrier = next) {
+  if (!next) return previous;
+  const decision = combatSnapshotDecision({fight:previous},{fight:next});
+  recordCombatHpTransition(source,previous,next,{accepted:decision.accept,reason:decision.reason,meta:combatResponseMeta(metaCarrier)});
+  return decision.accept ? next : previous;
+}
+
+function rememberFightOnReturn(key, fight, source = 'return_cache', metaCarrier = fight) {
+  if (!key || !fight?.id) return false;
+  const previous = confirmedFightOnReturn.get(key);
+  const accepted = chooseFightSnapshot(source,previous,fight,metaCarrier);
+  if (accepted !== fight) return false;
+  confirmedFightOnReturn.delete(key);
+  confirmedFightOnReturn.set(key, fight);
+  for (const notify of fightReturnListeners) notify(key, fight);
+  if (confirmedFightOnReturn.size > 32) confirmedFightOnReturn.delete(confirmedFightOnReturn.keys().next().value);
+  return true;
+}
+
+export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdateProfile, onSyncProfile = null, onOpenPlayerProfile = null, onOpenClan = null, suppressLootModal = false, raidMode = false, onBackToEvents = null, joinedBossFight = null, onJoinedBossFightConsumed = null, fightAdapter = null, onNavigate = null, cursePreviewToken = 0, boneCursePreviewState = null, armorPreviewImpact = null, suspended = false }) {
   const { t } = useTranslation();
-  const [activeFight, setActiveFight] = useState(null);
+  const returnFightKey = profile?.id ? profile.id + ':' + (raidMode ? 'raid' : 'personal') : null;
+  const cachedFight = confirmedFightOnReturn.get(returnFightKey);
+  const knownFight = cachedFight && !acknowledgedBossVictories.get(String(profile?.id || profile?.created_by || 'anonymous'))?.has(cachedFight.id)
+    && (cachedFight.status === 'dead' || (cachedFight.status === 'active' && Number(cachedFight.current_hp) > 0
+    && (!cachedFight.ends_at || Date.parse(cachedFight.ends_at) > Date.now()))) ? cachedFight : null;
+  const [activeShipFight,setActiveShipFight]=useState(() => knownFight?.kind === 'ship' ? knownFight : null);
+  const [resumeShip,setResumeShip]=useState(() => knownFight?.kind === 'ship' || (import.meta.env.DEV && new URLSearchParams(window.location.search).get('localShipBoss') === 'hangar'));
+  const resumeShipBattle=()=>{
+    if(!activeShipFight)return;
+    setAttackError('');setResumeShip(true);
+  };
+  const [activeFight, setActiveFight] = useState(() => fightAdapter?.fight || (knownFight?.kind !== 'ship' ? knownFight : null));
+  const renderedFightTraceRef = useRef(activeFight);
   const [myDmgLog, setMyDmgLog] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [lastBossWinners, setLastBossWinners] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!fightAdapter && !knownFight);
+  const fightLoadSequence = useRef(0);
   const [hitEffect, setHitEffect] = useState(null);
+  const [criticalFeedback, setCriticalFeedback] = useState(null);
+  useEffect(() => {
+    if (!criticalFeedback) return;
+    const timer = window.setTimeout(() => setCriticalFeedback(null), 1400);
+    return () => window.clearTimeout(timer);
+  }, [criticalFeedback]);
+  const [armorImpact, setArmorImpact] = useState(null);
+  useEffect(() => {
+    const previous=renderedFightTraceRef.current;
+    if(previous?.id!==activeFight?.id||previous?.combat_revision!==activeFight?.combat_revision||previous?.current_hp!==activeFight?.current_hp){
+      recordCombatHpTransition('rendered_fight',previous,activeFight,{accepted:true,reason:'rendered',meta:combatResponseMeta(activeFight)});
+      renderedFightTraceRef.current=activeFight;
+    }
+  },[activeFight]);
+  useEffect(() => {
+    if (armorPreviewImpact) setArmorImpact(armorPreviewImpact);
+  }, [armorPreviewImpact]);
+  const latestTapFeedback = useRef(null);
+  const [confirmedCurse, setConfirmedCurse] = useState(null);
+  useEffect(() => { if (import.meta.env.DEV && cursePreviewToken > 0) setConfirmedCurse(`preview:${cursePreviewToken}`); }, [cursePreviewToken]);
   const [bossHitToken, setBossHitToken] = useState(0);
   const hitEffectTimerRef = useRef(null);
+  useEffect(() => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = poisonCritGif;
+  }, []);
   useEffect(() => () => window.clearTimeout(hitEffectTimerRef.current), []);
   const [bossEffectClass, setBossEffectClass] = useState('');
   const [attacking, setAttacking] = useState(false);
+  const [pendingAttack, setPendingAttack] = useState(null);
+  const [tapCooldowns, setTapCooldowns] = useState({});
+  useEffect(()=>{if(activeFight?.status==='dead')setTapCooldowns({});},[activeFight?.id,activeFight?.status]);
+  const [queuedPoisons, setQueuedPoisons] = useState([]);
+  const [poisonView, setPoisonView] = useState(null);
+  const [queuedVictoryClaim, setQueuedVictoryClaim] = useState(null);
+  const poisonViewRef = useRef(null);
+  const poisonQueueRef = useRef(null);
+  const queuedAttackHandlerRef = useRef(null);
+  const combatMountedRef = useRef(true);
+  const queuedFightRef = useRef(activeFight?.id);
+  useEffect(() => {
+    combatMountedRef.current = true;
+    return () => { combatMountedRef.current = false; };
+  }, []);
+  useEffect(() => {
+    queuedFightRef.current = activeFight?.id;
+  }, [activeFight?.id]);
+  useEffect(() => {
+    if (fightAdapter || !returnFightKey) return;
+    const sync = (key, fight) => {
+      if (key !== returnFightKey || fight.kind === 'ship') return;
+      setActiveFight(current => current?.id === fight.id || !current ? chooseFightSnapshot('late_attack_return',current,fight) : current);
+      if (!raidMode && fight.status === 'dead' && !claimedVictoryFightIdsRef.current.has(fight.id)) {
+        setVictorySummary(current => current?.fightId === fight.id ? current : {fightId:fight.id,bossId:fight.boss_id,bossName:fight.boss_name,leaderboard:[]});
+        void loadLeaderboard(fight.id).then(rows => {
+          if (rows?.length) setVictorySummary(current => current?.fightId === fight.id && !current.leaderboard?.length ? { ...current, leaderboard: rows } : current);
+        }).catch(() => {});
+      }
+    };
+    fightReturnListeners.add(sync);
+    return () => { fightReturnListeners.delete(sync); };
+  }, [fightAdapter, returnFightKey]);
+  const attackBusyRef = useRef(false);
+  const [spawningBossId, setSpawningBossId] = useState(null);
+  const [bossFightMode, setBossFightMode] = useState('solo');
+  const spawnPendingRef = useRef(false);
   const [attackError, setAttackError] = useState('');
   const [escaping, setEscaping] = useState(false);
   const [escapeConfirmOpen, setEscapeConfirmOpen] = useState(false);
@@ -2033,7 +2132,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
   const [statusInfoOpen, setStatusInfoOpen] = useState(null);
   const [selectedComboIndex, setSelectedComboIndex] = useState(null);
   const [killReward, setKillReward] = useState(null);
-  const [victorySummary, setVictorySummary] = useState(null);
+  const [victorySummary, setVictorySummary] = useState(() => !raidMode && knownFight?.kind !== 'ship' && knownFight?.status === 'dead' ? {fightId:knownFight.id,bossId:knownFight.boss_id,bossName:knownFight.boss_name,leaderboard:[]} : null);
   const victoryOwnerKey = String(profile?.id || profile?.created_by || 'anonymous');
   if (!acknowledgedBossVictories.has(victoryOwnerKey)) acknowledgedBossVictories.set(victoryOwnerKey, new Set());
   const claimedVictoryFightIdsRef = useRef(acknowledgedBossVictories.get(victoryOwnerKey));
@@ -2042,11 +2141,37 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
   const [autoBoxFightId, setAutoBoxFightId] = useState(null);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [leaderboardMode, setLeaderboardMode] = useState('players');
+  const openLeaderboardPlayer = onOpenPlayerProfile ? (player) => {
+    setLeaderboardOpen(false);
+    onOpenPlayerProfile(player);
+  } : null;
+
+  useEffect(() => {
+    if (!fightAdapter) return;
+    setActiveFight(current => current?.id === fightAdapter.fight.id && current.status === 'dead'
+      ? current
+      : chooseFightSnapshot('fight_adapter',current,fightAdapter.fight));
+    setMyDmgLog(fightAdapter.damageLog);
+    setLeaderboard(fightAdapter.leaderboard || []);
+    if (fightAdapter.fight.status === 'dead' && !claimedVictoryFightIdsRef.current.has(fightAdapter.fight.id)) setVictorySummary({fightId:fightAdapter.fight.id,bossId:fightAdapter.fight.boss_id,bossName:fightAdapter.fight.boss_name,leaderboard:fightAdapter.leaderboard || []});
+  }, [fightAdapter?.fight, fightAdapter?.damageLog, fightAdapter?.leaderboard]);
+
+  // Rankings belong to one fight; never carry the portal into its result or successor.
+  useEffect(() => {
+    setLeaderboardOpen(false);
+    setLeaderboardMode('players');
+  }, [activeFight?.id, activeFight?.status, raidMode]);
+
   const [secondBossWarning, setSecondBossWarning] = useState(null);
   const secondBossWarningSeenRef = useRef(Boolean(profile?.second_boss_warning_seen));
   const [cooldownNow, setCooldownNow] = useState(serverNow());
   const bossEscapeCooldownMs = getBossEscapeCooldownRemaining(profile?.weapon_cooldowns, cooldownNow);
   const pollRef = useRef(null);
+  const suspendedRef = useRef(suspended);
+  const previousSuspendedRef = useRef(suspended);
+  suspendedRef.current = suspended;
+  const leaderboardLoadRef = useRef(null);
+  const leaderboardLastReadRef = useRef(null);
   const loadRetryRef = useRef(null);
   const attackEpochRef = useRef(0);
   const expiredRefreshRef = useRef(null);
@@ -2056,7 +2181,21 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
   const handledBoxKeysRef = useRef(new Set());
   const lang = profile?.language || 'uk';
   const combatStateKey = raidMode ? `raid:${activeFight?.id || 'active'}` : activeFight?.id;
-  const currentCombatState = profile?.talent_combat_state?.[combatStateKey] || {};
+  const localPoisonView = poisonView?.fight.id === activeFight?.id ? poisonView : null;
+  useEffect(() => {
+    if (poisonQueueRef.current?.size || !poisonView) return;
+    if (poisonView.fight.id !== activeFight?.id) {
+      poisonViewRef.current = null; setPoisonView(null); return;
+    }
+    const stock = poisonView.profile.weapon_inventory || {};
+    const inventorySynced = ['small-poison','medium-poison','large-poison'].every(key =>
+      Number(profile?.weapon_inventory?.[key] || 0) === Number(stock[key] || 0));
+    if (inventorySynced && Number(activeFight.current_hp) <= Number(poisonView.fight.current_hp)) {
+      poisonViewRef.current = null; setPoisonView(null);
+    }
+  }, [queuedPoisons.length, activeFight, profile?.weapon_inventory, poisonView]);
+  const combatProfile = localPoisonView?.profile || profile;
+  const currentCombatState = combatProfile?.talent_combat_state?.[combatStateKey] || {};
   const tr = {
     chooseBoss: t('boss_panel.choose_boss', { lng: lang }),
     rewardTitle: t('boss_panel.reward_title', { lng: lang }),
@@ -2071,10 +2210,10 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
     nextKey: lang === 'en' ? 'Key to the next boss' : lang === 'ru' ? 'Ключ к следующему боссу' : 'Ключ до наступного боса',
     smallPoison: lang === 'en' ? 'Small Poison' : lang === 'ru' ? 'Малый яд' : 'Мала отрута',
     poisonMultiplier: lang === 'en'
-      ? 'Choose x10 or x100 poison: uses that many doses and deals matching damage. Select the active option again to turn it off.'
+      ? 'Cycle poison doses: x1 → x5 → x10 → x100 → x1. Uses the selected number of doses and deals matching damage.'
       : lang === 'ru'
-        ? 'Выберите x10 или x100 яда: расходуется столько же доз и наносится соответствующий урон. Нажмите выбранный вариант ещё раз, чтобы выключить.'
-        : 'Обери x10 або x100 отрути: витрачається стільки ж доз і завдається відповідна шкода. Натисни вибраний варіант ще раз, щоб вимкнути.',
+        ? 'Переключение доз яда: x1 → x5 → x10 → x100 → x1. Расходуется выбранное число доз и наносится соответствующий урон.'
+        : 'Перемикання доз отрути: x1 → x5 → x10 → x100 → x1. Витрачається вибрана кількість доз і завдається відповідна шкода.',
     statusTitle: lang === 'en' ? 'BLEED & TOXIC MARKS' : lang === 'ru' ? 'КРОВОТЕЧЕНИЕ И МЕТКИ' : 'КРОВОТЕЧА Й МІТКИ',
     statusClose: lang === 'en' ? 'CLOSE' : lang === 'ru' ? 'ЗАКРЫТЬ' : 'ЗАКРИТИ',
     statusBleed: lang === 'en' ? 'BLEED' : lang === 'ru' ? 'КРОВОТЕЧЕНИЕ' : 'КРОВОТЕЧА',
@@ -2090,7 +2229,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
     statusDamageHit: lang === 'en' ? 'damage/hit' : lang === 'ru' ? 'урона/удар' : 'шкоди/удар',
     statusProgress: lang === 'en' ? 'Your progress' : lang === 'ru' ? 'Твой прогресс' : 'Твій прогрес',
     statusAvailable: lang === 'en' ? 'ACTIVE' : lang === 'ru' ? 'АКТИВНО' : 'АКТИВНО',
-    statusNeedMarkSpace: lang === 'en' ? 'Marks are full (5/5). Spend one first.' : lang === 'ru' ? 'Метки заполнены (5/5). Сначала потрать одну.' : 'Міток уже максимум (5/5). Спершу витрать одну.',
+    statusNeedMarkSpace: lang === 'en' ? 'Marks are full. Spend one first.' : lang === 'ru' ? 'Метки заполнены. Сначала потрать одну.' : 'Міток уже максимум. Спершу витрать одну.',
     statusNeedBleed: lang === 'en' ? 'Apply bleed first' : lang === 'ru' ? 'Сначала вызови кровотечение' : 'Спершу наклади кровотечу',
     statusMarksTrigger: lang === 'en' ? 'marks' : lang === 'ru' ? 'меток' : 'міток',
     clanAssistBosses: lang === 'en' ? 'Clanmates’ bosses hit' : lang === 'ru' ? 'Боссов соклановцев задето' : 'Босів сокланівців зачеплено',
@@ -2117,14 +2256,23 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
         : `У цього боса ${Number(secondBossWarning?.maxHp || 10000).toLocaleString('uk-UA')} HP, а ти нижче 20 рівня й без клану. Знайди клан і повернися з підкріпленням або заходь сам на свій страх і ризик.`,
     findClan: lang === 'en' ? 'FIND A CLAN' : lang === 'ru' ? 'НАЙТИ КЛАН' : 'ЗНАЙТИ КЛАН',
   };
-  const displayedLeaderboard = leaderboardMode === 'clans' ? buildClanDamageLeaderboard(leaderboard) : leaderboard;
-  const ownDamageRank = leaderboard.findIndex(row => (profile?.id && row.player_id === profile.id) || (profile?.created_by && row.player_email === profile.created_by));
+  const isOwnDamageRow = row => (profile?.id && row.player_id === profile.id) || (profile?.created_by && row.player_email === profile.created_by);
+  const fetchedOwnDamage = leaderboard.find(isOwnDamageRow);
+  const ownDamage = localPoisonView ? instantDamageRow(localPoisonView, myDmgLog)
+    : Number(myDmgLog?.damage || 0) >= Number(fetchedOwnDamage?.damage || 0) ? myDmgLog : fetchedOwnDamage;
+  const combatLeaderboard = ownDamage ? [
+    ...leaderboard.filter(row => !isOwnDamageRow(row)),
+    { ...fetchedOwnDamage, ...ownDamage, player_id: profile.id, player_email: profile.created_by,
+      player_name: profile.nickname || profile.username, avatar: profile.avatar, clan_name: profile.clan_name, battle_pass_tier:getPlayerPassTier(profile), profile_header_theme:profile.profile_header_theme },
+  ].sort((a, b) => Number(b.damage || 0) - Number(a.damage || 0)) : leaderboard;
+  const displayedLeaderboard = leaderboardMode === 'clans' ? buildClanDamageLeaderboard(combatLeaderboard) : combatLeaderboard;
+  const ownDamageRank = combatLeaderboard.findIndex(isOwnDamageRow);
   const fightStartedByPlayer = Boolean(activeFight?.opened_by_email && profile?.created_by && String(activeFight.opened_by_email).toLowerCase() === String(profile.created_by).toLowerCase());
   const clanHelpAlreadySent = Boolean(activeFight?.clan_invite_sent_at);
-  const canCallClanHelp = Boolean(activeFight && !raidMode && fightStartedByPlayer && !clanHelpAlreadySent);
+  const canCallClanHelp = Boolean(activeFight && activeFight.status === 'active' && !raidMode && (fightAdapter?.inviteClan || fightStartedByPlayer) && !clanHelpAlreadySent);
   const getFightBossName = (fight) => {
     const boss = GAME_CONFIG.BOSSES.find((entry) => entry.id === fight?.boss_id);
-    return boss ? getLocalizedBossName(boss, lang) : fight?.boss_name || '';
+    return fightAdapter ? fight?.boss_name : boss ? getLocalizedBossName(boss, lang) : fight?.boss_name || '';
   };
 
   const triggerBossEffect = (effectName, duration = 500) => {
@@ -2153,6 +2301,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
     box?.instanceId || `${box?.boxType || 'box'}:${box?.bossId || box?.boss_id || 'boss'}:${box?.fightId || box?.fight_id || 'fight'}:${index}`;
 
   useEffect(() => {
+    if (fightAdapter) return;
     void loadFight();
     if (!raidMode) listLastBossWinners().then((winners) => setLastBossWinners(winners || {})).catch(() => setLastBossWinners({}));
     return () => {
@@ -2167,6 +2316,24 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
     const timer = setInterval(() => { if (!document.hidden) setCooldownNow(serverNow()); }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (fightAdapter) return;
+    const wasSuspended = previousSuspendedRef.current;
+    previousSuspendedRef.current = suspended;
+    if (wasSuspended === suspended) return;
+    if (suspended) {
+      if (pollRef.current) clearInterval(pollRef.current);
+      pollRef.current = null;
+      return;
+    }
+    if (activeFight?.status === 'active') {
+      void refreshFight(activeFight.id).catch(() => {});
+      startPolling(activeFight.id);
+    } else {
+      void loadFight();
+    }
+  }, [suspended]);
 
   useEffect(() => {
     if (!autoBoxFightId || !claimedVictoryFightIdsRef.current.has(autoBoxFightId) || pendingBoxes.length) return;
@@ -2186,125 +2353,201 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
     }
   }, [raidMode, suppressLootModal, profile?.pending_boss_boxes, pendingBoxes.length]);
 
+  useEffect(() => {
+    if (raidMode || suppressLootModal || victorySummary || !pendingBoxes.length) return;
+    const box = pendingBoxes[0];
+    const fightId = box.fightId || box.fight_id;
+    if (!fightId || claimedVictoryFightIdsRef.current.has(fightId)) return;
+    const bossId = box.bossId || box.boss_id;
+    setVictorySummary({
+      fightId, bossId,
+      bossName: getLocalizedBossName(GAME_CONFIG.BOSSES.find(boss => boss.id === bossId), profile?.language || 'uk'),
+      leaderboard: [],
+    });
+    void loadLeaderboard(fightId).then(rows => {
+      setVictorySummary(current => current?.fightId === fightId ? { ...current, leaderboard: rows } : current);
+    }).catch(() => {});
+  }, [raidMode, suppressLootModal, pendingBoxes]);
+
   const bleedExpiresAt = Number(currentCombatState.bleed?.expiresAt || 0);
   useEffect(() => {
-    if (raidMode || !activeFight?.id || bleedExpiresAt <= serverNow()) return undefined;
+    if (fightAdapter || suspended || !activeFight?.id || bleedExpiresAt <= serverNow()) return undefined;
     let busy = false;
     let cancelled = false;
     const timer = setInterval(async () => {
-      if (document.hidden || busy || serverNow() > bleedExpiresAt + 2000) return;
+      if (document.hidden || busy || attackBusyRef.current || poisonQueueRef.current?.size || serverNow() > bleedExpiresAt + 2000) return;
       busy = true;
       const epoch = attackEpochRef.current;
       try {
-        const fight = await getBossFightById(activeFight.id);
+        const received = await (raidMode ? getRaidBoss() : getBossFightById(activeFight.id));
+        const fight = raidMode && received ? { ...received, boss_id: 'heli', boss_name: received.name || 'Raid Boss' } : received;
         if (!cancelled && epoch === attackEpochRef.current && fight) {
           if (fight.status === 'dead') { clearInterval(timer); await refreshFight(fight.id, fight); }
-          else setActiveFight(current => current?.id === fight.id ? fight : current);
+          else setActiveFight(current => current?.id === fight.id ? chooseFightSnapshot('bleed_poll',current,fight,received) : current);
         }
       } catch { /* Keep the normal fight poll as fallback. */ }
       finally { busy = false; }
     }, 1000);
     return () => { cancelled = true; clearInterval(timer); };
-  }, [activeFight?.id, bleedExpiresAt, raidMode]);
+  }, [activeFight?.id, bleedExpiresAt, raidMode, suspended]);
 
   const startPolling = (fightId) => {
+    if (fightAdapter || suspendedRef.current) return;
     if (pollRef.current) clearInterval(pollRef.current);
     pollRef.current = setInterval(() => {
-      if (document.hidden) return;
+      if (document.hidden || attackBusyRef.current || poisonQueueRef.current?.size) return;
       void refreshFight(fightId).catch(() => {});
       void loadLeaderboard(fightId).catch(() => {});
     }, 10000);
   };
 
-  const loadLeaderboard = async (fightId) => {
-    const logs = raidMode ? await listRaidBossLeaderboard() : await listBossDamageLogs(fightId, 100);
-    setLeaderboard(logs);
-    return logs;
+  const loadLeaderboard = async (fightId, throttle = false) => {
+    if (fightAdapter) return fightAdapter.leaderboard || [];
+    const key = raidMode ? 'raid' : String(fightId || '');
+    if (leaderboardLoadRef.current?.key === key) return leaderboardLoadRef.current.promise;
+    if (throttle && leaderboardLastReadRef.current?.key === key && Date.now() - leaderboardLastReadRef.current.at < 2000) return leaderboardLastReadRef.current.logs;
+    const epoch = attackEpochRef.current;
+    const promise = (raidMode ? listRaidBossLeaderboard() : listBossDamageLogs(fightId, 100))
+      .then(logs => {
+        if (epoch === attackEpochRef.current) {
+          leaderboardLastReadRef.current = {key, at: Date.now(), logs};
+          setLeaderboard(logs);
+        }
+        return logs;
+      })
+      .finally(() => { if (leaderboardLoadRef.current?.promise === promise) leaderboardLoadRef.current = null; });
+    leaderboardLoadRef.current = { key, promise };
+    return promise;
   };
 
   const loadMyDmg = async (fightId) => {
+    if (fightAdapter) { setMyDmgLog(fightAdapter.damageLog); return; }
     if (!profile) return;
+    const epoch = attackEpochRef.current;
     const log = await getPlayerBossDamageLog(fightId, profile.created_by);
-    setMyDmgLog(log);
+    if (epoch === attackEpochRef.current) setMyDmgLog(log);
   };
 
   const refreshFight = async (fightId, knownFight = null) => {
+    if (fightAdapter) {
+      setActiveFight(current => chooseFightSnapshot('adapter_refresh',current,fightAdapter.fight));
+      return;
+    }
     const epoch = attackEpochRef.current;
     if (raidMode) {
       const raidBoss = await getRaidBoss();
       if (epoch !== attackEpochRef.current) return;
-      if (raidBoss) setActiveFight({ ...raidBoss, boss_id: 'heli', boss_name: raidBoss.name || 'Raid Boss' });
+      if (raidBoss) {
+        const fight = { ...raidBoss, boss_id: 'heli', boss_name: raidBoss.name || 'Raid Boss' };
+        setActiveFight(current => chooseFightSnapshot('raid_poll',current,fight,raidBoss));
+      }
       return;
     }
     const fight = knownFight || await getBossFightById(fightId);
-    if (!fight || epoch !== attackEpochRef.current) return;
+    if (!fight || epoch !== attackEpochRef.current || String(escapedFightIdRef.current || "") === String(fightId)) return;
     if (fight.status !== 'active' && pollRef.current) clearInterval(pollRef.current);
     if (fight.status === 'dead') {
-      const finalLeaderboard = await loadLeaderboard(fight.id).catch(() => []);
-      if (epoch !== attackEpochRef.current) return;
-      // Publish the finished fight and its complete result together. Until the
-      // ranking arrives, retain the fight scene rather than an interim modal.
-      setActiveFight(fight);
+      if(!hasPersonalBossVictory(fight.id,myDmgLog,profile?.pending_boss_boxes)){setActiveFight(null);void Promise.resolve(onRefreshProfile?.()).catch(()=>{});return;}
+      setActiveFight(current => chooseFightSnapshot('dead_fight_refresh',current,fight));
       setVictorySummary(current => claimedVictoryFightIdsRef.current.has(fight.id) || current?.fightId === fight.id ? current : {
         bossId: fight.boss_id,
         bossName: getLocalizedBossName(GAME_CONFIG.BOSSES.find(boss => boss.id === fight.boss_id), profile?.language || 'uk'),
-        leaderboard: finalLeaderboard,
+        leaderboard,
         fightId: fight.id,
       });
-      await onRefreshProfile?.();
+      void loadLeaderboard(fight.id).then(finalLeaderboard => {
+        if (epoch === attackEpochRef.current) setVictorySummary(current => current?.fightId === fight.id ? { ...current, leaderboard: finalLeaderboard } : current);
+      }).catch(() => {});
+      void Promise.resolve(onRefreshProfile?.()).catch(() => {});
     } else {
-      setActiveFight(fight.status === 'expired' || fight.status === 'abandoned' ? null : fight);
+      setActiveFight(current => {
+        if (fight.status === 'expired' || fight.status === 'abandoned') return null;
+        return chooseFightSnapshot('fight_poll',current,fight);
+      });
     }
   };
 
-  const loadFight = async () => {
-    if (!activeFight) setLoading(true);
+  const loadFight = async ({ resumeShipOnLoad = true } = {}) => {
+    if (fightAdapter) { setActiveFight(current => chooseFightSnapshot('adapter_load',current,fightAdapter.fight)); setLoading(false); return; }
+    const epoch = attackEpochRef.current;
+    const sequence = ++fightLoadSequence.current;
+    const confirmedAtStart = confirmedFightOnReturn.get(returnFightKey);
+    const isCurrent = () => combatMountedRef.current && sequence === fightLoadSequence.current
+      && epoch === attackEpochRef.current;
+    if (raidMode && !activeFight) setLoading(true);
     try {
       if (raidMode) {
         try {
           const raidBoss = await getRaidBoss();
-          setActiveFight(raidBoss ? { ...raidBoss, boss_id: 'heli', boss_name: raidBoss.name || 'Raid Boss' } : {
+          if (!isCurrent()) return;
+          const latestRaid = confirmedFightOnReturn.get(returnFightKey);
+          const raid = isOlderCombatSnapshot({ fight: latestRaid }, { fight: raidBoss }) ? latestRaid : raidBoss;
+          if (raid) rememberFightOnReturn(returnFightKey, raid, 'raid_load', raidBoss);
+          setActiveFight(current => raid ? chooseFightSnapshot('raid_load',current,{ ...raid, boss_id: 'heli', boss_name: raid.name || 'Raid Boss' },raidBoss) : {
             id: 'global-raid-boss', boss_id: 'heli', boss_name: 'Raid Boss', max_hp: RAID_BOSS_MAX_HP, current_hp: RAID_BOSS_MAX_HP, status: eventPhase('raid-boss') === 'active' ? 'active' : 'inactive', started_at: EVENT_SCHEDULE['raid-boss'].startAt, ends_at: EVENT_SCHEDULE['raid-boss'].endAt,
           });
         setLoading(false);
         startPolling('global-raid-boss');
         void loadLeaderboard('global-raid-boss').catch(() => {});
         } catch (error) {
+          if (!isCurrent()) return;
           setActiveFight(null);
           setAttackError(error?.message || 'Could not load raid boss');
         }
         return;
       }
       const fights = (await listActiveBossFights(profile.created_by))
-        .filter((fight) => !fight?.status || fight.status === 'active');
+        .filter((fight) => (!fight?.status || fight.status === 'active') && Number(fight.current_hp || 0) > 0 && !claimedVictoryFightIdsRef.current.has(fight.id));
+      if (!isCurrent()) return;
+      if (!fights.length && (pendingFightRequests.get(returnFightKey) || confirmedFightOnReturn.get(returnFightKey) !== confirmedAtStart)) return;
 
+      // A late active-list response must not unmount the ship reward portal.
+      const returningShip = activeShipFight && readShipScene(`${profile.id}:${activeShipFight.clanId}:${activeShipFight.moduleId}`, activeShipFight.id);
+      if (resumeShip && returningShip?.fight.status === 'dead') return;
+
+      setLoading(false);
+      const shipFight=fights.find(f=>f.kind==='ship');
+      setActiveShipFight(shipFight||null);
+      if(shipFight){rememberFightOnReturn(returnFightKey,shipFight,'active_list_ship',shipFight);if(resumeShipOnLoad)setResumeShip(true);setActiveFight(null);if(pollRef.current)clearInterval(pollRef.current);return;}
       if (fights.length > 0) {
-        const fight = fights[0];
+        const received = fights[0];
+        const confirmed = confirmedFightOnReturn.get(returnFightKey);
+        const fight = isOlderCombatSnapshot({ fight: confirmed }, { fight: received }) ? confirmed : received;
         if (escapedFightIdRef.current && String(fight.id) === String(escapedFightIdRef.current)) {
           setActiveFight(null);
           if (pollRef.current) clearInterval(pollRef.current);
         } else {
-          setActiveFight(fight);
+          rememberFightOnReturn(returnFightKey, fight, 'active_list', received);
+          setActiveFight(current => chooseFightSnapshot('active_list',current,fight,received));
           void loadLeaderboard(fight.id).catch(() => {});
           void loadMyDmg(fight.id).catch(() => {});
           startPolling(fight.id);
         }
       } else {
+        confirmedFightOnReturn.delete(returnFightKey);
         setActiveFight(null);
         if (pollRef.current) clearInterval(pollRef.current);
       }
     } catch {
+      if (!isCurrent()) return;
       // A transient request failure must not erase an active fight.
       if (loadRetryRef.current) clearTimeout(loadRetryRef.current);
-      loadRetryRef.current = setTimeout(() => { void loadFight(); }, 5000);
+      loadRetryRef.current = setTimeout(() => { void loadFight({ resumeShipOnLoad }); }, 5000);
     } finally {
-      setLoading(false);
+      if (raidMode && isCurrent()) setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (raidMode || !joinedBossFight?.id) return;
+    if (fightAdapter || raidMode || !joinedBossFight?.id) return;
+    onJoinedBossFightConsumed?.(joinedBossFight.id);
+    if (claimedVictoryFightIdsRef.current.has(joinedBossFight.id)
+      || joinedBossFight.status !== 'active' || Number(joinedBossFight.current_hp) <= 0
+      || joinedBossFight.ends_at && Date.parse(joinedBossFight.ends_at) <= serverNow()) return;
+    // The invitation is a one-time navigation handoff, never a persisted active fight.
+    attackEpochRef.current += 1;
     setActiveFight(joinedBossFight);
+    setLoading(false);
     setAttackError('');
     void loadLeaderboard(joinedBossFight.id).catch(() => {});
     void loadMyDmg(joinedBossFight.id).catch(() => {});
@@ -2314,13 +2557,18 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
   const handleRefresh = async (event) => {
     event?.preventDefault();
     event?.stopPropagation();
+    if (poisonQueueRef.current?.size || attackBusyRef.current) return;
     await loadFight();
   };
 
   const spawnBoss = async (boss) => {
+    if (spawnPendingRef.current || activeShipFight) return;
+    spawnPendingRef.current = true;
+    attackEpochRef.current += 1;
+    setSpawningBossId(boss.id);
     setAttackError('');
     try {
-      const fight = await spawnBossFight({ profile, boss });
+      const fight = await spawnBossFight({ profile, boss, mode: bossFightMode });
       onSyncProfile?.({ id: profile.id, weapon_cooldowns: {} });
       setActiveFight(fight);
       setMyDmgLog(null);
@@ -2328,7 +2576,11 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
       startPolling(fight.id);
       void onRefreshProfile?.().catch(() => {});
     } catch (error) {
+      if(error?.code==='BOSS_FIGHT_ALREADY_ACTIVE')void loadFight();
       setAttackError(error?.message || (lang === 'en' ? 'Could not start this boss fight.' : lang === 'ru' ? 'Не удалось начать бой с боссом.' : 'Не вдалося почати бій із босом.'));
+    } finally {
+      spawnPendingRef.current = false;
+      setSpawningBossId(null);
     }
   };
 
@@ -2347,7 +2599,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
       if (result.player) onSyncProfile?.(result.player);
       // The claim has already succeeded. A failed background refresh must not
       // make the modal report a failed chest opening or allow a duplicate claim.
-      if (!onSyncProfile) await onRefreshProfile?.().catch(() => {});
+      if (!onSyncProfile) void Promise.resolve().then(() => onRefreshProfile?.()).catch(() => {});
       return result.drops || [];
     } catch (error) {
       if (error?.code === 'LOOT_ALREADY_CLAIMED') {
@@ -2359,6 +2611,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
   };
 
   const closePendingBox = () => {
+    if (fightAdapter) { fightAdapter.onClose(); return; }
     const fightId = pendingBoxes[0]?.fightId || pendingBoxes[0]?.fight_id || autoBoxFightId;
     if (fightId) claimedVictoryFightIdsRef.current.add(fightId);
     setVictorySummary(null);
@@ -2377,9 +2630,20 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
   };
 
   const handleVictoryClaim = () => {
+    if (!fightAdapter) setActiveFight(null);
+    if (pollRef.current) clearInterval(pollRef.current);
     const fightId = victorySummary?.fightId || autoBoxFightId || activeFight?.id;
     if (fightId) { claimedVictoryFightIdsRef.current.add(fightId); setAutoBoxFightId(fightId); }
     const isFirstBoss = String(victorySummary?.bossId) === String(GAME_CONFIG.BOSSES[0]?.id);
+    if (fightAdapter && !suppressLootModal) {
+      const boxes = [...pendingBoxes, ...(profile?.pending_boss_boxes || [])];
+      const hasReward = boxes.some(box => box.rewardFormula === 'boss_v2'
+        && (box.fightId || box.fight_id) === fightId);
+      if (!hasReward) {
+        fightAdapter.onClose();
+        return;
+      }
+    }
     setVictorySummary(null);
     if (isFirstBoss) onUpdateProfile?.({ first_boss_tutorial_seen: true });
     if (!isFirstBoss) return;
@@ -2407,15 +2671,30 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
   };
 
   const handleEscape = async () => {
+    if (fightAdapter) {
+      if (escaping || attacking || fightAdapter.attackPending) return;
+      setEscaping(true);
+      try { if (fightAdapter.escape) await fightAdapter.escape(); else fightAdapter.onClose(); }
+      catch (error) { setAttackError(error?.message || (lang === 'ru' ? 'Не удалось выйти из боя' : lang === 'en' ? 'Could not leave the fight' : 'Не вдалося вийти з бою')); }
+      finally { setEscaping(false); }
+      return;
+    }
     if (!activeFight?.id || escaping || attacking) return;
     const fightId = activeFight.id;
     escapedFightIdRef.current = fightId;
+    attackEpochRef.current += 1;
+    if (loadRetryRef.current) clearTimeout(loadRetryRef.current);
     if (pollRef.current) {
       clearInterval(pollRef.current);
       pollRef.current = null;
     }
     setEscaping(true);
     try {
+      if (raidMode) {
+        setActiveFight(null);
+        onBackToEvents?.();
+        return;
+      }
       const escapeResult = await escapeBossFight(fightId);
       if (escapeResult?.boss_escape_cooldown_until) {
         onSyncProfile?.({
@@ -2431,6 +2710,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
       setX10InfoOpen(false);
     } catch (error) {
       console.error('[boss] escape failed', error);
+      setAttackError(error?.message || (lang === 'ru' ? 'Не удалось выйти из боя' : lang === 'en' ? 'Could not leave the fight' : 'Не вдалося вийти з бою'));
       escapedFightIdRef.current = null;
       await loadFight();
     } finally {
@@ -2447,6 +2727,12 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
     if (sendingClanHelp || !activeFight || !canCallClanHelp) return;
     setSendingClanHelp(true);
     try {
+      if (fightAdapter?.inviteClan) {
+        await fightAdapter.inviteClan();
+        setActiveFight(current => current ? { ...current, clan_invite_sent_at: new Date().toISOString() } : current);
+        setClanHelpOpen(false);
+        return;
+      }
       const invitedFightId = activeFight.id;
       const bossName = getFightBossName(activeFight);
       const text = lang === 'en'
@@ -2455,7 +2741,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
           ? `🛟 Нужна помощь клана! Я сражаюсь с боссом «${bossName}». Залетайте, поможем его добить — ключ не нужен!`
           : `🛟 Потрібна допомога клану! Я б’юся з босом «${bossName}». Залітайте, допоможіть його добити — ключ не потрібен!`;
       await sendChatMessage({ channel: 'clan', text, kind: 'boss_fight_invite', bossFightInvite: { fightId: activeFight.id } });
-      setActiveFight((current) => current?.id === invitedFightId ? { ...current, clan_invite_sent_at: new Date().toISOString() } : current);
+      setActiveFight((current) => current?.id === invitedFightId ? { ...current, solo: false, clan_invite_sent_at: new Date().toISOString() } : current);
       setClanHelpStatus('');
       setClanHelpOpen(false);
     } catch (error) {
@@ -2469,11 +2755,59 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
   };
 
   const handleAttack = async (weapon) => {
-    if (!activeFight || !profile || attacking || activeFight.status !== 'active') return;
+    if (!activeFight || !profile || attackBusyRef.current || activeFight.status !== 'active') return;
+    const attackMultiplier = isPoisonWeapon(weapon) ? weapon.queuedMultiplier ?? poisonMultiplier : 1;
+    const sendAttack = async () => {
+      pendingFightRequests.set(returnFightKey, (pendingFightRequests.get(returnFightKey) || 0) + 1);
+      try {
+        return await (fightAdapter ? fightAdapter.attack({ weapon, multiplier: attackMultiplier, presses: weapon.queuedPresses })
+          : raidMode ? attackRaidBoss({ weapon, multiplier: attackMultiplier, presses: weapon.queuedPresses })
+          : attackBoss({ fight: activeFight, profile, weapon, multiplier: attackMultiplier, presses: weapon.queuedPresses }));
+      } finally {
+        const remaining = (pendingFightRequests.get(returnFightKey) || 1) - 1;
+        if (remaining) pendingFightRequests.set(returnFightKey, remaining);
+        else pendingFightRequests.delete(returnFightKey);
+      }
+    };
+    // Accepted taps keep saving after navigating away; UI timers and polling
+    // belong to the mounted screen and must not restart in the background.
+    if (weapon.queuedFeedback && (!combatMountedRef.current || queuedFightRef.current !== activeFight.id)) {
+      try {
+        const result = await sendAttack();
+        const accepted = fightAdapter || rememberFightOnReturn(returnFightKey, result?.fight,'late_attack_response',result);
+        if (accepted && result?.player) onSyncProfile?.(result.player);
+        return result;
+      } catch (error) {
+        void Promise.resolve(onRefreshProfile?.()).catch(() => {});
+        if(fightAdapter && error?.code==='NO_POISON_INVENTORY')throw error;
+        return null;
+      }
+    }
+    attackBusyRef.current = true;
 
+    const tappedAt = serverNow();
+    const feedbackId = weapon.feedbackId || `tap:${tappedAt}`;
+    if (!isPoisonWeapon(weapon) && !weapon.queuedFeedback) {
+      setCooldownNow(tappedAt);
+      setTapCooldowns(current => ({...current, [weapon.id]: tappedAt}));
+      latestTapFeedback.current = { id: feedbackId, at: performance.now() };
+      setHitEffect({damage:Number(weapon.previewDamage || weapon.damage),pending:true,isCrit:false,effectId:feedbackId});
+      window.clearTimeout(hitEffectTimerRef.current);
+      hitEffectTimerRef.current=window.setTimeout(()=>setHitEffect(null),ATTACK_FEEDBACK_MS);
+    }
     setAttackError('');
     attackEpochRef.current += 1;
     setAttacking(true);
+    if (!fightAdapter && !weapon.queuedFeedback) setPendingAttack({
+      fightId: activeFight.id,
+      weaponId: weapon.id,
+      damage: Number(weapon.previewDamage || weapon.damage) * (isPoisonWeapon(weapon) ? attackMultiplier : 1),
+      count: isPoisonWeapon(weapon) ? attackMultiplier : 0,
+    });
+    if (!weapon.queuedFeedback) {
+      setBossHitToken((current) => current + 1);
+      triggerBossEffect(isPoisonWeapon(weapon) ? 'poison-hit' : 'hit', 350);
+    }
     // Do not let the five-second poll render the finished-fight fallback while
     // the finishing attack is still resolving its result screen.
     if (pollRef.current) {
@@ -2484,40 +2818,66 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
     let fightNotFound = false;
 
     try {
-      const multiplier = isPoisonWeapon(weapon) ? poisonMultiplier : 1;
-      const attackResult = await (raidMode ? attackRaidBoss({ weapon, multiplier }) : attackBoss({
-        fight: activeFight,
-        profile,
-        weapon,
-        multiplier,
-      }));
+      const sentAt = performance.now();
+      const attackResult = await sendAttack();
       resolvedFight = attackResult?.fight || null;
+      if (!fightAdapter && !rememberFightOnReturn(returnFightKey, resolvedFight,'attack_response',attackResult)) return attackResult;
+      if (!isPoisonWeapon(weapon) && combatMountedRef.current) setTapCooldowns(current => ({...current, [weapon.id]: attackResult?.player?.weapon_cooldowns?.[weapon.id] ? new Date(attackResult.player.weapon_cooldowns[weapon.id]).getTime() : tappedAt}));
+      if (!combatMountedRef.current) {
+        if (attackResult?.player) onSyncProfile?.(attackResult.player);
+        return attackResult;
+      }
+      setPendingAttack(null);
+      // Invalidate polls that started before the resolved attack response.
+      attackEpochRef.current += 1;
+      const confirmedBoxes = attackResult.player?.pending_boss_boxes;
+      if (!raidMode && Array.isArray(confirmedBoxes)) {
+        const available = confirmedBoxes.filter((box, index) => box?.rewardFormula === 'boss_v2'
+          && !handledBoxKeysRef.current.has(getPendingBoxKey(box, index)));
+        if (available.length) setPendingBoxes(available.map((box, index) => ({ ...box, queueIndex: index, totalBoxes: available.length })));
+      }
       if (!raidMode && attackResult?.fight?.status === 'dead') {
         const finishedFight = attackResult.fight;
-        setActiveFight(finishedFight);
-        setVictorySummary(current => claimedVictoryFightIdsRef.current.has(finishedFight.id) || current?.fightId === finishedFight.id ? current : {
+        setActiveFight(current => chooseFightSnapshot('lethal_attack_response',current,finishedFight,attackResult));
+        // The return listener may already have opened this victory with an empty
+        // ranking; fill it from the confirmed reply instead of keeping it empty.
+        setVictorySummary(current => claimedVictoryFightIdsRef.current.has(finishedFight.id) ? current
+          : current?.fightId === finishedFight.id ? (current.leaderboard?.length || !attackResult.leaderboard?.length ? current : { ...current, leaderboard: attackResult.leaderboard })
+          : {
           fightId: finishedFight.id,
           bossId: finishedFight.boss_id,
-          bossName: getLocalizedBossName(GAME_CONFIG.BOSSES.find(boss => boss.id === finishedFight.boss_id), profile?.language || 'uk'),
-          leaderboard,
+          bossName: fightAdapter ? finishedFight.boss_name : getLocalizedBossName(GAME_CONFIG.BOSSES.find(boss => boss.id === finishedFight.boss_id), profile?.language || 'uk'),
+          leaderboard: attackResult.leaderboard || leaderboard,
         });
-        // Show the result screen immediately; update the final ranking in the background.
-        void loadLeaderboard(finishedFight.id).then((finalLeaderboard) => {
+        if (!attackResult.leaderboard) void loadLeaderboard(finishedFight.id).then((finalLeaderboard) => {
           setVictorySummary(current => current?.fightId === finishedFight.id ? { ...current, leaderboard: finalLeaderboard } : current);
         }).catch(() => {});
       }
       showClanAssistNotice(attackResult?.clanAssists);
       if (raidMode || attackResult?.fight?.status !== 'dead') {
-        setActiveFight(raidMode && attackResult.fight ? { ...attackResult.fight, boss_id: 'heli', boss_name: attackResult.fight.name || activeFight?.boss_name || 'Raid Boss' } : attackResult.fight);
+        setActiveFight(current => chooseFightSnapshot('attack_response',current,raidMode && attackResult.fight ? { ...attackResult.fight, boss_id: 'heli', boss_name: attackResult.fight.name || activeFight?.boss_name || 'Raid Boss' } : attackResult.fight,attackResult));
       }
       if (attackResult.player) onSyncProfile?.(attackResult.player);
       setMyDmgLog(attackResult.playerDamageLog);
-      setHitEffect(attackResult.hit);
-      setBossHitToken((current) => current + 1);
-      if (attackResult?.hit?.isCrit) triggerBossEffect('big-poison-hit', 800);
-      else triggerBossEffect('poison-hit', 400);
-      window.clearTimeout(hitEffectTimerRef.current);
-      hitEffectTimerRef.current = window.setTimeout(() => setHitEffect(null), 2200);
+      // Correct the same immediate number without replaying its animation.
+      const tap = latestTapFeedback.current;
+      const feedbackNow = performance.now();
+      const crit = confirmedCriticalHit(attackResult, feedbackNow - sentAt);
+      if (crit && queuedFightRef.current === activeFight.id) {
+        setCriticalFeedback({ fightId: activeFight.id, effectId: feedbackId, damage: crit.damage });
+      }
+      const lastHit = Array.isArray(attackResult.hits) ? null : attackResult.hit;
+      if (attackResult.hit && tap?.id === feedbackId && feedbackNow - tap.at < ATTACK_FEEDBACK_MS) {
+        const armor = attackResult.hit.state?.lastArmorResult
+          || attackResult.player?.talent_combat_state?.[activeFight.id]?.lastArmorResult;
+        if (activeFight.boss_id === 'boss8' && (armor?.blocked || armor?.breached)) {
+          setArmorImpact({ id: feedbackId, blocked: armor.blocked, breached: armor.breached });
+        }
+        if (lastHit) setHitEffect(current => confirmAttackFeedback(current, feedbackId, {
+          ...lastHit, blocked: armor?.blocked ?? lastHit.blocked,
+        }));
+        if (attackResult.hit.boneCurseApplied === true) setConfirmedCurse(feedbackId);
+      }
 
       if (attackResult.player && !onSyncProfile) {
         const nextProfilePatch = {};
@@ -2550,15 +2910,16 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
         mergeDefined('weapon_inventory', attackResult.player.weapon_inventory);
         mergeDefined('weapon_cooldowns', attackResult.player.weapon_cooldowns);
         if (Object.keys(nextProfilePatch).length > 0) {
-          await onUpdateProfile?.(nextProfilePatch);
+          void Promise.resolve().then(() => onUpdateProfile?.(nextProfilePatch)).catch(() => {});
         }
       }
 
       if (attackResult.xpGranted && !attackResult.xpApplied) {
-        await onAddXp(attackResult.xpGranted);
+        void Promise.resolve().then(() => onAddXp?.(attackResult.xpGranted)).catch(() => {});
       }
 
-      if (attackResult?.fight?.status !== 'dead') void loadLeaderboard(activeFight.id).catch(() => {});
+      if(fightAdapter && attackResult.leaderboard)setLeaderboard(attackResult.leaderboard);
+      if (!fightAdapter && attackResult?.fight?.status !== 'dead' && (!weapon.queuedFeedback || poisonQueueRef.current.size <= 1 || leaderboardOpen)) void loadLeaderboard(activeFight.id, true).catch(() => {});
 
       if (attackResult.rewardSummary) {
         setKillReward({
@@ -2576,61 +2937,135 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
         void fightId;
         void rewardBoxes;
         setTimeout(() => setKillReward(null), 5000);
-        if (!onSyncProfile) await onRefreshProfile?.();
+        if (!onSyncProfile) void Promise.resolve().then(() => onRefreshProfile?.()).catch(() => {});
 
         if (pollRef.current) clearInterval(pollRef.current);
       }
+      return attackResult;
     } catch (error) {
+      if (!isPoisonWeapon(weapon) && combatMountedRef.current) {
+        setTapCooldowns(current => {const next={...current};delete next[weapon.id];return next;});
+        setHitEffect(null);
+      }
+      if (!combatMountedRef.current) {
+        void Promise.resolve(onRefreshProfile?.()).catch(() => {});
+        return null;
+      }
+      setPendingAttack(null);
+      if (weapon.queuedFeedback) {
+        setHitEffect(null);
+        window.clearTimeout(hitEffectTimerRef.current);
+      }
+      if(fightAdapter){setAttackError(error?.message||error?.code||'ATTACK_FAILED');if(weapon.queuedFeedback)throw error;return;}
       if (error?.code === 'BOSS_FIGHT_NOT_FOUND') {
         fightNotFound = true;
         // A clan mate can finish the fight between the last poll and this hit.
         // Refresh immediately so the stale fight does not leave a permanent error.
-        await loadFight();
+        const finished = await getBossFightById(activeFight.id).catch(() => null);
+        if (finished?.status === 'dead' || finished && Number(finished.current_hp) <= 0) await refreshFight(finished.id, {...finished,status:'dead'});
+        else { setActiveFight(null); await loadFight(); }
         setAttackError('');
         return;
       }
       // A 500 can happen after the server has committed part of an attack. Re-read
       // both the profile and fight so the UI cannot keep spending stale poison.
-      await Promise.allSettled([
-        Promise.resolve().then(() => onRefreshProfile?.()),
-        loadFight(),
+      await settleCombatRecovery([
+        () => onRefreshProfile?.(),
+        () => loadFight(),
       ]);
       setAttackError(error?.message || error?.code || 'ATTACK_FAILED');
       console.error('[boss] attack failed', error);
     } finally {
-      setAttacking(false);
-      if (!fightNotFound && !raidMode && resolvedFight?.status === 'active') startPolling(resolvedFight.id);
-      else if (!fightNotFound && !resolvedFight && activeFight?.status === 'active') startPolling(activeFight.id);
+      attackBusyRef.current = false;
+      if (combatMountedRef.current) {
+        setAttacking(false);
+        setPendingAttack(null);
+        if (!fightNotFound && !raidMode && resolvedFight?.status === 'active') startPolling(resolvedFight.id);
+        else if (!fightNotFound && !resolvedFight && activeFight?.status === 'active') startPolling(activeFight.id);
+      }
     }
+  };
+
+  queuedAttackHandlerRef.current = entry => {
+    if (entry.fightId !== activeFight?.id) return null;
+    return handleAttack({ ...entry.weapon, feedbackId:`tap:${entry.token}`, queuedFeedback: true, queuedAt: entry.queuedAt, queuedMultiplier: entry.multiplier, queuedPresses: entry.presses });
+  };
+  if (!poisonQueueRef.current) poisonQueueRef.current = createPoisonAttackQueue({
+    batch: entry => entry.allowBatch === true,
+    pressBatch: entry => entry.allowPresses === true,
+    onSettled: (entry, result, remaining,error) => {
+      if (queuedFightRef.current !== entry.fightId) return;
+      const previous = poisonViewRef.current || {profile};
+      if(error?.code==='NO_POISON_INVENTORY')result=error.combatSnapshot || (previous.confirmedFight && previous.confirmedProfile ? {fight:previous.confirmedFight,player:previous.confirmedProfile,playerDamageLog:previous.confirmedDamageLog} : null);
+      const next = rebasePoisonQueue(previous, result, remaining, fightAdapter ? 'ship' : raidMode ? 'raid' : 'personal');
+      poisonViewRef.current = next;
+      if (combatMountedRef.current) setPoisonView(next);
+    },
+    send: entry => entry.send(entry), onChange: entries => {
+      if (combatMountedRef.current) {
+        setQueuedPoisons(entries);
+        if (!entries.length) setTapCooldowns({});
+      }
+    },
+  });
+  const handleWeaponPress = weapon => {
+    if (!activeFight || activeFight.status !== 'active' || (attackBusyRef.current && !poisonQueueRef.current.size)) return;
+    const currentView = poisonViewRef.current?.fight.id === activeFight.id ? poisonViewRef.current : { fight: activeFight, profile, damageLog: myDmgLog };
+    const count=isPoisonWeapon(weapon)?poisonMultiplier:1;
+    const now=serverNow();
+    const nextView = projectPoisonTap(currentView, { weaponId: weapon.id, count, mode: fightAdapter ? 'ship' : raidMode ? 'raid' : 'personal', now });
+    if (!nextView) return;
+    const available = isPoisonWeapon(weapon)?getWeaponStock(currentView.profile, weapon):1;
+    const allowBatch = canCombinePoisonTaps(currentView.profile, activeFight);
+    const entry = poisonQueueRef.current.enqueue({ weapon, multiplier: count, fightId: activeFight.id, projectedAt:now, allowBatch, allowPresses: true, send: queuedAttackHandlerRef.current }, available + poisonQueueRef.current.reserved(weapon.id, activeFight.id));
+    if (!entry) return;
+    if(!isPoisonWeapon(weapon)){setCooldownNow(now);setTapCooldowns(current=>({...current,[weapon.id]:now}));}
+    poisonViewRef.current = nextView;
+    setPoisonView(nextView);
+    setBossHitToken(current => current + 1);
+    const effectId = `tap:${entry.token}`;
+    latestTapFeedback.current = { id: effectId, at: performance.now() };
+    setHitEffect({ ...nextView.hit, pending:true, isCrit:false, effectId });
+    triggerBossEffect(isPoisonWeapon(weapon) ? 'poison-hit' : 'hit', 350);
+    window.clearTimeout(hitEffectTimerRef.current);
+    hitEffectTimerRef.current = window.setTimeout(() => setHitEffect(null), ATTACK_FEEDBACK_MS);
   };
 
   const getWeaponCdLeft = (weapon) => {
     if (!weapon.cooldownMin) return 0;
-    const last = (profile?.weapon_cooldowns || {})[weapon.id];
+    const last = Math.max(tapCooldowns[weapon.id] || 0, new Date((profile?.weapon_cooldowns || {})[weapon.id] || 0).getTime() || 0);
     if (!last) return 0;
-    return Math.max(0, weapon.cooldownMin - (cooldownNow - new Date(last).getTime()) / 60000);
+    return Math.max(0, weapon.cooldownMin - (Math.max(cooldownNow, serverNow()) - last) / 60000);
   };
 
-  const hpPct = activeFight ? (activeFight.current_hp / (activeFight.max_hp || 1)) * 100 : 0;
+  // Render the latest aggregate projection, not each acknowledgement in turn.
+  // A lethal projection stays a preview until the server confirms victory.
+  const displayedHp = localPoisonView ? localPoisonView.displayHp ?? localPoisonView.fight.current_hp : pendingBossHp(activeFight, pendingAttack);
+  const hpPct = activeFight ? (displayedHp / (activeFight.max_hp || 1)) * 100 : 0;
   const bossMedia = activeFight
-    ? getBossSceneImage(activeFight.boss_id)
+    ? getBossSceneImage(activeFight.boss_id, hpPct)
     : { src: BOSS_PHASE_IMGS.high, isVideo: false };
   const [bossAssetsFailed,setBossAssetsFailed]=useState(false);
+
   useEffect(()=>setBossAssetsFailed(false),[activeFight?.boss_id]);
   const androidScene = typeof window !== 'undefined' && (String(window.Telegram?.WebApp?.platform || '').toLowerCase().includes('android') || /Android/i.test(window.navigator.userAgent));
-  const bossImage = bossMedia?.src || BOSS_PHASE_IMGS.high;
+  const bossImage = fightAdapter?.portrait || bossMedia?.src || BOSS_PHASE_IMGS.high;
   const useSceneVideo = Boolean(bossMedia?.isVideo);
   const bossBackground = activeFight
     ? BOSS_BACKGROUNDS[activeFight.boss_id] || BOSS_BACKGROUNDS.heli
     : BOSS_BACKGROUNDS.heli;
   const bossSceneSizeClass =
-    activeFight?.boss_id === 'chinook'
+    activeFight?.boss_id === 'boss8'
+      ? 'h-[min(65dvh,550px)] sm:h-[min(72dvh,690px)] max-w-none translate-y-[12%]'
+      : activeFight?.boss_id === 'chinook'
       ? 'h-[min(48dvh,420px)] sm:h-[min(58dvh,560px)]'
       : activeFight?.boss_id === 'tank'
         ? 'h-[min(46dvh,390px)] sm:h-[min(56dvh,520px)]'
         : 'h-[min(45dvh,380px)] sm:h-[min(55dvh,510px)]';
-  const personalDamage = myDmgLog?.damage || 0;
-  const fightDurationMs = raidMode ? 7 * 86400000 : 6 * 3600000;
+  const personalDamage = ownDamage?.damage ?? 0;
+  const fightDurationMs = raidMode
+    ? Date.parse(EVENT_SCHEDULE['raid-boss'].endAt) - Date.parse(EVENT_SCHEDULE['raid-boss'].startAt)
+    : 6 * 3600000;
   const fightDeadline = raidMode
     ? Date.parse(activeFight?.ends_at || EVENT_SCHEDULE['raid-boss'].endAt)
     : Date.parse(activeFight?.ends_at || '') || Date.parse(activeFight?.started_at || '') + fightDurationMs;
@@ -2656,19 +3091,37 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
     return `${hours}:${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
   };
 
-  const raidBackButton = raidMode && onBackToEvents ? (
-    <button type="button" onClick={onBackToEvents} className="absolute left-2 top-[44px] z-[50] flex min-h-10 items-center gap-1 bg-black/65 px-3 font-mono text-xs font-bold text-[#e6f7d4]">
+  const raidBackButton = (fightAdapter || raidMode && onBackToEvents) ? (
+    <button type="button" onClick={fightAdapter ? fightAdapter.onClose : onBackToEvents} className="absolute left-2 top-[44px] z-[50] flex min-h-10 items-center gap-1 bg-black/65 px-3 font-mono text-xs font-bold text-[#e6f7d4]">
       ← {lang === 'en' ? 'Back' : 'Назад'}
     </button>
   ) : null;
-  const canShowPendingBossBox = !victorySummary
-    && (!activeFight || activeFight.status !== 'dead' || claimedVictoryFightIdsRef.current.has(activeFight.id));
+  const predictedVictory = !raidMode && activeFight?.status === 'active' && (localPoisonView?.pendingDefeat || localPoisonView?.holdVictoryPreview) ? {
+    fightId: activeFight.id,
+    bossId: activeFight.boss_id,
+    bossName: fightAdapter ? activeFight.boss_name : getLocalizedBossName(GAME_CONFIG.BOSSES.find(boss => boss.id === activeFight.boss_id), lang),
+    leaderboard: combatLeaderboard,
+  } : null;
+  const visibleVictory = victorySummary || predictedVictory;
+  useEffect(() => {
+    if (!queuedVictoryClaim) return;
+    if (victorySummary?.fightId === queuedVictoryClaim) {
+      setQueuedVictoryClaim(null);
+      handleVictoryClaim();
+    } else if (activeFight?.id !== queuedVictoryClaim || (activeFight.status === 'active' && !predictedVictory
+      && !poisonQueueRef.current?.size && !fightAdapter?.attackPending && !attacking)) {
+      setQueuedVictoryClaim(null);
+    }
+  }, [queuedVictoryClaim, victorySummary, predictedVictory?.fightId, activeFight, queuedPoisons.length, fightAdapter?.attackPending, attacking]);
+  const victoryModal = visibleVictory ? <BossVictoryModal criticalDamage={criticalFeedback?.fightId === visibleVictory.fightId ? criticalFeedback.damage : undefined} preparing={!victorySummary} claimQueued={queuedVictoryClaim === visibleVictory.fightId} portrait={visibleVictory.bossId===fightAdapter?.fight?.boss_id ? fightAdapter.portrait : undefined} bossId={visibleVictory.bossId} bossName={visibleVictory.bossName} leaderboard={visibleVictory.leaderboard} language={profile?.language || 'uk'} bossKills={String(visibleVictory.bossId).startsWith('ship-') ? Number(profile?.ship_boss_kills?.[String(visibleVictory.bossId).slice(5)] || 0) : getBossKillCount(profile, visibleVictory.bossId)} tutorialEnabled={Number(profile?.boss_kills || 0) === 0 && !profile?.first_boss_tutorial_seen && !profile?.starter_guide_final_claimed && !profile?.tutorial_level_eight_reward_claimed} onClaim={victorySummary ? handleVictoryClaim : () => setQueuedVictoryClaim(visibleVictory.fightId)} onOpenPlayerProfile={onOpenPlayerProfile} /> : null;
+  const pendingFightId = pendingBoxes[0]?.fightId || pendingBoxes[0]?.fight_id;
+  const canShowPendingBossBox = !victorySummary && (!pendingFightId || claimedVictoryFightIdsRef.current.has(pendingFightId));
 
-  if (loading) {
+  if (loading && !victorySummary) {
     return (
-      <div className="relative flex h-full justify-center py-16">
+      <div className="relative flex h-full min-h-0 flex-1 items-center justify-center">
         {raidBackButton}
-        <Loader2 className="h-6 w-6 animate-spin text-[#ff9d20]" />
+        <CombatLoader/>
       </div>
     );
   }
@@ -2677,13 +3130,14 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
     return <div className="relative flex h-full flex-col items-center justify-center gap-3 font-mono text-[#9dff43]">{raidBackButton}{attackError || 'LOADING RAID BOSS...'}{attackError && <button type="button" onClick={() => { setAttackError(''); void loadFight(); }}>RETRY</button>}</div>;
   }
 
-  if ((!activeFight || activeFight.status !== 'active') && !raidMode) {
+  if ((!activeFight || activeFight.status !== 'active') && !raidMode && !fightAdapter) {
     return (
       <>
         <AnimatePresence>
-          {victorySummary ? <BossVictoryModal bossId={victorySummary.bossId} bossName={victorySummary.bossName} leaderboard={victorySummary.leaderboard} language={profile?.language || 'uk'} bossKills={getBossKillCount(profile, victorySummary.bossId)} tutorialEnabled={Number(profile?.boss_kills || 0) === 0 && !profile?.first_boss_tutorial_seen && !profile?.starter_guide_final_claimed && !profile?.tutorial_level_eight_reward_claimed} onClaim={handleVictoryClaim} onOpenPlayerProfile={onOpenPlayerProfile} /> : null}
+          {victoryModal}
           {pendingBoxes[0] && canShowPendingBossBox && !suppressLootModal && (
             <LootBoxModal
+                portalRoot={fightAdapter?.portalRoot}
               key={pendingBoxes[0].instanceId}
               instanceId={pendingBoxes[0].instanceId}
               boxType={pendingBoxes[0].boxType}
@@ -2700,7 +3154,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
         </AnimatePresence>
 
         {secondBossWarning ? (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4 backdrop-blur-[2px]">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4 backdrop-blur-[2px]" onClick={event => { if (event.target === event.currentTarget) setSecondBossWarning(null); }}>
             <div className="w-full max-w-[390px] rounded-[18px] border-2 border-[#ffd21f] bg-[#151b10] p-4 text-center shadow-[0_0_28px_rgba(255,210,31,.35)]">
               <p className="font-mono text-[11px] font-black uppercase tracking-[0.14em] text-[#ffd21f]">{tr.secondBossWarningTitle}</p>
               <img src={guideStopScared} alt="" aria-hidden="true" className="mx-auto -mb-1 h-48 w-48 object-contain" />
@@ -2714,18 +3168,42 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
           </div>
         ) : null}
 
-        <div className="flex h-full min-h-0 flex-col">
+        {resumeShip && activeShipFight && SHIP_MODULES.some(m=>m.id===activeShipFight.moduleId) && <Suspense fallback={<div className="fixed inset-0 z-[400] flex items-center justify-center bg-[#080e09]"><CombatLoader/></div>}><ResumeShipBossBattle initialData={activeShipFight.initialData} module={SHIP_MODULES.find(m=>m.id===activeShipFight.moduleId)} name={getShipBossName(activeShipFight.moduleId,lang)} portrait={getShipBossPortrait(activeShipFight.moduleId)} language={lang==='ua'?'uk':lang} clanId={activeShipFight.clanId} expectedFightId={activeShipFight.id} profile={profile} onClose={()=>{setResumeShip(false);void loadFight({ resumeShipOnLoad: false });void onRefreshProfile?.();}} onNavigate={tab=>{setResumeShip(false);onNavigate?.(tab);}} /></Suspense>}
+        <div className="relative flex h-full min-h-0 flex-col">
+          {spawningBossId&&<div className="absolute inset-0 z-30 flex items-center justify-center bg-[#080e09]" role="status"><CombatLoader/></div>}
+          {activeShipFight && <div className="mx-2 mb-2 flex shrink-0 items-center gap-3 rounded-lg border border-[#28ee90] bg-[#102219] p-3 text-[#eaffd5]">
+            <img src={getShipBossPortrait(activeShipFight.moduleId)} alt="" className="h-12 w-12 shrink-0 rounded-lg border border-[#28ee90]/50 bg-[#07110b] object-cover" />
+            <div className="min-w-0 flex-1"><p className="text-xs font-black">{getShipBossName(activeShipFight.moduleId,lang)}</p><p className="text-[10px]">{lang==='en'?'Your active clan ship battle':lang==='ru'?'Твой активный бой с боссом корабля':'Твій активний бій із босом корабля'}</p><div role="progressbar" aria-label={lang==='en'?'Boss health':lang==='ru'?'Здоровье босса':'Здоров’я боса'} aria-valuemin={0} aria-valuemax={Math.max(1,Number(activeShipFight.max_hp)||1)} aria-valuenow={Math.max(0,Math.min(Number(activeShipFight.max_hp)||1,Number(activeShipFight.current_hp)||0))} className="mt-1 h-2.5 overflow-hidden rounded-sm border border-[#626a38] bg-[#080e09] shadow-[inset_0_1px_3px_#0009]"><div className="h-full w-full origin-left bg-gradient-to-b from-[#fa8274] via-[#df443b] to-[#a72a25] transition-transform duration-300" style={{transform:`scaleX(${Math.max(0,Math.min(100,(Number(activeShipFight.current_hp)||0)/Math.max(1,Number(activeShipFight.max_hp)||1)*100))/100})`}}/></div></div>
+            <GameTextureButton onClick={resumeShipBattle} className="h-11 shrink-0 px-2"><span className="relative z-10 text-[10px] font-black text-[#172016]">{lang==='en'?'RETURN TO FIGHT':lang==='ru'?'ВЕРНУТЬСЯ В БОЙ':'ПОВЕРНУТИСЯ В БІЙ'}</span></GameTextureButton>
+          </div>}
           {attackError ? <p role="alert" className="mb-2 px-2 text-center font-mono text-[10px] text-[#ff8978]">{attackError}</p> : null}
-          <div className="flex items-center justify-between">
-            <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-[#a18368]">{tr.chooseBoss}</p>
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center">
+            <div role="radiogroup" aria-describedby="boss-fight-mode-hint" aria-label={lang === 'en' ? 'Fight mode' : lang === 'ru' ? 'Режим боя' : 'Режим бою'} className="flex justify-self-start gap-1 rounded-lg border border-[#48512a] bg-[#080e09] p-0.5 shadow-[inset_0_2px_4px_#0009]">
+              {['clan', 'solo'].map(mode => {
+                const ModeIcon = mode === 'clan' ? Users : UserRound;
+                return <label key={mode} className={`relative cursor-pointer ${spawningBossId ? 'pointer-events-none opacity-50' : ''}`}>
+                  <input type="radio" name="boss-fight-mode" value={mode} checked={bossFightMode === mode} disabled={Boolean(spawningBossId)} onChange={() => setBossFightMode(mode)} className="peer sr-only" />
+                  <span className="flex h-7 items-center justify-center gap-1 rounded-md border border-transparent px-2 font-sans text-[10px] font-black text-[#8d9b76] transition peer-checked:border-[#c6db69] peer-checked:bg-[linear-gradient(180deg,#b1d63e,#789e22)] peer-checked:text-[#172208] peer-checked:shadow-[inset_0_1px_0_#efffa480,0_1px_3px_#0009] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#dfff82]">
+                    <ModeIcon aria-hidden="true" className="h-3 w-3" />
+                    {mode === 'solo' ? (lang === 'en' ? 'SOLO' : 'СОЛО') : (lang === 'en' ? 'CLAN' : 'КЛАН')}
+                  </span>
+                </label>;
+              })}
+            </div>
+            <p className="text-center font-mono text-[12px] uppercase tracking-[0.18em] text-[#a18368]">{tr.chooseBoss}</p>
             <button
               type="button"
               onClick={handleRefresh}
-              className="flex h-9 w-9 items-center justify-center bg-[#0c140a] text-[#b8f179] transition hover:bg-[#132010]"
+              className="flex h-9 w-9 items-center justify-center justify-self-end bg-[#0c140a] text-[#b8f179] transition hover:bg-[#132010]"
             >
               <RefreshCw className="h-4 w-4" />
             </button>
           </div>
+          <p id="boss-fight-mode-hint" className="mb-2 px-1 font-mono text-[10px] leading-snug text-[#9aaa83]">
+            {bossFightMode === 'solo'
+              ? (lang === 'en' ? 'Fight alone. Call your clan anytime during battle.' : lang === 'ru' ? 'Бей один. Позвать клан можно в любой момент боя.' : 'Бий сам. Покликати клан можна будь-коли під час бою.')
+              : (lang === 'en' ? 'Clanmates share damage across clan boss fights.' : lang === 'ru' ? 'Урон соклановцев помогает в клановых боях с боссами.' : 'Урон сокланів допомагає у кланових боях із босами.')}
+          </p>
 
           <div
             className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1"
@@ -2742,7 +3220,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
               {GAME_CONFIG.BOSSES.map((boss) => {
                 const isFirstBoss = boss.id === GAME_CONFIG.BOSSES[0]?.id;
                 const bossIndex = GAME_CONFIG.BOSSES.findIndex((item) => item.id === boss.id);
-                const comingSoon = bossIndex >= GAME_CONFIG.BOSSES.length - 3;
+                const comingSoon = !isBossReleased(boss.id);
                 const nextBoss = GAME_CONFIG.BOSSES[bossIndex + 1] || null;
                 const nextKeyIcon = nextBoss ? BOSS_KEY_ICONS[nextBoss.id] : null;
                 const keyCount = (profile?.keycards || {})[boss.keycardLocation] || 0;
@@ -2750,11 +3228,11 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
                 const locked = comingSoon || boss.minLevel > (profile?.level || 1);
                 const cooldownLabel = `${lang === 'en' ? 'CD' : 'КД'} ${String(Math.floor(bossEscapeCooldownMs / 60000)).padStart(2, '0')}:${String(Math.floor((bossEscapeCooldownMs % 60000) / 1000)).padStart(2, '0')}`;
                 const actionLocked = bossEscapeCooldownMs > 0 && !locked && hasKey;
-                const bossPortrait = BOSS_PORTRAITS[boss.id] || BOSS_PHASE_IMGS.high;
+                const bossPortrait = ROSTER_PORTRAITS[boss.id] || BOSS_PORTRAITS[boss.id] || bossIco;
                 const keyIcon = BOSS_KEY_ICONS[boss.id];
                 const chestIcon = LOCATION_CHEST_ICONS[boss.keycardLocation];
                 const bossKills = getBossKillCount(profile, boss.id);
-                const medalProgress = getBossMedalProgress(bossKills);
+                const medalProgress = getBossMedalProgress(bossKills, lang);
                 const unlockedMedals = getUnlockedBossMedals(bossKills);
                 const medalSet = BOSS_MEDAL_ASSETS[boss.id] || DEFAULT_MEDAL_ASSETS;
                 const rewardPreview = getBossRewardPreview(boss.id);
@@ -2765,42 +3243,45 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
                     key={boss.id}
                     variant="transparent"
                     data-tutorial-target={isFirstBoss ? 'tutorial-first-boss' : undefined}
-                    className=""
-                    innerClassName="grid grid-cols-[84px_minmax(0,1fr)] gap-3 px-3 py-3 sm:grid-cols-[92px_minmax(0,1fr)] sm:gap-4 sm:px-4"
+                    className="boss-picker-card"
+                    innerClassName="boss-picker-layout"
                   >
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="relative flex h-[84px] w-[84px] shrink-0 items-center justify-center overflow-hidden rounded-[8px] border border-[#86a93b]/55 bg-[#120f0c] sm:h-[92px] sm:w-[92px]">
+                      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-[#101a10] bg-cover bg-center" style={{ backgroundImage: `linear-gradient(90deg, rgba(5,12,7,.76), rgba(5,12,7,.87) 48%, rgba(5,12,7,.65)), url(${ROSTER_BACKGROUNDS[boss.id] || rosterBg_heli})` }} />
+                      <div className="boss-picker-portrait-column flex flex-col items-center gap-3">
+                        <div className="boss-portrait-with-hp">
                           <img
                             src={bossPortrait}
+                            loading={bossIndex < 3 ? 'eager' : 'lazy'}
                             alt={getLocalizedBossName(boss, lang)}
-                            className="h-full w-full object-cover"
+                            className="boss-portrait-image"
                           />
+                        <BossPortraitHp max={boss.maxHp} current={activeFight?.boss_id === boss.id && activeFight.status === 'active' ? activeFight.current_hp : boss.maxHp} language={lang} />
                         </div>
                         <GameTextureButton
                           type="button"
-                          disabled={!hasKey || locked || actionLocked}
+                          disabled={Boolean(activeShipFight) || !hasKey || locked || actionLocked || Boolean(spawningBossId)}
                           onClick={() => handleBossSelection(boss)}
                           className={`flex h-11 w-[84px] items-center justify-center sm:w-[92px] ${
-                            !hasKey || locked || actionLocked ? 'opacity-50 grayscale' : 'hover:scale-[1.02] active:scale-[0.98]'
+                            activeShipFight || !hasKey || locked || actionLocked ? 'opacity-50 grayscale' : 'hover:scale-[1.02] active:scale-[0.98]'
                           }`}
                         >
                           <span className="relative z-[2] w-full px-2 text-center font-mono text-[12px] font-bold uppercase tracking-[0.05em] text-[#1d2a10]">
-                            {actionLocked ? cooldownLabel : comingSoon ? (lang === 'ru' ? 'СКОРО' : lang === 'en' ? 'COMING SOON' : 'СКОРО') : locked ? `${tr.level} ${boss.minLevel}` : !hasKey ? tr.noKey : isFirstBoss ? tr.free : tr.attack}
+                            {spawningBossId === boss.id ? '…' : actionLocked ? cooldownLabel : comingSoon ? (lang === 'ru' ? 'СКОРО' : lang === 'en' ? 'COMING SOON' : 'СКОРО') : locked ? `${tr.level} ${boss.minLevel}` : !hasKey ? tr.noKey : isFirstBoss ? tr.free : tr.attack}
                           </span>
                         </GameTextureButton>
                       </div>
 
-                      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)_88px] gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)_96px] sm:gap-3">
+                      <div className="boss-picker-details">
                         <div className="min-w-0">
                           <p className="truncate font-mono text-[16px] font-bold text-[#f1ffe1] sm:text-[18px]">{getLocalizedBossName(boss, lang)}</p>
                           <p className="mt-1 font-mono text-[11px] text-[#d6e7bf]">
-                            {bossKills}/{medalProgress.target} {medalProgress.label}
+                            {medalProgress.current}/{medalProgress.target} {medalProgress.label}
                           </p>
                           <div className="mt-1.5 flex items-center gap-1.5">
                             {(['bronze', 'silver', 'gold']).map((tier) => (
                               <img
                                 key={tier}
-                                src={medalSet[tier]}
+                                data-medal-tier={tier} src={medalSet[tier]}
                                 alt={`${tier} medal`}
                                 className={`h-[30px] w-[30px] object-contain sm:h-[34px] sm:w-[34px] ${
                                   unlockedMedals[tier] ? '' : 'grayscale opacity-45'
@@ -2824,9 +3305,9 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
                           ) : null}
                         </div>
 
-                        <div className="min-w-0 pt-1">
+                        <div className="boss-picker-rewards min-w-0 pt-1">
                           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#86a93b]">{tr.rewardTitle}</p>
-                          <div className="mt-2 space-y-1 font-mono text-[12px] text-[#f0f8de]">
+                          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[12px] text-[#f0f8de] sm:block sm:space-y-1">
                             <p className="flex items-center gap-1.5">
                               <img src={getResourceIcon('strength')} alt="CA" className="h-7 w-7 object-contain" />
                               <span className="inline-flex items-center gap-1">
@@ -2848,10 +3329,10 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
                             {nextKeyIcon ? <BossKeyIcon rank={nextKeyIcon} className="h-[28px] w-[28px] object-contain sm:h-[34px] sm:w-[34px]" /> : null}
                           </div>
                         </div>
-                        <div className="self-center flex min-w-0 flex-col items-center pr-2 text-center">
+                        <div className="boss-picker-winner flex min-w-0 flex-col items-center self-center text-center">
                           <p className="font-mono text-[8px] font-black uppercase leading-tight text-[#c8d9b6]">{lang === 'ru' ? <>Последний<br />победитель</> : lang === 'en' ? <>Last<br />winner</> : <>Останній<br />переможець</>}</p>
                           {lastWinner ? (
-                            <button type="button" onClick={() => onOpenPlayerProfile?.({ id: lastWinner.player_id, username: lastWinner.name, nickname: lastWinner.name, avatar: lastWinner.avatar })} className="mt-2 flex w-full flex-col items-center">
+                            <button type="button" onClick={() => lastWinner.player_id && onOpenPlayerProfile?.({ ...lastWinner, id: lastWinner.player_id, username: lastWinner.username || lastWinner.name, nickname: lastWinner.nickname || lastWinner.name })} className="mt-2 flex w-full flex-col items-center">
                               <span className="boss-last-winner-pulsar"><img src={lastWinner.avatar || heroIcon} alt={lastWinner.name} className="boss-last-winner-avatar h-14 w-14 rounded-[8px] border border-[#e7c34b] object-cover sm:h-16 sm:w-16" /></span>
                               <p className="mt-1 w-full truncate font-mono text-[8px] font-black uppercase text-[#fff0db]">{lastWinner.name}</p>
                             </button>
@@ -2879,7 +3360,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
       assetKey={`${raidMode ? 'raid' : 'boss'}:${activeFight?.boss_id || 'none'}:${bossImage}`}
       className={`h-full min-h-0 overflow-hidden px-0 pt-0 isolate ${androidScene ? 'boss-android-lite' : ''}`}
     >
-      {androidScene && activeFight?.boss_id === 'tank' ? <img src={boss2BgBase} alt="" className="absolute inset-0 h-full w-full object-cover"/> : bossAssetsFailed ? <img src={bossBackground} alt="" className="absolute inset-0 h-full w-full object-cover"/> : useSceneVideo ? (
+      {fightAdapter?.renderScene ? fightAdapter.renderScene({hp:hpPct,hitToken:bossHitToken}) : !raidMode && activeFight?.boss_id === 'boss8' ? <ShkrabanScene backgroundOnly className="pointer-events-none absolute inset-0 h-full w-full" /> : !raidMode && activeFight?.boss_id === 'boss7' ? <CleopatraScene hitToken={bossHitToken} /> : androidScene && activeFight?.boss_id === 'tank' ? <img src={boss2BgBase} alt="" className="absolute inset-0 h-full w-full object-cover"/> : bossAssetsFailed ? <img src={bossBackground} alt="" className="absolute inset-0 h-full w-full object-cover"/> : useSceneVideo ? (
         <video
           src={bossImage}
           autoPlay
@@ -2890,7 +3371,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
           className="absolute inset-0 h-full w-full object-cover"
         />
       ) : raidMode ? (
-        <StableRaidBossBackground />
+        <><StableRaidBossBackground /><RaidBossTwoForeground /></>
       ) : activeFight?.boss_id === 'heli' ? (
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           <img src={BOSS1_BACKGROUND_LAYERS.base} alt="" className="boss1-bg-layer" />
@@ -2939,8 +3420,10 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
       </AnimatePresence>
 
       <AnimatePresence>
+        {victoryModal}
         {pendingBoxes[0] && canShowPendingBossBox && !suppressLootModal && (
           <LootBoxModal
+            portalRoot={fightAdapter?.portalRoot}
             key={pendingBoxes[0].instanceId}
             instanceId={pendingBoxes[0].instanceId}
             boxType={pendingBoxes[0].boxType}
@@ -2973,18 +3456,19 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
           />
           <div className="absolute inset-0 z-[2] flex items-center justify-center px-3">
             <Clock className="mr-1 h-3 w-3" />
-            <span className="font-sans text-[12px] font-black leading-none text-[#f8ffe8] [text-shadow:0_1px_0_rgba(0,0,0,0.9)] sm:text-[14px]">{formatFightTime(fightSecondsLeft)}</span>
+            <span className="font-sans text-[12px] font-black leading-none text-[#f8ffe8] [text-shadow:0_1px_0_rgba(0,0,0,0.9)] sm:text-[14px]">{fightAdapter && activeFight?.status==='dead' ? (lang==='ru'?'БОСС ПОБЕЖДЁН':lang==='en'?'BOSS DEFEATED':'БОСА ПЕРЕМОЖЕНО') : formatFightTime(fightSecondsLeft)}</span>
           </div>
         </div>
 
         <p className={`pointer-events-none absolute inset-x-3 top-[46px] z-10 text-center font-mono text-[20px] font-bold leading-none text-[#eef7de] [text-shadow:0_2px_4px_#000] sm:top-[52px] sm:text-[24px] ${statusInfoOpen ? 'invisible' : ''}`}>
-          {raidMode ? activeFight.boss_name : getFightBossName(activeFight)}
+          {!raidMode && !fightAdapter && activeFight?.status === 'active' && <img src={BOSS_PORTRAITS[activeFight.boss_id] || bossImage} alt="" className="mr-2 inline-block h-9 w-9 rounded-lg border border-[#28ee90]/60 bg-[#07110b] object-cover align-middle" />}
+          {raidMode ? `${getFriday13BossName(lang)} · 13th` : getFightBossName(activeFight)}
         </p>
         
 
-        <div className="absolute inset-x-0 bottom-[calc(var(--bottom-nav-space,0px)+124px)] top-0 z-[2] flex items-end justify-center px-2 sm:px-3">
+        <div className={`absolute inset-x-0 bottom-[calc(var(--bottom-nav-space,0px)+124px)] ${raidMode ? 'top-[82px] sm:top-[88px]' : 'top-0'} z-[2] flex items-end justify-center px-2 sm:px-3`}>
           <div className="absolute bottom-[-6px] left-1/2 z-0 h-[38px] w-[190px] -translate-x-1/2 rounded-[50%] bg-[radial-gradient(ellipse_at_center,rgba(7,16,5,0.78)_0%,rgba(31,47,18,0.38)_48%,rgba(0,0,0,0)_74%)] blur-[1px] sm:w-[250px]" />
-          {androidScene && activeFight?.boss_id === 'tank' ? <img src={mothStatic} alt="boss" className="relative h-[min(100%,405px)] w-auto max-w-full object-contain sm:max-h-[510px]"/> : bossAssetsFailed ? <img src={bossImage} alt="boss" className={`relative z-[1] ${bossSceneSizeClass} object-contain`}/> : useSceneVideo ? null : raidMode ? (
+          {fightAdapter?.renderScene ? null : !raidMode && activeFight?.boss_id === 'boss7' ? null : androidScene && activeFight?.boss_id === 'tank' ? <img src={mothStatic} alt="boss" className="relative h-[min(100%,405px)] w-auto max-w-full object-contain sm:max-h-[510px]"/> : bossAssetsFailed ? <img src={bossImage} alt="boss" className={`relative z-[1] ${bossSceneSizeClass} object-contain`}/> : useSceneVideo ? null : raidMode ? (
             <StableRaidBossComposite hitToken={bossHitToken} />
           ) : activeFight?.boss_id === 'heli' ? (
             <StableBossOneComposite hitToken={bossHitToken} />
@@ -2998,6 +3482,10 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
             <StableSuckholeComposite />
           ) : activeFight?.boss_id === 'chinook' ? (
             <StableShorkComposite hitToken={bossHitToken} />
+          ) : activeFight?.boss_id === 'boss8' ? (
+            <div className={`relative z-[1] shrink-0 ${bossSceneSizeClass}`}>
+              <ShkrabanScene key={activeFight.id} hitToken={bossHitToken} className="block h-full w-auto max-w-full object-contain" />
+            </div>
           ) : (
             <motion.img
               src={bossImage}
@@ -3008,7 +3496,11 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
             />
           )}
 
-          <AnimatePresence>{hitEffect?.isCrit ? <CritCloud language={profile?.language || 'uk'} /> : null}</AnimatePresence>
+          {criticalFeedback && criticalFeedback.fightId === activeFight?.id && !visibleVictory && <CritCloud key={`critical:${criticalFeedback.effectId}`} language={lang} damage={criticalFeedback.damage} onComplete={() => setCriticalFeedback(current => current?.effectId === criticalFeedback.effectId ? null : current)} />}
+          {armorImpact
+            ? <CritCloud key={`armor:${armorImpact.id}`} language={lang} armor={armorImpact} onComplete={() => setArmorImpact(current => current?.id === armorImpact.id ? null : current)} />
+            : null}
+          {confirmedCurse && <BoneCurseEffect key={confirmedCurse} language={profile?.language || 'uk'} onComplete={() => setConfirmedCurse(null)} />}
         </div>
 
           {activeFight?.last_bleed_tick?.playerId === profile?.id && cooldownNow - Number(activeFight.last_bleed_tick.at) < 2000 && !document.hidden ? (
@@ -3026,19 +3518,24 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
             </div>
           ) : null}
 
-        <AnimatePresence>
-          {hitEffect && (
-            <motion.div
-              initial={{ opacity: 0, y: 0, scale: 1 }}
-              animate={{ opacity: [0, 1, 1, 1, 0], y: [0, -8, -16, -26, -42], scale: [1, 1.03, 1.03, 1.06, 1.1] }}
-              transition={{ duration: 2.1, times: [0, 0.08, 0.62, 0.82, 1], ease: 'easeOut' }}
-              exit={{ opacity: 0 }}
-              className="pointer-events-none absolute left-1/2 top-[32%] z-[40] -translate-x-1/2 whitespace-nowrap font-mono text-2xl font-black text-[#ffad4d] [text-shadow:0_2px_3px_#000,0_0_6px_#000]"
+          {hitEffect?.pending && (
+            <div key={`flash:${hitEffect.effectId}`} aria-hidden="true"
+              className="boss-tap-flash pointer-events-none absolute left-1/2 top-[32%] z-[40] -ml-9 h-[72px] w-[72px]">
+              <svg viewBox="0 0 72 72" className="h-full w-full" fill="none">
+                <path d="m36 7 5 19 17-10-10 17 17 5-20 4 7 18-16-13-12 16 3-21-20-4 20-7-8-17 14 12Z" fill="#ffd66a" fillOpacity=".7" stroke="#fff4c4" strokeWidth="2"/>
+                <path d="m9 11 8 8m40 36 7 7M7 57l9-7m41-37 8-7" stroke="#ffebae" strokeWidth="3" strokeLinecap="round"/>
+              </svg>
+            </div>
+          )}
+
+          {hitEffect && !hitEffect.blocked && (
+            <div
+              key={`damage:${hitEffect.effectId}`}
+              className="boss-tap-damage pointer-events-none absolute left-1/2 top-[32%] z-[40] -translate-x-1/2 whitespace-nowrap font-mono text-2xl font-black text-[#ffad4d] [text-shadow:0_2px_3px_#000,0_0_6px_#000]"
             >
               -{hitEffect.damage}
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
 
         <AnimatePresence>
           {clanAssistNotice ? (
@@ -3055,7 +3552,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
                 <p className="mt-0.5 font-mono text-[10px] text-[#d7f7dc]">{tr.clanAssistDamage}: +{clanAssistNotice.damage.toLocaleString()} {tr.damage}</p>
               ) : null}
               {clanAssistNotice.names.length ? (
-                <p className="mt-0.5 truncate font-mono text-[10px] text-[#9de6af]">{clanAssistNotice.names.join(' · ')}</p>
+                <p className="mt-0.5 max-h-24 overflow-y-auto whitespace-normal break-words font-mono text-[10px] text-[#9de6af]">{clanAssistNotice.names.join(' · ')}</p>
               ) : null}
             </motion.div>
           ) : null}
@@ -3065,9 +3562,9 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
           type="button"
           onClick={() => { setClanHelpStatus(''); setClanHelpOpen(true); }}
           disabled={!canCallClanHelp || sendingClanHelp}
-          className={`absolute left-2 top-16 z-[30] flex h-12 w-12 items-center justify-center overflow-visible rounded-lg bg-black/35 drop-shadow-[0_2px_4px_rgba(0,0,0,.85)] transition-transform ${statusInfoOpen || clanHelpOpen || escapeConfirmOpen || leaderboardOpen || victorySummary || secondBossWarning ? 'invisible pointer-events-none' : ''} ${canCallClanHelp ? 'hover:scale-105 active:scale-95' : 'cursor-not-allowed opacity-40'}`}
-          title={clanHelpAlreadySent ? tr.clanHelpAlreadySent : !fightStartedByPlayer ? tr.clanHelpOwnerOnly : tr.clanAssist}
-          aria-label={clanHelpAlreadySent ? tr.clanHelpAlreadySent : !fightStartedByPlayer ? tr.clanHelpOwnerOnly : tr.clanAssist}
+          className={`absolute left-2 ${raidBackButton ? 'top-[104px]' : 'top-16'} z-[30] flex h-12 w-12 items-center justify-center overflow-visible rounded-lg bg-black/35 drop-shadow-[0_2px_4px_rgba(0,0,0,.85)] transition-transform ${statusInfoOpen || clanHelpOpen || escapeConfirmOpen || leaderboardOpen || victorySummary || secondBossWarning ? 'invisible pointer-events-none' : ''} ${canCallClanHelp ? 'hover:scale-105 active:scale-95' : 'cursor-not-allowed opacity-40'}`}
+          title={clanHelpAlreadySent ? tr.clanHelpAlreadySent : !fightAdapter?.inviteClan && !fightStartedByPlayer ? tr.clanHelpOwnerOnly : tr.clanAssist}
+          aria-label={clanHelpAlreadySent ? tr.clanHelpAlreadySent : !fightAdapter?.inviteClan && !fightStartedByPlayer ? tr.clanHelpOwnerOnly : tr.clanAssist}
         >
           <img src={clanHelpIcon} alt="" aria-hidden="true" className="h-full w-full object-contain" />
         </button>
@@ -3099,27 +3596,29 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
             <div className="relative flex min-w-0 items-end justify-between gap-2">
 
               <div className="absolute left-1/2 bottom-0 flex -translate-x-1/2 items-end justify-center gap-2" aria-label="Boss effects">
-                <button type="button" onClick={() => setStatusInfoOpen('marks')} title={tr.statusMarks} aria-label={tr.statusMarks} className="flex items-center gap-1 font-mono text-[12px] font-black text-[#e2ff9d]">
+                {activeFight?.boss_id==='boss8'&&<BossArmorStatus state={currentCombatState} profile={profile} language={lang} onAcknowledge={()=>Promise.resolve(onUpdateProfile?.({armorIntroSeen:true})).catch(()=>{})}/>}
+                {(boneCursePreviewState || combatProfile?.bone_curse || currentCombatState.boneCurse) && <BoneCurseStatus state={boneCursePreviewState || combatProfile?.bone_curse || currentCombatState.boneCurse} language={lang} />}
+                <button type="button" onClick={() => setStatusInfoOpen('marks')} title={tr.statusMarks} aria-label={tr.statusMarks} className="relative flex shrink-0 items-center font-mono text-[12px] font-black text-[#e2ff9d]">
                   <img src={toxicMarkIcon} alt="" aria-hidden="true" className="h-9 w-9 rounded object-contain" />
-                  <span className="rounded border border-[#b9ff68]/80 bg-[#253318] px-1.5 py-1 text-[11px] leading-none text-[#efffc7] shadow-[0_1px_3px_rgba(0,0,0,.9)]">{Number(currentCombatState.toxicMarks || 0)}/5</span>
+                  <span className="absolute inset-x-0 bottom-0 rounded border border-[#b9ff68]/80 bg-[#253318]/90 text-center text-[9px] leading-none text-[#efffc7] shadow-[0_1px_3px_rgba(0,0,0,.9)]">{Number(currentCombatState.toxicMarks || 0)}/{5+Math.min(10,Number(combatProfile?.talent_levels?.a08||0))}</span>
                 </button>
-                <button type="button" onClick={() => setStatusInfoOpen('bleed')} title={tr.statusBleed} aria-label={tr.statusBleed} className="flex items-center gap-1 font-mono text-[12px] font-black text-[#ffd0c8]">
+                <button type="button" onClick={() => setStatusInfoOpen('bleed')} title={tr.statusBleed} aria-label={tr.statusBleed} className="relative flex shrink-0 items-center font-mono text-[12px] font-black text-[#ffd0c8]">
                   <img src={bloodStatusIcon} alt="" aria-hidden="true" className={`h-9 w-9 rounded object-contain ${Number(currentCombatState.bleed?.expiresAt || 0) > cooldownNow ? '' : 'opacity-55 grayscale'}`} />
-                  {Number(currentCombatState.bleed?.expiresAt || 0) > cooldownNow ? `${Math.max(0, Math.ceil((Number(currentCombatState.bleed?.expiresAt || 0) - cooldownNow) / 1000))}s` : '—'}
+                  {Number(currentCombatState.bleed?.expiresAt || 0) > cooldownNow && <span className="absolute inset-x-0 bottom-0 rounded bg-black/85 text-center text-[9px] leading-none">{Math.ceil((Number(currentCombatState.bleed.expiresAt) - cooldownNow) / 1000)}{lang === 'en' ? 's' : 'с'}</span>}
                 </button>
               </div>
               <div className="relative ml-auto flex shrink-0 flex-col items-end gap-1">
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={() => setPoisonMultiplier((value) => value === 1 ? 10 : value === 10 ? 100 : 1)}
+                    onClick={() => setPoisonMultiplier((value) => value === 1 ? 5 : value === 5 ? 10 : value === 10 ? 100 : 1)}
                     aria-label={tr.poisonMultiplier}
                     aria-pressed={poisonMultiplier > 1}
                     title={`${tr.poisonMultiplier} · ×${poisonMultiplier}`}
                     className={`relative h-11 w-14 overflow-hidden rounded-md border transition ${poisonMultiplier > 1 ? 'border-[#ffe070] bg-[#4d3410] shadow-[0_0_14px_rgba(255,207,48,0.85)]' : 'border-[#58604c] bg-black/45 grayscale opacity-55'}`}
                   >
                     {poisonMultiplier > 1 ? <span className="absolute inset-[-50%] bg-[linear-gradient(115deg,transparent_35%,rgba(255,255,220,0.65)_50%,transparent_65%)]" style={{ animation: 'boss-acid-shine 1.5s linear infinite' }} /> : null}
-                    <img src={poisonMultiplier === 100 ? poisonX100Icon : poisonX10Icon} alt="" aria-hidden="true" className={`relative z-10 h-full w-full object-contain p-1 ${poisonMultiplier > 1 ? 'animate-pulse' : ''}`} />
+                    {poisonMultiplier === 1 ? <span className="relative z-10 font-black text-[#e6f7d4]">×1</span> : <img src={poisonMultiplier === 100 ? poisonX100Icon : poisonMultiplier === 10 ? poisonX10Icon : poisonX5Icon} alt="" aria-hidden="true" className="relative z-10 h-full w-full object-contain p-1" />}
                   </button>
                   <button type="button" onClick={() => setX10InfoOpen((value) => !value)} aria-label={tr.poisonMultiplier} className="flex h-4 w-4 items-center justify-center rounded-full border border-[#d8f8a6] bg-[#182114] text-[10px] font-black text-[#d8f8a6]">?</button>
                 </div>
@@ -3129,7 +3628,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
 
             {statusInfoOpen ? (() => {
               const state = currentCombatState;
-              const marks = Math.min(5, Math.max(0, Number(state.toxicMarks || 0)));
+              const marks = Math.min(5+Math.min(10,Number(combatProfile?.talent_levels?.a08||0)), Math.max(0, Number(state.toxicMarks || 0)));
               const bleed = state.bleed;
               const bleedActive = Number(bleed?.expiresAt || 0) > cooldownNow;
               const seconds = bleedActive ? Math.max(0, Math.ceil((Number(bleed.expiresAt) - cooldownNow) / 1000)) : 0;
@@ -3209,11 +3708,11 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
                   ? ['Накладывай метки Малой или Средней отравой.', 'Накопи до 5 меток: каждая усиливает комбо.', 'Атакуй, чтобы сработал бонус комбо.']
                   : ['Накладай мітки Малою або Середньою отрутою.', 'Накопичуй до 5 міток: кожна підсилює комбо.', 'Атакуй, щоб спрацював бонус комбо.'];
               return createPortal(<div className="fixed inset-0 z-[99999] flex min-h-0 items-center justify-center overflow-hidden bg-black/80 p-3 backdrop-blur-[2px]" onClick={() => setStatusInfoOpen(false)} style={{ touchAction: 'none' }}>
-                <section role="dialog" aria-modal="true" aria-label={tr.statusTitle} onClick={(event) => event.stopPropagation()} className="max-h-[88dvh] min-h-0 w-full max-w-[440px] touch-pan-y overflow-x-hidden overflow-y-scroll overscroll-y-contain rounded-2xl border-2 border-[#38e88e] bg-[#10170f] p-4 text-[#eaf5d8] shadow-[0_0_30px_rgba(56,232,142,.2)]" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
+                <section role="dialog" aria-modal="true" aria-label={tr.statusTitle} onClick={(event) => event.stopPropagation()} className={effectDialogClass} style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
                   <header className="mb-3 flex items-center justify-between gap-2"><h2 className="font-sans text-base font-black uppercase">{statusInfoOpen === 'bleed' ? tr.statusBleed : statusInfoOpen === 'marks' ? `⚡ ${lang === 'en' ? 'COMBO ATTACKS' : lang === 'ru' ? 'КОМБО-АТАКИ' : 'КОМБО-АТАКИ'}` : tr.statusTitle}</h2><button type="button" onClick={() => { setStatusInfoOpen(null); setSelectedComboIndex(null); }} aria-label={tr.statusClose} className="rounded p-1 text-[#73f2ae]"><X className="h-5 w-5" /></button></header>
                   {statusInfoOpen === 'marks' ? <>
                     <div className="mb-3 rounded-lg bg-black/25 p-3">
-                      <div className="flex items-center gap-2"><img src={toxicMarkIcon} alt="" className="h-9 w-9 object-contain"/><div className="min-w-0 flex-1"><h3 className="text-xs font-black uppercase text-[#dfffaa]">{lang === 'en' ? 'Toxic marks' : lang === 'ru' ? 'Ядовитые метки' : 'Отруйні мітки'}</h3><p className="text-[10px] font-bold text-[#f5f1dc]">{marks}/5 {tr.statusMarksTrigger}</p></div></div>
+                      <div className="flex items-center gap-2"><img src={toxicMarkIcon} alt="" className="h-9 w-9 object-contain"/><div className="min-w-0 flex-1"><h3 className="text-xs font-black uppercase text-[#dfffaa]">{lang === 'en' ? 'Toxic marks' : lang === 'ru' ? 'Ядовитые метки' : 'Отруйні мітки'}</h3><p className="text-[10px] font-bold text-[#f5f1dc]">{marks}/{5+Math.min(10,Number(combatProfile?.talent_levels?.a08||0))} {tr.statusMarksTrigger}</p></div></div>
                       <p className="mt-2 text-[10px] leading-snug text-[#c4d2b5]">{lang === 'en' ? 'Apply poison marks to strengthen attacks. The more marks, the stronger the combo.' : lang === 'ru' ? 'Накладывай метки ядом и усиливай атаки. Чем больше меток, тем мощнее комбо.' : 'Накладай мітки отрутою та підсилюй атаки. Що більше міток, то потужніше комбо.'}</p>
                       <p className="mt-1 text-[9px] text-[#aab99a]">{tr.statusComboHelp}</p>
                       <div className="mt-2 space-y-1 border-t border-white/10 pt-2 text-[9px] leading-snug text-[#aab99a]"><p className="font-black uppercase text-[#b9ff68]">{lang === 'en' ? 'How marks work' : lang === 'ru' ? 'Как работают метки' : 'Як працюють мітки'}</p>{howMarksWork.map((step, index) => <p key={step}><b className="mr-1 text-[#b9ff68]">{index + 1}.</b>{step}</p>)}</div>
@@ -3247,14 +3746,14 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
                   </> : null}
                   <div className={`grid gap-2 ${statusInfoOpen === 'all' ? 'grid-cols-2' : 'grid-cols-1'}`}>
                     {statusInfoOpen !== 'marks' && statusInfoOpen !== 'bleed' ? <div className="rounded-xl bg-black/25 p-2"><div className="flex items-center gap-2"><img src={bloodStatusIcon} alt="" className={`h-8 w-8 object-contain ${bleedActive ? '' : 'opacity-55 grayscale'}`} /><b className="text-xs">{tr.statusBleed}</b></div><p className="mt-1 text-xs font-bold text-[#ffd0c8]">{bleedActive ? `${Number(bleed.damage || 0)} ${tr.statusPerSecond} · ${seconds}s ${tr.statusRemaining}` : `${expectedBleedDamage} ${tr.statusPerSecond} · ${expectedBleedDuration}s (${tr.statusNextBleed})`}</p><p className="mt-1 text-[11px] leading-snug text-[#c4d2b5]">{tr.statusBleedHelp}</p><p className="mt-1 text-[10px] leading-snug text-[#91a586]">{tr.statusProgress}: {talentProgress(['t07', 't22', 't23', 't27', 't51'])}</p></div> : null}
-                    {statusInfoOpen !== 'bleed' && statusInfoOpen !== 'marks' ? <div className="rounded-xl bg-black/25 p-2"><div className="flex items-center gap-2"><img src={toxicMarkIcon} alt="" className="h-12 w-12 shrink-0 object-contain"/><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><b className="text-xs">{tr.statusMarks}</b><span className="shrink-0 rounded-md border border-[#b9ff68]/70 bg-[#253318] px-2 py-1 text-sm font-black leading-none text-[#eaffb5]">{marks}/5</span></div></div></div><p className="mt-1 text-[11px] leading-snug text-[#c4d2b5]">{tr.statusMarksHelp}</p></div> : null}
+                    {statusInfoOpen !== 'bleed' && statusInfoOpen !== 'marks' ? <div className="rounded-xl bg-black/25 p-2"><div className="flex items-center gap-2"><img src={toxicMarkIcon} alt="" className="h-12 w-12 shrink-0 object-contain"/><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><b className="text-xs">{tr.statusMarks}</b><span className="shrink-0 rounded-md border border-[#b9ff68]/70 bg-[#253318] px-2 py-1 text-sm font-black leading-none text-[#eaffb5]">{marks}/{5+Math.min(10,Number(combatProfile?.talent_levels?.a08||0))}</span></div></div></div><p className="mt-1 text-[11px] leading-snug text-[#c4d2b5]">{tr.statusMarksHelp}</p></div> : null}
                   </div>
                   {statusInfoOpen !== 'marks' && statusInfoOpen !== 'bleed' ? <h3 className="mb-1 mt-3 text-[11px] font-black uppercase tracking-wide text-[#b9ff68]">{tr.statusCombo}</h3> : null}
                   {statusInfoOpen !== 'marks' && statusInfoOpen !== 'bleed' ? <p className="mb-2 text-[10px] leading-snug text-[#aab99a]">{tr.statusComboHelp}</p> : null}
                   {statusInfoOpen !== 'marks' && statusInfoOpen !== 'bleed' ? <div className="space-y-1.5">
                     {rows.map((row, index) => <div key={index} className={`flex items-center gap-2 rounded-lg border border-white/10 px-2 py-1 ${row.ready ? 'bg-[#293b1d] shadow-[inset_0_0_14px_rgba(185,255,104,.12)]' : 'bg-black/20'}`}><img src={row.left} alt="" className="h-6 w-6 object-contain"/>{row.output ? <><span className="text-xs font-black text-[#b9ff68]">→</span><img src={row.output} alt="" className="h-6 w-6 object-contain"/></> : <><span className="text-xs font-black text-[#b9ff68]">+</span><img src={row.right} alt="" className="h-6 w-6 object-contain"/><span className="text-xs font-black text-[#b9ff68]">=</span></>}<div className="min-w-0 flex-1"><p className="text-[11px] leading-snug text-[#eaf5d8]">{row.text}</p><p className="mt-0.5 text-[9px] leading-snug text-[#91a586]">{tr.statusProgress}: {talentProgress(row.talents)}{row.stockLabel ? ` · ${row.stockLabel}` : ''}{row.reason ? ` · ${row.reason}` : ''}</p></div>{row.ready ? <span className="shrink-0 rounded bg-[#b9ff68] px-1 py-0.5 text-[8px] font-black text-[#18220e]">{tr.statusAvailable}</span> : null}</div>)}
                   </div> : null}
-                  <button type="button" onClick={() => { setStatusInfoOpen(null); setSelectedComboIndex(null); }} className="mt-3 h-10 w-full rounded-lg border border-[#b9ff68] bg-[#182318] text-xs font-black uppercase text-[#dfffaa]">{tr.statusClose}</button>
+                  <button type="button" onClick={() => { setStatusInfoOpen(null); setSelectedComboIndex(null); }} className={effectCloseClass}>{tr.statusClose}</button>
                 </section>
               </div>, document.body);
             })() : null}
@@ -3274,25 +3773,31 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
               </div>
               <div className="absolute inset-0 z-[2] flex items-center justify-center px-3">
                 <span className="font-sans text-[12px] font-black leading-none text-[#f8ffe8] [text-shadow:0_1px_0_rgba(0,0,0,0.9)] sm:text-[14px]">
-                  {(activeFight.current_hp || 0).toLocaleString()} / {(activeFight.max_hp || 0).toLocaleString()} HP
+                  {localPoisonView?.pendingDefeat && activeFight?.status === 'active'
+                    ? (lang === 'en' ? 'Finishing hit' : lang === 'ru' ? 'Завершающий удар' : 'Завершальний удар')
+                    : `${displayedHp.toLocaleString()} / ${(activeFight?.max_hp || 0).toLocaleString()} HP`}
                 </span>
               </div>
             </div>
-            <TalentProgressTrack profile={profile} />
+            <TalentProgressTrack profile={combatProfile} />
           </div>
 
           {attackError ? <p role="alert" className="px-2 text-center font-mono text-[10px] text-[#ff8978]">{attackError}</p> : null}
           <div className="grid min-w-0 grid-cols-5 gap-0.5 rounded-[14px] bg-black/22 p-1 backdrop-blur-[1px] sm:gap-1">
             {GAME_CONFIG.WEAPONS.map((baseWeapon) => {
-              const weapon = buildEffectiveWeapon(baseWeapon, profile);
-              const combatStateKey = raidMode ? 'raid:' + (activeFight?.id || 'active') : activeFight?.id;
-              const damagePreview = Number(profile?.talent_tree_version || 0) >= 2
-                ? resolveTalentAttack({weapon, levels: profile?.talent_levels || {}, state: profile?.talent_combat_state?.[combatStateKey] || {}, fight: activeFight, now: cooldownNow, random: () => 1}).damage
-                : weapon.damage;
-              const displayedDamage = Math.max(1, Math.floor(damagePreview * getCollectionDamageBonus(profile) * (1 + Number(weapon.equipmentBossDamagePct || 0))));
+              const weapon = buildEffectiveWeapon(baseWeapon, combatProfile);
+              const talentPreview = { weapon, levels: combatProfile?.talent_levels, fight: localPoisonView?.fight || activeFight, now: cooldownNow, random: () => 1 };
+              const hasCombatTalents = Number(combatProfile?.talent_tree_version || 0) >= 2;
+              const damagePreview = hasCombatTalents ? resolveTalentAttack({ ...talentPreview, state: currentCombatState }).damage : weapon.damage;
+              const unboostedDamage = hasCombatTalents ? resolveTalentAttack(talentPreview).damage : weapon.damage;
+              const curseState = boneCursePreviewState || combatProfile?.bone_curse || currentCombatState.boneCurse;
+              const curseBoosted = isPoisonWeapon(weapon) && Number(curseState?.expiresAt || 0) > cooldownNow;
+              const baseDisplayedDamage = Math.max(1, Math.floor(damagePreview * getCollectionDamageBonus(combatProfile) * (1 + Number(weapon.equipmentBossDamagePct || 0))));
+              const displayedDamage = curseBoosted ? Math.floor(baseDisplayedDamage * 1.10) : baseDisplayedDamage;
+              const damageBoosted = displayedDamage > baseDisplayedDamage || damagePreview > unboostedDamage;
               const cdLeft = getWeaponCdLeft(weapon);
               const onCd = cdLeft > 0;
-              const stock = getWeaponStock(profile, weapon);
+              const stock = localPoisonView ? getWeaponStock(combatProfile, weapon) : pendingBossStock(getWeaponStock(profile, weapon), weapon.id, pendingAttack?.fightId === activeFight?.id ? pendingAttack : null);
               const hasStoredWeapon = stock !== null && stock > 0;
               const canAffordTentacles = weapon.costType === 'tentacles' && (profile?.tentacles || 0) >= weapon.cost;
               const canAffordPremium = weapon.costType === 'premium' && (profile?.premium || 0) >= weapon.cost;
@@ -3300,8 +3805,9 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
               const isFree = weapon.costType === 'free';
               const canPayCost = isFree || canAffordTentacles || canAffordPremium;
               const hasEnoughPoison = !poisonWeapon || poisonMultiplier === 1 || stock >= poisonMultiplier;
-              const canUse = (poisonWeapon ? hasStoredWeapon : (hasStoredWeapon || canPayCost)) && hasEnoughPoison && !onCd && !attacking;
-              const visualMuted = !canUse && !onCd;
+              const resourceAvailable = (poisonWeapon ? hasStoredWeapon : (hasStoredWeapon || canPayCost)) && hasEnoughPoison && !onCd && displayedHp > 0;
+              const canUse = !fightAdapter?.entering && resourceAvailable && (!fightAdapter?.attackPending || queuedPoisons.length>0);
+              const visualMuted = !resourceAvailable && !onCd;
 
               return (
                 <button
@@ -3309,12 +3815,14 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
                   type="button"
                   data-tutorial-target={weapon.id === 'fist' ? 'tutorial-boss-finger' : weapon.id === 'knuckle' ? 'tutorial-boss-pencil' : weapon.id === 'c4' ? 'tutorial-boss-poison' : undefined}
                   disabled={!canUse}
-                  onClick={() => handleAttack(weapon)}
+                  onClick={()=>handleWeaponPress({...weapon,previewDamage:displayedDamage})}
+                  style={{touchAction:'manipulation'}}
                   className={`relative flex min-h-[clamp(52px,14vw,62px)] w-full min-w-0 flex-col items-center justify-center px-0 py-0 text-center sm:min-h-[78px] ${
                     visualMuted ? 'grayscale' : ''
                   }`}
                 >
-                  <WeaponIcon weapon={{...weapon, damage: displayedDamage}} cooldownLeft={cdLeft} stock={stock} muted={visualMuted} />
+                  <WeaponIcon weapon={{...weapon, damage: displayedDamage}} cooldownLeft={cdLeft} stock={stock} muted={visualMuted} damageBoosted={damageBoosted} damageHint={damageBoosted ? ({ru:'Урон с активными боевыми бонусами',en:'Damage with active combat bonuses'}[lang] || 'Шкода з активними бойовими бонусами') : undefined} />
+
                 </button>
               );
             })}
@@ -3327,7 +3835,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
             className="game-app leaderboard-page fixed inset-0 z-[110] bg-[#070b07]"
             style={{ paddingTop: 'var(--app-safe-top, 0px)', paddingBottom: 'var(--app-safe-bottom, 0px)' }}
           >
-            <div className="leaderboard-panel relative mx-auto flex h-full min-h-0 w-full max-w-[520px] flex-col overflow-hidden p-2 sm:p-3">
+            <div className="leaderboard-panel trophy-ranking-background relative mx-auto flex h-full min-h-0 w-full max-w-[520px] flex-col overflow-hidden p-2 sm:p-3">
               
               <div className="leaderboard-tabs mb-2 grid h-10 w-full shrink-0 grid-cols-[64px_minmax(0,1fr)_64px] items-center bg-[#121812] sm:h-12">
                 <button type="button" onClick={() => setLeaderboardOpen(false)} className="flex h-full items-center justify-start px-1 font-mono text-[10px] font-black uppercase text-[#e6f7d4]">
@@ -3335,7 +3843,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
                 </button>
                 <div className="flex min-w-0 items-center justify-center font-mono text-[11px] font-black uppercase text-[#cfe8b3]">
                   <span className="text-center leading-tight">{lang === 'en' ? 'Damage leaderboard' : lang === 'ru' ? 'Топ урона' : 'Топ урону'}</span>
-                  <span className="relative z-10 ml-2 text-[9px] text-[#9fbc82]">{leaderboard.length}</span>
+                  <span className="relative z-10 ml-2 text-[9px] text-[#9fbc82]">{combatLeaderboard.length}</span>
                 </div>
                 <button
                   type="button"
@@ -3359,26 +3867,26 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
               ) : null}
 
               {raidMode && <RaidRankRewardsGuide language={lang} />}
-              {displayedLeaderboard.length ? <div className="leaderboard-top mb-2 shrink-0 overflow-hidden rounded-none bg-[#0b100a] px-1 py-2 sm:px-2"><BossTopPodium leaderboard={displayedLeaderboard} mode={leaderboardMode} clanSubtitle={t('boss_panel.clan_damage', { lng: lang })} onOpenPlayerProfile={onOpenPlayerProfile} /></div> : null}
+              {displayedLeaderboard.length ? <div className="leaderboard-top mb-2 shrink-0 overflow-hidden rounded-none bg-[#0b100a]/70 px-1 py-2 sm:px-2"><BossTopPodium leaderboard={displayedLeaderboard} mode={leaderboardMode} clanSubtitle={t('boss_panel.clan_damage', { lng: lang })} onOpenPlayerProfile={openLeaderboardPlayer} /></div> : null}
 
               <div className="leaderboard-list-wrap players-scroll h-0 min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain touch-pan-y pb-4 mt-2" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {displayedLeaderboard.length === 0 ? (
                   <div className="flex h-full min-h-[180px] items-center justify-center rounded-[14px] px-4 text-center">
-                    <p className="font-mono text-[11px] leading-relaxed text-[#9bb576]">Nobody has hit this boss yet.</p>
+                    <p className="font-mono text-[11px] leading-relaxed text-[#9bb576]">{lang === 'en' ? 'Nobody has hit this boss yet.' : lang === 'ru' ? 'Этого босса ещё никто не атаковал.' : 'Цього боса ще ніхто не атакував.'}</p>
                   </div>
                 ) : (
                   <div className="space-y-1.5">
                     {displayedLeaderboard.map((log, index) => leaderboardMode === 'clans' ? (
-                      <BossClanDamageRow key={log.id} log={log} rank={index + 1} subtitle={t('boss_panel.clan_damage', { lng: lang })} />
+                      <BossClanDamageRow key={log.id} log={log} rank={index + 1} language={lang} subtitle={t('boss_panel.clan_damage', { lng: lang })} />
                     ) : (
-                      <BossDamageRow key={log.id || log.player_id || index} log={log} rank={index + 1} raidMode={raidMode} isMe={log.player_email === profile?.created_by} language={lang} onOpenPlayerProfile={onOpenPlayerProfile} />
+                      <BossDamageRow key={log.id || log.player_id || index} log={log} rank={index + 1} raidMode={raidMode} isMe={log.player_email === profile?.created_by} language={lang} onOpenPlayerProfile={openLeaderboardPlayer} />
                     ))}
                   </div>
                 )}
               </div>
-              {leaderboardMode === 'players' && ownDamageRank >= 0 && <div data-leaderboard-position="true" className="mt-2 shrink-0 border-t border-[#28ee90] bg-[#071007] pt-2"><BossDamageRow log={leaderboard[ownDamageRank]} rank={ownDamageRank + 1} isMe language={lang} onOpenPlayerProfile={onOpenPlayerProfile} /></div>}
+              {leaderboardMode === 'players' && ownDamageRank >= 0 && <div data-leaderboard-position="true" className="mt-2 shrink-0 border-t border-[#28ee90] bg-[#071007] pt-2"><BossDamageRow log={combatLeaderboard[ownDamageRank]} rank={ownDamageRank + 1} isMe language={lang} onOpenPlayerProfile={openLeaderboardPlayer} /></div>}
             </div>
-          </div>, document.body
+          </div>, fightAdapter?.portalRoot || document.body
         ) : null}
       <AnimatePresence>
         {escapeConfirmOpen ? (
@@ -3418,7 +3926,7 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
             >
               <img src={clanHelpGuide} alt="" aria-hidden="true" className="mx-auto -my-2 h-48 w-48 object-contain" />
               <h2 className="font-sans text-[19px] font-black uppercase leading-tight text-[#f4ffd9]">{tr.clanHelpTitle}</h2>
-              <p className="mt-3 font-mono text-[12px] font-bold leading-relaxed text-[#d3e7bf]">{tr.clanHelpText}</p>
+              <p className="mt-3 font-mono text-[12px] font-bold leading-relaxed text-[#d3e7bf]">{fightAdapter?.inviteClan ? (lang === 'en' ? 'This is a shared clan boss. Send a call to clan chat so your clanmates can join this fight.' : lang === 'ru' ? 'Это общий босс клана. Отправь призыв в чат, чтобы соклановцы присоединились к этому бою.' : 'Це спільний бос клану. Надішли заклик у чат, щоб учасники клану приєдналися до цього бою.') : tr.clanHelpText}</p>
               {clanHelpStatus ? <p role="status" className="mt-3 font-mono text-[11px] font-black text-[#dfff82]">{clanHelpStatus}</p> : null}
               <div className="mt-5 grid grid-cols-2 gap-2">
                 <GameTextureButton type="button" tone="dark-green" onClick={() => setClanHelpOpen(false)} className="h-11 w-full">
@@ -3633,7 +4141,12 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
         .boss-layer-eyes-red { opacity: 0; mix-blend-mode: screen; }
         .poison-hit .boss-layer-eyes-green { opacity: 1 !important; filter: brightness(1.45) drop-shadow(0 0 10px rgba(164,255,84,0.65)); }
         .poison-hit .boss-layer-aura { filter: brightness(1.24); opacity: 0.85; }
-        .big-poison-hit { animation: boss-shake 0.28s ease-in-out 2; }
+        .boss-tap-flash { animation: boss-tap-flash .28s ease-out both; }
+        .boss-tap-damage { animation: boss-tap-damage 2.1s ease-out both; }
+        @keyframes boss-tap-flash { from { opacity:1; transform:scale(.5) rotate(-12deg); } to { opacity:0; transform:scale(1.45) rotate(8deg); } }
+        @keyframes boss-tap-damage { 0% { opacity:0; transform:translateY(0) scale(1); } 8% { opacity:1; } 82% { opacity:1; transform:translateY(-26px) scale(1.06); } 100% { opacity:0; transform:translateY(-42px) scale(1.1); } }
+        @media (prefers-reduced-motion:reduce) { .boss-tap-flash { display:none; } .boss-tap-damage { animation:none; } }
+        .big-poison-hit { animation: boss-shake 0.28s ease-in-out 1; }
         .big-poison-hit .boss-layer-eyes-green { opacity: 0 !important; }
         .big-poison-hit .boss-layer-eyes-red { opacity: 1 !important; filter: brightness(1.35) drop-shadow(0 0 12px rgba(255,48,48,0.8)); }
         .big-poison-hit .boss-layer-head { animation: boss-head-twitch 0.3s ease-in-out, boss-head-idle 2.7s ease-in-out infinite alternate; }
@@ -3892,4 +4405,8 @@ export default function BossPanel({ profile, onAddXp, onRefreshProfile, onUpdate
       </div>
     </AssetStage>
   );
+}
+
+export function warmFirstFrame() {
+  return warmFirstFrameImages([slapIcon, forkStrikeIcon, smallPoisonIcon, mediumPoisonIcon, largePoisonIcon]);
 }

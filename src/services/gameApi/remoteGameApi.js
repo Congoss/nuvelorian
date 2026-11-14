@@ -1,10 +1,20 @@
+import { trackGameWrite } from '@/lib/gameBuildRefresh';
+import { recoverShipAttack } from '@/lib/shipAttackRecovery.js';
 import i18n from '@/i18n';
 import { localizeApiError } from '@/lib/apiErrorTranslations';
 import { rateLimitedFetch } from '@/lib/rateLimitedFetch.js';
+import { recordPerformanceRequest } from '@/lib/performanceDiagnostics.js';
+import { readRemoteResponse } from '@/lib/remoteResponse.js';
+import { responseErrorCode } from '@/lib/responseErrorCode.js';
+import {withShipRequestTimeout} from '@/lib/shipCombatRequest.js';
 import { syncServerClock } from '@/lib/serverClock.js';
 import { platformConfig } from '@/lib/platform/config';
 import { getTelegramSession } from '@/lib/platform/telegram';
 import { reportClientDiagnostic } from '@/lib/diagnosticReporter';
+import { createReadCache, selectChatMessages } from '@/lib/displayReadCache';
+
+const displayReads=createReadCache({ttl:2000,max:100});
+let lastSlowApiReport = -Infinity;
 
 function setBootDebug(patch = {}) {
   if (typeof window === 'undefined') return;
@@ -71,6 +81,16 @@ function extractResponseData(result) {
   return result;
 }
 
+function attachResponseMeta(value, response, path) {
+  if (!value || typeof value !== 'object') return value;
+  const meta={path,request_id:response.headers.get('x-request-id') || '',received_at:Date.now()};
+  try {
+    Object.defineProperty(value, '__combat_response_meta', { configurable:true, enumerable:true, value:meta });
+    if(value.fight&&typeof value.fight==='object')Object.defineProperty(value.fight,'__combat_response_meta',{configurable:true,enumerable:true,value:meta});
+  } catch { /* Response metadata is diagnostic only. */ }
+  return value;
+}
+
 function buildQuery(params = {}) {
   const searchParams = new URLSearchParams();
 
@@ -98,36 +118,50 @@ function buildQuery(params = {}) {
   return query ? `?${query}` : '';
 }
 
-async function remoteRequest(path, { method = 'GET', query, body } = {}) {
+function remoteRequest(path, options) {
+  const method = options?.method || 'GET';
+  return method === 'GET' || method === 'HEAD'
+    ? sendRemoteRequest(path, options)
+    : trackGameWrite(() => sendRemoteRequest(path, options));
+}
+
+async function sendRemoteRequest(path, { method = 'GET', query, body,signal,headers = {} } = {}) {
+  if(method!=='GET'&&(path==='/chat/messages'||path.startsWith('/releases/')))displayReads.clear();
   const baseUrl = ensureApiBaseUrl();
   const url = `${baseUrl}${path}${buildQuery(query)}`;
   const hasBody = body !== undefined;
 
   let response;
+  const requestStarted = performance.now();
   try {
     response = await rateLimitedFetch(url, {
       method,
+      signal,
       cache: 'no-store',
-      headers: buildHeaders(hasBody ? { 'Content-Type': 'application/json' } : undefined),
+      headers: buildHeaders({...headers,...(hasBody ? { 'Content-Type': 'application/json' } : {})}),
       body: hasBody ? normalizePayload(body) : undefined,
     });
   } catch (error) {
-    reportClientDiagnostic('NETWORK_ERROR', error, path);
+    recordPerformanceRequest(performance.now() - requestStarted, 0);
+    if (error?.name !== 'AbortError') reportClientDiagnostic('NETWORK_ERROR', error, path);
     throw error;
   }
 
+  const fetchDuration = performance.now() - requestStarted;
   syncServerClock(response);
-  let parsed;
-  const contentType = response.headers.get('content-type') || '';
+  const parsed = await readRemoteResponse(response);
 
-  if (contentType.includes('application/json')) {
-    parsed = await response.json();
-  } else {
-    const text = await response.text();
-    parsed = text ? { message: text } : null;
+  const requestDuration = performance.now() - requestStarted;
+  recordPerformanceRequest(requestDuration, response.status);
+  if (requestDuration >= 2000 && !document.hidden && performance.now() - lastSlowApiReport >= 60000) {
+    lastSlowApiReport = performance.now();
+    reportClientDiagnostic('SLOW_API', `${method} ${response.status}: ${Math.round(requestDuration)}ms; server-timing: ${(response.headers.get('server-timing') || 'unavailable').slice(0, 400)}`, path, {elapsed_ms:requestDuration,fetch_ms:fetchDuration,parse_ms:requestDuration-fetchDuration,method,request_id:response.headers.get('x-request-id') || '',server_timing:response.headers.get('server-timing') || ''});
   }
 
-  if (!response.ok) {
+  if (!response.ok || parsed?.code==='REMOTE_INVALID_RESPONSE' || parsed?.code==='GATEWAY_UNAVAILABLE') {
+    if([502,503,504].includes(response.status) || parsed?.code==='REMOTE_INVALID_RESPONSE') {
+      reportClientDiagnostic('GATEWAY_ERROR',`${parsed?.code || 'GATEWAY_UNAVAILABLE'} (HTTP ${response.status})`,path,{elapsed_ms:requestDuration,method,request_id:response.headers.get('x-request-id') || ''});
+    }
     setBootDebug({
       bootstrapStatus: path === '/players/bootstrap' ? response.status : (window.__tgBootDebug?.bootstrapStatus || null),
       bootstrapErrorCode: path === '/players/bootstrap' ? (parsed?.code || parsed?.error || 'BOOTSTRAP_FAILED') : (window.__tgBootDebug?.bootstrapErrorCode || null),
@@ -142,9 +176,10 @@ async function remoteRequest(path, { method = 'GET', query, body } = {}) {
       hasTelegramObject: Boolean(window.Telegram?.WebApp),
       hasInitData: Boolean(window.Telegram?.WebApp?.initData),
     });
-    const error = new Error(localizeApiError(parsed?.code, parsed?.message || `Remote API request failed with status ${response.status}`, i18n.language));
+    const errorCode = responseErrorCode(response.status,parsed);
+    const error = new Error(localizeApiError(errorCode, parsed?.message || `Remote API request failed with status ${response.status}`, i18n.language));
     error.status = response.status;
-    error.code = parsed?.code || 'REMOTE_GAME_API_REQUEST_FAILED';
+    error.code = errorCode || 'REMOTE_GAME_API_REQUEST_FAILED';
     error.details = parsed;
     throw error;
   }
@@ -157,7 +192,23 @@ async function remoteRequest(path, { method = 'GET', query, body } = {}) {
     });
   }
 
-  return extractResponseData(parsed);
+  return attachResponseMeta(extractResponseData(parsed), response, path);
+}
+
+const readCache = new Map();
+function cachedRemoteRequest(path, ttlMs) {
+  const now = Date.now();
+  const cached = readCache.get(path);
+  if (cached && (cached.pending || cached.expiresAt > now)) return cached.value;
+  const pending = remoteRequest(path).then((value) => {
+    readCache.set(path, { value: Promise.resolve(value), expiresAt: Date.now() + ttlMs, pending: false });
+    return value;
+  }).catch((error) => {
+    readCache.delete(path);
+    throw error;
+  });
+  readCache.set(path, { value: pending, expiresAt: now + ttlMs, pending: true });
+  return pending;
 }
 
 function getPlayerLookupQuery(filter = {}) {
@@ -169,6 +220,25 @@ function getPlayerLookupQuery(filter = {}) {
 }
 
 export const remoteGameApi = {
+  submitBug(payload){return remoteRequest('/support/reports',{method:'POST',body:payload});},
+  cardGame(command,payload={}) { return remoteRequest('/card-game/'+command,{method:'POST',body:payload}); },
+  clanShipCombat(clanId, command, payload) { return withShipRequestTimeout(signal=>remoteRequest('/clans/'+encodeURIComponent(clanId)+'/ship/'+command, {method:'POST',signal,body:{...payload,compact:true}})).catch(error=>{if(error.code==='SHIP_REQUEST_TIMEOUT')error.message=localizeApiError(error.code,error.message,i18n.language);throw error;}); },
+  localMarket(body) { return remoteRequest(import.meta.env.DEV?'/local-market':'/market-pilot', {headers:{'X-Local-Market-Platform':platformConfig.platform},...(body ? {method:'POST',body} : {})}); },
+  marketSimulation() { return remoteRequest('/local-market/simulation', {headers:{'X-Local-Market-Platform':platformConfig.platform}}); },
+  marketAccess() { return remoteRequest(import.meta.env.DEV?'/local-market/access':'/market-pilot/access'); },
+  marketPaymentInstruction(orderId) { return remoteRequest('/market-pilot/instruction',{method:'POST',headers:{'X-Local-Market-Platform':platformConfig.platform},body:{orderId}}); },
+  marketRegistration() { return remoteRequest('/market-pilot/registration',{method:'POST',body:{}}); },
+  marketTestnet(body) { return remoteRequest('/local-market/testnet', {headers:{'X-Local-Market-Platform':platformConfig.platform},...(body?{method:'POST',body}:{})}); },
+  equipmentForge(body) { return remoteRequest('/equipment-forge', body ? {method:'POST',body} : {}); },
+  pvp(body) { return remoteRequest('/pvp', body ? {method:'POST',body} : {}); },
+  pvpOnline(body) { return remoteRequest('/pvp/online', body ? {method:'POST',body} : {}); },
+  getClanShip(clanId) { return remoteRequest('/clans/'+encodeURIComponent(clanId)+'/ship'); },
+  contributeClanShip(clanId, payload) { return remoteRequest('/clans/'+encodeURIComponent(clanId)+'/ship/contribute', {method:'POST',body:payload}); },
+  renameClanShip(clanId, payload) { return remoteRequest('/clans/'+encodeURIComponent(clanId)+'/ship/rename', {method:'POST',body:payload}); },
+  async getHalloweenEvent({ force = false } = {}) {
+    if (force) readCache.delete('/events/halloween');
+    return cachedRemoteRequest('/events/halloween', 2000);
+  },
   async claimNftHolderPet(petId) {
     return remoteRequest('/holder-pets/claim', { method: 'POST', body: { petId } });
   },
@@ -266,7 +336,7 @@ export const remoteGameApi = {
   },
 
   async listClans() {
-    return remoteRequest('/clans');
+    return displayReads.get('clans',()=>remoteRequest('/clans'));
   },
 
   async createClan(payload) {
@@ -329,16 +399,17 @@ export const remoteGameApi = {
     return remoteRequest('/players/me/like-box/claim', { method: 'POST' });
   },
 
-  async donateToClan(clanId, amount, actionId = crypto.randomUUID()) {
+  async donateToClan(clanId, amount, actionId) {
+    actionId ??= globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2);
     return remoteRequest(`/clans/${encodeURIComponent(clanId)}/donations`, { method: 'POST', body: { amount, actionId } });
   },
 
   async getShopConfig() {
-    return remoteRequest('/shop/config');
+    return cachedRemoteRequest('/shop/config', 300000);
   },
 
   async getPaymentRates() {
-    return remoteRequest('/payments/rates');
+    return cachedRemoteRequest('/payments/rates', 60000);
   },
 
   async getNewbiePackOffers() {
@@ -369,10 +440,11 @@ export const remoteGameApi = {
     });
   },
 
-  async listChatMessages(channel = 'world', limit = 50) {
-    return remoteRequest('/chat/messages', {
-      query: { channel, limit },
-    });
+  async listChatMessages(channel = 'world', limit = 50, scope = {}) {
+    if(!scope.playerId)return remoteRequest('/chat/messages',{query:{channel,limit}});
+    const key=JSON.stringify(['chat',String(scope.playerId),channel,channel==='clan'?String(scope.clanId||''):'']);
+    const messages=await displayReads.get(key,()=>remoteRequest('/chat/messages',{query:{channel,limit:100}}));
+    return selectChatMessages(messages,limit);
   },
 
   async sendChatMessage({ channel = 'world', text, replyToId, kind, bossFightInvite }) {
@@ -380,6 +452,9 @@ export const remoteGameApi = {
       method: 'POST',
       body: { channel, text, replyToId, kind, bossFightInvite },
     });
+  },
+  async claimReleaseReward(version) {
+    return remoteRequest(`/releases/${encodeURIComponent(version)}/claim`, {method:'POST'});
   },
 
   async findPlayerProfiles(filter = {}) {
@@ -458,7 +533,7 @@ export const remoteGameApi = {
     });
   },
 
-  async completeMission({ profileId, task, requestId }) {
+  async completeMission({ profileId, task, requestId, count = 1, batchMode }) {
     if (!profileId) {
       const error = new Error('Profile id is required');
       error.code = 'PROFILE_ID_REQUIRED';
@@ -466,7 +541,7 @@ export const remoteGameApi = {
     }
     return remoteRequest(`/players/${profileId}/tasks/complete`, {
       method: 'POST',
-      body: { task, requestId },
+      body: { task, requestId, count, batchMode },
     });
   },
 
@@ -561,21 +636,21 @@ export const remoteGameApi = {
     });
   },
 
-  async attackBoss({ fight, weapon, multiplier = 1 }) {
-    return remoteRequest(`/boss-fights/${fight.id}/attack`, {
-      method: 'POST',
-      body: {
-        weaponId: weapon.id,
-        multiplier,
-      },
-    });
+  async attackBoss({ fight, weapon, multiplier = 1, presses = null }) {
+    const requestId = 'combat:' + Date.now() + ':' + (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2));
+    // Several queued taps travel together; the server still resolves them one by one.
+    const body = Array.isArray(presses) && presses.length > 1 ? { presses, requestId } : { weaponId: weapon.id, multiplier, requestId };
+    return recoverShipAttack(payload => withShipRequestTimeout(signal => remoteRequest(`/boss-fights/${fight.id}/attack`, {
+      method: 'POST', body: payload, signal,
+    }), {timeoutMs:8000}), body, {maxRetries:1});
   },
 
-  async spawnBossFight({ boss }) {
+  async spawnBossFight({ boss, mode = 'solo' }) {
     return remoteRequest('/boss-fights/spawn', {
       method: 'POST',
       body: {
         bossId: boss.id,
+        mode,
       },
     });
   },
@@ -621,8 +696,10 @@ export const remoteGameApi = {
     return remoteRequest('/raid-boss');
   },
 
-  async attackRaidBoss({ weapon, multiplier = 1 }) {
-    return remoteRequest('/raid-boss/attack', { method: 'POST', body: { weaponId: weapon.id, multiplier } });
+  async attackRaidBoss({ weapon, multiplier = 1, presses = null }) {
+    const requestId = 'combat:' + Date.now() + ':' + (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2));
+    const body = Array.isArray(presses) && presses.length > 1 ? { presses, requestId } : { weaponId: weapon.id, multiplier, requestId };
+    return recoverShipAttack(payload => withShipRequestTimeout(signal => remoteRequest('/raid-boss/attack', { method: 'POST', body: payload, signal }), {timeoutMs:8000}), body, {maxRetries:1});
   },
 
   async listRaidBossLeaderboard() {

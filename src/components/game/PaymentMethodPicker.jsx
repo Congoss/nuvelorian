@@ -1,14 +1,16 @@
+import { useTranslation } from 'react-i18next';
+import { paymentText } from '@/lib/paymentUiText';
 import { isWebPlatform } from '@/lib/platform/config';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useTonAddress, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { TonConnectUIContext, TonConnectUIProvider, useTonAddress, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import nearIcon from '@/assets/ui/near-logo.svg';
 import starsCurrencyIcon from '@/assets/ui/star1.png';
-import { getResourceIcon } from '@/lib/resourceIcons';
 import tonIcon from '@/assets/optimized/paper.webp';
 import GameTextureButton from './GameTextureButton';
 import { confirmPaymentOrder, createPaymentOrder, getPaymentOrder, getPaymentRates } from '@/services/paymentsApi';
-import { createTonCommentPayload, getTonChainId } from '@/lib/platform/ton';
+import { createTonCommentPayload, getTonChainId, getTonConnectProviderProps } from '@/lib/platform/ton';
 import { getActiveNearAccount, getNearWalletConnector, openNearWalletModal, sendNearTransfer } from '@/lib/platform/nearWallet';
+import { applyFriday13SaleToProduct } from '@/lib/friday13Event';
 
 const FALLBACK_METHODS = [
   { id: 'ton', title: 'TON' },
@@ -49,7 +51,12 @@ function PaymentMethodButton({ method, active, onClick }) {
 }
 
 export default function PaymentMethodPicker(props) {
-  return isWebPlatform ? <PaymentPicker {...props} /> : <TonPaymentPicker {...props} />;
+  const existingTon=useContext(TonConnectUIContext);
+  const offered=(props.paymentMethods||FALLBACK_METHODS).map(method=>method.id);
+  const allowed=props.pack?.paymentMethods||offered;
+  const needsTon=!isWebPlatform&&offered.includes('ton')&&allowed.includes('ton');
+  if(!needsTon)return <PaymentPicker {...props} />;
+  return existingTon?<TonPaymentPicker {...props}/>:<TonConnectUIProvider {...getTonConnectProviderProps()}><TonPaymentPicker {...props}/></TonConnectUIProvider>;
 }
 
 function TonPaymentPicker(props) {
@@ -68,10 +75,14 @@ function PaymentPicker({
   tonConnectUI = null,
   tonAddress = '',
   tonWallet = null,
+  portalLayer = false,
 }) {
 
 
 
+  const { i18n } = useTranslation();
+  const pt = text => paymentText(text,i18n.resolvedLanguage||i18n.language);
+  const displayPack = applyFriday13SaleToProduct(pack);
   const [method, setMethod] = useState(initialMethodId || paymentMethods[0]?.id || 'ton');
   const [phase, setPhase] = useState('idle');
   const purchaseBusy = useRef(false);
@@ -174,6 +185,11 @@ function PaymentPicker({
 
     let nearTransferSubmitted = false;
     try {
+      if(method==='ton'){
+        if(!tonConnectUI)throw new Error('TON wallet is not available');
+        await tonConnectUI.connectionRestored;
+        if(!tonConnectUI.connected){await tonConnectUI.openModal();setPhase('idle');return;}
+      }
       const response = await createPaymentOrder({ itemId: pack.id, paymentMethod: method });
       const nextOrder = response?.order || response;
       setOrder(nextOrder);
@@ -199,7 +215,7 @@ function PaymentPicker({
           // TonConnect returns a signed BOC here, not an on-chain transaction
           // hash. The server verifies the transfer against the receiver ledger.
           txHash: '',
-          senderAddress: tonAddress || tonWallet?.account?.address || '',
+          senderAddress: tonConnectUI.wallet?.account?.address || tonAddress || tonWallet?.account?.address || '',
           amount: request.amount,
           recipient: request.receiver,
           confirmed: true,
@@ -315,22 +331,22 @@ function PaymentPicker({
   const lockedNearAmount = Number(order?.nearAmountLocked || order?.near_amount_locked || order?.payment_request?.near?.amount || 0);
   const nearPrice = lockedNearAmount > 0
     ? lockedNearAmount
-    : pack.near ? Number(pack.near) : nearUsd > 0 ? Math.ceil((Number(pack.usd || 0) / nearUsd) * 1e6) / 1e6 : 0;
+    : displayPack.near ? Number(displayPack.near) : nearUsd > 0 ? Math.ceil((Number(displayPack.usd || 0) / nearUsd) * 1e6) / 1e6 : 0;
   const priceLabel = method === 'telegram_stars'
-    ? <span className="inline-flex items-center gap-1"><img src={starsCurrencyIcon} alt="" aria-hidden="true" className="h-3.5 w-3.5 object-contain" />{Number(pack.stars || Math.ceil(Number(pack.usd || 0) * 100)).toLocaleString()}</span>
+    ? <span className="inline-flex items-center gap-1">{displayPack.friday13SalePercent ? <del className="text-[#bd8f84]">{Number(pack.stars || Math.ceil(Number(pack.usd || 0) * 100)).toLocaleString()}</del> : null}<img src={starsCurrencyIcon} alt="" aria-hidden="true" className="h-3.5 w-3.5 object-contain" /><b>{Number(displayPack.stars || Math.ceil(Number(displayPack.usd || 0) * 100)).toLocaleString()} Stars</b></span>
     : method === 'near'
-      ? <span className="inline-flex items-center gap-1"><img src={nearIcon} alt="" aria-hidden="true" className="h-3.5 w-3.5 object-contain" />{nearPrice > 0 ? nearPrice.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—'} NEAR</span>
-      : `$${Number(pack.usd || 0).toFixed(2)} USD`;
+      ? <span className="inline-flex items-center gap-1">{displayPack.friday13SalePercent && nearUsd>0 ? <del className="text-[#bd8f84]">{(Number(pack.usd||0)/nearUsd).toLocaleString('en-US',{maximumFractionDigits:2})}</del> : null}<img src={nearIcon} alt="" aria-hidden="true" className="h-3.5 w-3.5 object-contain" /><b>{nearPrice > 0 ? nearPrice.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—'} NEAR</b></span>
+      : `$${Number(displayPack.usd || 0).toFixed(2)} USD`;
 
   return (
-    <div className="fixed inset-0 z-[20] flex items-center justify-center bg-black/75 px-4 py-6">
-      <div className="w-full max-w-[360px] border-2 border-[#28ee90] bg-[#10170d] p-4 shadow-[0_0_24px_rgba(40,238,144,.2)]">
+    <div onClick={event=>{if(event.target===event.currentTarget)onClose();}} className={`fixed inset-0 ${portalLayer ? "z-[240]" : "z-[20]"} flex items-center justify-center bg-black/75 px-4 py-6`}>
+      <div role="dialog" aria-modal="true" aria-label={pack.title} className="max-h-full w-full max-w-[360px] overflow-y-auto overscroll-contain border-2 border-[#28ee90] bg-[#10170d] p-4 shadow-[0_0_24px_rgba(40,238,144,.2)]">
         <div className="relative flex min-h-6 items-center justify-center">
           <p className="max-w-[290px] truncate text-center font-mono text-sm font-black uppercase text-[#eaffd1]">{pack.title}</p>
-          <button type="button" onClick={onClose} aria-label="Close" className="absolute right-0 top-0 font-mono text-xl font-black leading-none text-[#d8ff86]">×</button>
+          <button type="button" onClick={onClose} aria-label={pt('Close')} className="absolute right-0 top-0 font-mono text-xl font-black leading-none text-[#d8ff86]">×</button>
         </div>
         <div className="flex flex-col items-center justify-center py-2">
-          <img src={pack.icon || getResourceIcon('cdm')} alt="" aria-hidden="true" className="h-24 w-24 object-contain drop-shadow-[0_0_12px_rgba(216,255,134,.2)]" />
+          <img src={pack.icon || getMethodIcon(method)} alt="" aria-hidden="true" className="h-24 w-24 object-contain drop-shadow-[0_0_12px_rgba(216,255,134,.2)]" />
           <p className="mt-1 text-center font-mono text-xs font-black text-[#d8ff86]">{priceLabel}</p>
         </div>
 
@@ -342,22 +358,22 @@ function PaymentPicker({
 
         <div className="border border-[#33452a] bg-[#0b1009] px-3 py-2 text-center">
           <p className="font-mono text-[10px] text-[#d8ffb6]">
-            {phase === 'support' ? 'Contact support' : phase === 'success' ? 'Payment complete' : phase === 'waiting_near' ? 'NEAR transfer pending' : phase === 'waiting_ton' ? 'TON wallet signing' : phase === 'waiting_stars' ? 'STARS pending' : 'Ready to pay'}
+            {pt(phase === 'support' ? 'Contact support' : phase === 'success' ? 'Payment complete' : phase === 'waiting_near' ? 'NEAR transfer pending' : phase === 'waiting_ton' ? 'TON wallet signing' : phase === 'waiting_stars' ? 'STARS pending' : 'Ready to pay')}
           </p>
-          {phase === 'support' && order?.id ? <p className="mt-1 font-mono text-[10px] text-[#a9c18d]">Order: {order.id}</p> : null}
-          {message ? <p className="mt-1 font-mono text-[10px] text-[#a9c18d]">{message}</p> : null}
+          {phase === 'support' && order?.id ? <p className="mt-1 font-mono text-[10px] text-[#a9c18d]">{pt('Order')}: {order.id}</p> : null}
+          {message ? <p className="mt-1 font-mono text-[10px] text-[#a9c18d]">{pt(message)}</p> : null}
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2">
           <GameTextureButton type="button" tone="yellow" onClick={onClose} className="h-[38px]">
             <span className="relative z-[1] flex h-full items-center justify-center font-mono text-[10px] font-black uppercase tracking-[0.08em] text-[#173207]">
-              Close
+              {pt('Close')}
             </span>
           </GameTextureButton>
 
             <GameTextureButton type="button" onClick={beginPurchase} disabled={!method || phase !== 'idle'} className="h-[38px] disabled:opacity-60">
               <span className="relative z-[1] flex h-full items-center justify-center font-mono text-[10px] font-black uppercase tracking-[0.08em] text-[#173207]">
-                {phase === 'support' ? 'Contact support' : ['waiting_near', 'verifying_near'].includes(phase) ? 'Checking…' : phase === 'creating_order' ? '...' : 'Pay'}
+                {pt(phase === 'support' ? 'Contact support' : ['waiting_near', 'verifying_near'].includes(phase) ? 'Checking…' : phase === 'creating_order' ? '...' : 'Pay')}
               </span>
             </GameTextureButton>
         </div>

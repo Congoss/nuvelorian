@@ -1,37 +1,56 @@
-import { APP_VERSION_LABEL } from '@/lib/appVersion';
+import CombatLoader from '@/components/game/CombatLoader';
+import RaidRewardReceipt from '@/components/game/RaidRewardReceipt';
+import {clanOverviewQueries} from '@/lib/clanOverviewQueries';
+import {queryClientInstance} from '@/lib/query-client';
+import {gameApi} from '@/services/gameApi';
+import {warmSceneImage} from '@/lib/sceneAssets';
+import CardGameDailyTrigger from '@/components/game/CardGameDailyTrigger';
+import TutorialJourneyGoal from '@/components/game/TutorialJourneyGoal';
+import JudgeTour from '@/components/game/JudgeTour';
+import RetentionTelemetry from '@/components/game/RetentionTelemetry';
+import { claimAchievement } from '@/services/achievementClaim';
+import { ViewerLanguageContext, AchievementClaimContext } from '@/lib/useAchievementLanguage';
+import AchievementNotifications from '@/components/game/AchievementNotifications';
+import {chatIndicators as getChatIndicators,CHAT_READ_EVENT} from '@/lib/chatReadState';
+import DesktopSpaceBackdrop from '@/components/game/DesktopSpaceBackdrop';
+import LoadingOverlay from '@/components/game/LoadingOverlay';
 import { MotionConfig } from 'framer-motion';
 import { useGlobalAnimations } from '@/lib/animationPreference';
-import { resolveTutorialStep, FIRST_QUEST_TUTORIAL_ENERGY, getQuestTutorialRecoveryStep, isNewbieTutorialActive } from '@/lib/tutorialProgress.js';
+import { resolveTutorialStep, getQuestTutorialRecoveryStep, isNewbieTutorialActive } from '@/lib/tutorialProgress.js';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import TopBar from '@/components/game/TopBar';
+import PublicPlayerProfile from '@/components/game/PublicPlayerProfile';
 import BottomNav from '@/components/game/BottomNav';
 import CampView from '@/components/game/CampView';
 import AvatarWithFrame from '@/components/game/AvatarWithFrame';
 import MarkerFrame from '@/components/game/MarkerFrame';
 import GameTextureButton from '@/components/game/GameTextureButton';
 import { useGameState } from '@/components/game/useGameState';
+import { useClanQuestNotifications } from '@/components/game/useClanQuestNotifications';
 import { useStartupLoadingManager } from '@/components/game/useStartupLoadingManager';
 import { Button } from '@/components/ui/button';
 import { GAME_CONFIG } from '@/lib/gameConfig';
 import { findPlayerProfiles, listChatMessages } from '@/services/gameApi';
 import inboxIcon from '@/assets/ui/inbox.svg';
-import loadingBackground from '@/assets/optimized/loading.webp';
-import loadingSpaceBackground from '@/assets/loading/loading-background.png';
-import loadingPlanet from '@/assets/loading/planet-background.png';
-import loadingPlanet360 from '@/assets/loading/pl360.png';
-import loadingGreenPlanet from '@/assets/loading/green-planet-background.png';
-import loadingHero from '@/assets/loading/hero-loading.png';
-import loadingLogo from '@/assets/loading/NUVE-loading.png';
+
+
+
+
+
+
+
+
+
 import heroNavIcon from '@/assets/optimized/nav-hero.webp';
-import shopNavIcon from '@/assets/nav/shop.png';
 import tentaclesIcon from '@/assets/optimized/cosmohand.webp';
 import starIcon from '@/assets/optimized/paper.webp';
 import levelIcon from '@/assets/optimized/level.webp';
-import bossesNavIcon from '@/assets/optimized/nav-bosses.webp';
-import questsNavIcon from '@/assets/optimized/nav-quests.webp';
-import inventoryNavIcon from '@/assets/optimized/nav-inventory.webp';
-import clansNavIcon from '@/assets/optimized/nav-clans.webp';
-import heroBase from '@/assets/hero/hero-base1.gif';
+import bossesNavIcon from '@/assets/optimized/all/nav/boss-nav.webp';
+import questsNavIcon from '@/assets/optimized/all/nav/quests-nav.webp';
+import inventoryNavIcon from '@/assets/optimized/all/nav/talents-nav.webp';
+import clansNavIcon from '@/assets/optimized/all/nav/clans-nav.webp';
+import { getCampBackgroundById } from '@/components/game/backgrounds';
+import heroBase from '@/assets/hero/set1-body.png';
 import puddleSponge from '@/assets/ui/puddle-sponge.png';
 import energyIcon from '@/assets/optimized/all/ui/energy.webp';
 import guideBase from '@/assets/guide/enot-guide-base.png';
@@ -66,12 +85,17 @@ const loadDailyPanel = () => import('@/components/game/DailyPanel');
 const loadLeaderboardPanel = () => import('@/components/game/LeaderboardPanel');
 const loadEquipmentPanel = () => import('@/components/game/EquipmentPanel');
 const loadClanPanel = () => import('@/components/game/ClanPanel');
+const loadMarketPanel = () => import('@/components/game/MarketPanel');
+const MarketPanel = lazy(loadMarketPanel);
 const loadRaidPanel = () => import('@/components/game/RaidPanel');
 const loadChatPanel = () => import('@/components/game/ChatPanel');
 const loadBackgroundPanel = () => import('@/components/game/BackgroundPanel');
 const loadProfilePanel = () => import('@/components/game/WalletProfilePanel');
 const loadRoulettePanel = () => import('@/components/game/RoulettePanel');
 const loadMailPanel = () => import('@/components/game/MailPanel');
+const loadPvpPanel = () => import('@/components/game/PvpPanel');
+const ShipUpdateWelcome = lazy(() => import('@/components/game/ShipUpdateWelcome'));
+const HalloweenWelcome = lazy(() => import('@/components/game/HalloweenWelcome'));
 
 const BossPanel = lazy(loadBossPanel);
 const TasksPanel = lazy(loadTasksPanel);
@@ -87,10 +111,21 @@ const BackgroundPanel = lazy(loadBackgroundPanel);
 const ProfilePanel = lazy(loadProfilePanel);
 const RoulettePanel = lazy(loadRoulettePanel);
 const MailPanel = lazy(loadMailPanel);
+const PvpPanel = lazy(loadPvpPanel);
 
-const TAB_LOADERS = { boss: loadBossPanel, tasks: loadTasksPanel, skills: loadSkillsPanel, clan: loadClanPanel };
+const TAB_LOADERS = {
+  boss: loadBossPanel, tasks: loadTasksPanel, skills: loadSkillsPanel, clan: loadClanPanel, market: loadMarketPanel,
+  shop: loadShopPanel, raid: loadRaidPanel, raidBoss: loadBossPanel, events: loadDailyPanel,
+  fishing: loadDailyPanel,
+};
+const MODAL_LOADERS = {
+  daily: loadDailyPanel, events: loadDailyPanel, leaderboard: loadLeaderboardPanel,
+  equipment: loadEquipmentPanel, clan: loadClanPanel, chat: loadChatPanel,
+  roulette: loadRoulettePanel, mail: loadMailPanel, backgrounds: loadBackgroundPanel,
+  profile: loadProfilePanel, pvp: loadPvpPanel,
+};
 function warmTab(tab) {
-  TAB_LOADERS[tab]?.().catch(() => {});
+  return TAB_LOADERS[tab]?.().then(panel => panel.warmFirstFrame?.()).catch(() => {});
 }
 
 function LocalTesterTutorial(props) {
@@ -151,12 +186,13 @@ function ActiveTutorial({ profile, activeTab, activeModal, onUpdateProfile, onNa
       .catch(() => { welcomeBonusPendingRef.current = false; setWelcomeBonusError(true); });
   }, [profile?.welcome_energy_granted, storageKey, onUpdateProfile]);
   const [goCount, setGoCount] = useState(0);
+  const autoQuestRunning = useRef(false);
+  const [autoQuestIndex, setAutoQuestIndex] = useState(null);
   const [sectorIndex, setSectorIndex] = useState(0);
   const [sectorStartLoop, setSectorStartLoop] = useState(null);
   const [targetRect, setTargetRect] = useState(null);
   const [goRect, setGoRect] = useState(null);
   const [dismissedStep, setDismissedStep] = useState(null);
-  const [xpSourcesOpen, setXpSourcesOpen] = useState(false);
   const hintRef = useRef(null);
   const [hintHeight, setHintHeight] = useState(0);
   const rouletteUnlocked = Number(profile?.level || 1) >= (GAME_CONFIG.CONTENT_UNLOCK_LEVELS?.roulette || 1);
@@ -258,9 +294,8 @@ function ActiveTutorial({ profile, activeTab, activeModal, onUpdateProfile, onNa
 
 
   useEffect(() => {
-    if (step !== 'claim-reward') return;
-    const claims = profile?.collection_rewards_claimed || {};
-    if (Object.values(claims).some((count) => Number(count) > 0)) setStep('home');
+    if (!['task-location','quest-sector','artifacts','claim-reward'].includes(step)) return;
+    if (Number(profile?.collection_rewards_claimed?.['p4-u00'] || 0) > 0) setStep('home');
   }, [profile?.collection_rewards_claimed, step]);
 
   useEffect(() => {
@@ -342,20 +377,39 @@ function ActiveTutorial({ profile, activeTab, activeModal, onUpdateProfile, onNa
         setStep(recoveryStep);
         return;
       }
-      // The artifact step is available only after all seven tutorial quests have
-      // completed at least one full cycle. Never advance from a partial list.
-      if (rows.length >= 7 && rows.slice(0, 7).every((row) => Number(row.getAttribute('data-tutorial-loop') || 0) >= 1)) {
-        setStep('artifacts');
+      if (Number(profile?.collection_rewards_claimed?.['p4-u00'] || 0) > 0) { setStep('home'); return; }
+      if (rows.length && Number(rows[0].getAttribute('data-tutorial-loop') || 0) >= 1) {
+        if(autoQuestRunning.current)return;
+        autoQuestRunning.current=true;
+        Promise.resolve(onUpdateProfile?.({playerAction:{type:'tutorial-auto-quests'}})).then(()=>{
+          setAutoQuestIndex(0);
+          const autoRows = rows.slice(1,7);
+          const segmentsFor = row => Array.from(row.querySelectorAll('[data-tutorial-quest-sector]'));
+          autoRows.forEach(row => segmentsFor(row).forEach(segment => { segment.style.opacity='.25';segment.style.filter='grayscale(1)'; }));
+          let delay = 900;
+          autoRows.forEach((row,index) => {
+            const segments = segmentsFor(row);
+            setTimeout(() => {
+              rows.forEach(item=>item.classList.remove('tutorial-quest-auto-complete'));
+              setAutoQuestIndex(index+1);
+              row.classList.add('tutorial-quest-auto-complete');
+              row.scrollIntoView({behavior:'smooth',block:'center'});
+            }, delay);
+            segments.forEach((segment,segmentIndex) => setTimeout(() => {
+              segment.style.transition='opacity 160ms ease, filter 160ms ease';
+              segment.style.opacity='1';segment.style.filter='none';
+            }, delay + 300 + segmentIndex * 170));
+            delay += 300 + segments.length * 170 + 400;
+          });
+          setTimeout(() => {
+            rows.forEach(row=>row.classList.remove('tutorial-quest-auto-complete'));
+            autoRows.forEach(row => segmentsFor(row).forEach(segment => {segment.style.removeProperty('opacity');segment.style.removeProperty('filter');segment.style.removeProperty('transition');}));
+            setAutoQuestIndex(null);setStep('artifacts');autoQuestRunning.current=false;
+          }, delay+400);
+        }).catch(()=>{autoQuestRunning.current=false;});
         return;
       }
-      const firstIncomplete = rows.slice(0, 7).findIndex((row) => Number(row.getAttribute('data-tutorial-loop') || 0) < 1);
-      if (firstIncomplete < 0) return;
-      if (firstIncomplete !== sectorIndex) {
-        setSectorIndex(firstIncomplete);
-        setSectorStartLoop(null);
-        setGoCount(0);
-        return;
-      }
+      if (sectorIndex !== 0) {setSectorIndex(0);setSectorStartLoop(null);setGoCount(0);return;}
       const row = document.querySelector(`[data-tutorial-block="${sectorIndex}"]`);
       const progress = Number(row?.getAttribute('data-tutorial-progress') || 0);
       const total = Math.max(1, Number(row?.getAttribute('data-tutorial-total') || 1));
@@ -366,7 +420,7 @@ function ActiveTutorial({ profile, activeTab, activeModal, onUpdateProfile, onNa
       }
       setGoCount(Math.min(progress, total));
       if (progress >= total || loopCount > sectorStartLoop) {
-        if (sectorIndex >= 6) setStep('artifacts');
+        if (sectorIndex >= 0) { setSectorStartLoop(null); }
         else {
           setSectorIndex((index) => index + 1);
           setSectorStartLoop(null);
@@ -377,7 +431,7 @@ function ActiveTutorial({ profile, activeTab, activeModal, onUpdateProfile, onNa
     syncQuestProgress();
     const intervalId = window.setInterval(() => { if (!document.hidden) syncQuestProgress(); }, 1000);
     return () => window.clearInterval(intervalId);
-  }, [sectorIndex, sectorStartLoop, step]);
+  }, [sectorIndex, sectorStartLoop, step, profile?.collection_rewards_claimed]);
 
   const rewardPopupOpen = typeof document !== 'undefined' && Boolean(document.querySelector('[data-tutorial-reward-popup="true"], [data-tutorial-loot-box="true"]'));
   const targetName = rewardPopupOpen
@@ -647,6 +701,10 @@ function ActiveTutorial({ profile, activeTab, activeModal, onUpdateProfile, onNa
     return () => document.removeEventListener('click', handleTargetClick, true);
   }, [isTester, onUpdateProfile, onNavigateTab, guideScreenReady, step, returnTargetName, rouletteUnlocked, rouletteHintAfterClose, blocksUntilAck, dismissedStep]);
 
+  if (autoQuestIndex !== null) {
+    const autoCopy = language === 'ru' ? ['Первое задание ты прошёл сам!', 'Остальные завершим за тебя — это стартовый бонус.', 'Опыт, ресурсы и артефакты добавлены', 'Дальше откроем твой первый ящик'] : language === 'en' ? ['You completed the first quest!', 'We will finish the rest for you as a starter bonus.', 'XP, resources and artifacts added', 'Next, open your first chest'] : ['Перше завдання ти пройшов сам!', 'Решту завершимо за тебе — це стартовий бонус.', 'Досвід, ресурси й артефакти додано', 'Далі відкриємо твій перший ящик'];
+    return <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[210] flex justify-center"><div role="status" aria-live="polite" className="w-full max-w-[420px] rounded-xl border border-[#b9d876] bg-[#111c10]/95 p-4 text-center shadow-xl"><p className="text-sm font-black text-[#e4f49d]">{autoQuestIndex === 0 ? autoCopy[0] : `${language === 'en' ? 'Quest' : 'Квест'} ${autoQuestIndex+1}/7 ✓`}</p><p className="mt-2 text-xs leading-relaxed text-[#d1dfbc]">{autoQuestIndex === 0 ? autoCopy[1] : autoCopy[2]}</p><p className="mt-2 text-[10px] text-[#a4ba91]">{autoCopy[3]}</p><div className="mt-3 h-1.5 overflow-hidden rounded bg-black/50"><div className="h-full bg-[#b9da68] transition-[width] duration-500" style={{width:`${(autoQuestIndex+1)/7*100}%`}} /></div></div></div>;
+  }
   if (!isTester || dismissedStep === step || step === 'completed' || step === 'context-done' || step === 'roulette-wait' || (step === 'roulette' && !rouletteUnlocked)) return null;
   if (step === 'bosses' && activeTab !== 'camp') return null;
   // Never ask for a victory claim before the actual button is mounted.
@@ -668,24 +726,8 @@ function ActiveTutorial({ profile, activeTab, activeModal, onUpdateProfile, onNa
     );
   }
   if (step === 'journey') {
-    return (
-      <div className="pointer-events-none absolute inset-x-3 top-28 z-[90] flex justify-center">
-        <div data-tutorial-journey="true" className="pointer-events-auto relative w-full max-w-[380px] rounded-[16px] border border-[#ffd21f] bg-[#171b10]/95 p-3 text-center shadow-[0_5px_20px_rgba(0,0,0,.6)]">
-          <img src={guideExplain} alt="" aria-hidden="true" className="pointer-events-none absolute left-0 top-7 z-10 h-20 w-20 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,.75)]" />
-          <p className="font-mono text-[11px] font-black text-[#ffd21f]">
-            {language === 'ru' ? 'ЭВОЛЮЦИЯ КОСМИЧЕСКОЙ СОПЛИ' : language === 'en' ? 'EVOLUTION OF THE COSMIC BOOGER' : 'ЕВОЛЮЦІЯ КОСМІЧНОЇ ШМАРКЛІ'}
-          </p>
-          <p className="mt-2 font-mono text-[11px] font-bold text-[#f4ffd9]">{language === 'ru' ? 'Тебе нужен 8 уровень. Опыт дают квесты, ежедневные задания, квест новичка и боссы. Короче: нажимай кнопки, выполняй задания и создавай убедительное впечатление активной жизни.' : language === 'en' ? 'You need to reach level 8. Earn XP from quests, daily tasks, Newbie Quest, and boss fights. In short: press buttons, complete tasks, and create a convincing impression of an active lifestyle.' : 'Тобі потрібен 8 рівень. Досвід дають квести, щоденні завдання, квест новачка й боси. Коротше: натискай кнопки, виконуй завдання та створюй переконливе враження активного життя.'}</p>
-          <p className="mt-2 font-mono text-[13px] font-black text-[#d8ff5a]">{language === 'ru' ? 'ТЕКУЩИЙ УРОВЕНЬ' : language === 'en' ? 'CURRENT LEVEL' : 'ПОТОЧНИЙ РІВЕНЬ'}: {Math.min(8, Number(profile?.level || 1))}/8</p>
-          <div className="mt-3 flex items-center justify-center gap-2">
-            <GameTextureButton type="button" onClick={() => setDismissedStep(step)} className="h-9 px-4 font-sans text-[11px] font-black uppercase text-[#172016]"><span className="relative z-10">{language === 'ru' ? 'ПОНЯЛ' : language === 'en' ? 'GOT IT' : 'ЗРОЗУМІВ'}</span></GameTextureButton>
-            <GameTextureButton type="button" onClick={() => setXpSourcesOpen(true)} className="h-9 px-4 font-sans text-[11px] font-black uppercase text-[#172016]"><span className="relative z-10">{language === 'ru' ? 'ГДЕ ВЗЯТЬ ОПЫТ?' : language === 'en' ? 'WHERE TO GET XP?' : 'ДЕ ВЗЯТИ ДОСВІД?'}</span></GameTextureButton>
-          </div>
-          <style>{`[data-tutorial-journey="true"] .text-left > p { font-size: 11px; } [data-tutorial-journey="true"] > p:nth-of-type(2), [data-tutorial-journey="true"] > p:nth-of-type(3) { padding-left: 2.5rem; } [data-tutorial-journey="true"] .text-left button { font-size: 10px; background-image: radial-gradient(ellipse at 9% 23%,rgba(235,250,114,.48) 0 5%,transparent 6%),radial-gradient(ellipse at 91% 75%,rgba(229,247,99,.42) 0 5%,transparent 6%),linear-gradient(180deg,#a9d239 0%,#9ac72e 55%,#82aa20 86%,#58730f 100%); box-shadow: inset 0 1px 0 rgba(244,255,155,.42), inset 0 -2px 0 rgba(43,62,6,.3), 0 2px 3px rgba(0,0,0,.62); }`}</style>
-          {xpSourcesOpen ? <div className="mt-3 space-y-2 border-t border-[#526b43] pt-3 text-left"><p className="text-center font-mono text-[10px] font-black text-[#ffd21f]">{language === 'ru' ? 'ГДЕ ВЗЯТЬ ОПЫТ?' : language === 'en' ? 'WHERE TO GET XP?' : 'ДЕ ВЗЯТИ ДОСВІД?'}</p><p className="font-mono text-[9px] text-[#d3e7bf]">{language === 'ru' ? 'Опыт не вырастет от твоего взгляда.' : language === 'en' ? 'XP won’t grow just because you stare at it.' : 'Досвід не виросте від твого погляду.'}</p><div className="grid grid-cols-2 gap-2"><button type="button" onClick={() => { setXpSourcesOpen(false); onNavigateTab?.('tasks'); }} className="relative h-8 overflow-hidden rounded-[10px_8px_11px_7px] border border-[#090b04] bg-[#a9d239] font-black text-[9px] text-[#172016] shadow-[0_2px_3px_rgba(0,0,0,.62)]">{language === 'ru' ? 'К КВЕСТАМ' : language === 'en' ? 'TO QUESTS' : 'ДО КВЕСТІВ'}</button><button type="button" onClick={() => { setXpSourcesOpen(false); onOpenModal?.('daily'); }} className="relative h-8 overflow-hidden rounded-[10px_8px_11px_7px] border border-[#090b04] bg-[#a9d239] font-black text-[9px] text-[#172016] shadow-[0_2px_3px_rgba(0,0,0,.62)]">{language === 'ru' ? 'К ЕЖЕДНЕВНЫМ' : language === 'en' ? 'TO DAILY TASKS' : 'ДО ЩОДЕННИХ'}</button><button type="button" onClick={() => { setXpSourcesOpen(false); onOpenModal?.('daily'); }} className="relative h-8 overflow-hidden rounded-[10px_8px_11px_7px] border border-[#090b04] bg-[#a9d239] font-black text-[9px] text-[#172016] shadow-[0_2px_3px_rgba(0,0,0,.62)]">ДО NEWBIE QUEST</button><button type="button" onClick={() => { setXpSourcesOpen(false); onNavigateTab?.('boss'); }} className="relative h-8 overflow-hidden rounded-[10px_8px_11px_7px] border border-[#090b04] bg-[#a9d239] font-black text-[9px] text-[#172016] shadow-[0_2px_3px_rgba(0,0,0,.62)]">{language === 'ru' ? 'К БОССАМ' : language === 'en' ? 'TO BOSSES' : 'ДО БОСІВ'}</button></div></div> : null}
-        </div>
-      </div>
-    );
+    if (activeTab !== 'camp' || activeModal) return null;
+    return <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[90] flex justify-center"><div className="pointer-events-auto w-full max-w-[380px]"><TutorialJourneyGoal profile={profile} language={language} onContinue={() => onNavigateTab?.('tasks')} /></div></div>;
   }
   if (step === 'level-eight' || step === 'level-fifteen') {
     const levelEight = step === 'level-eight';
@@ -735,8 +777,8 @@ function ActiveTutorial({ profile, activeTab, activeModal, onUpdateProfile, onNa
     if (step === 'boss-finish' && !guideScreenReady) return null;
     const copy = {
       quests: ['ПОЧНЕМО З КВЕСТІВ', 'Ось тут енергія перетворюється на досвід, нагороди й хибне відчуття особистого розвитку. Тицяй. Подивимося, скільки проблем можна створити одним пальцем.'],
-      'task-location': ['ОБИРАЙ ПЕРШУ ПЛАНЕТУ', `Перший цикл тут коштує ${FIRST_QUEST_TUTORIAL_ENERGY} енергії. Під час гайду витрачай її лише на підсвічені GO у квестах цієї планети — інші витрати тимчасово заблоковані.`],
-      'quest-sector': [`ВИТРАЧАЄМО ЕНЕРГІЮ · КВЕСТ ${sectorIndex + 1}/7`, `Перший цикл потребує ${FIRST_QUEST_TUTORIAL_ENERGY} енергії. Натискай лише підсвічену GO на цій планеті; заповни всі 7 смуг по черзі. Інші витрати енергії тимчасово заблоковані.`],
+      'task-location': ['ОБИРАЙ ПЕРШУ ПЛАНЕТУ', 'Квести дають досвід і ресурси. Заверши лише перше завдання — 4 натискання GO.'],
+      'quest-sector': ['ДОСВІД І ПЕРШИЙ АРТЕФАКТ', 'Кожне GO дає досвід і ресурси. Заповни першу смугу, щоб отримати артефакт.'],
       artifacts: ['НЕ СМІТТЯ, А АРТЕФАКТИ', 'Під час квестів випадають дивні предмети, яких нормальна цивілізація давно б позбулася. На кожній планеті свій набір. Збери його повністю й отримай бонус. Запам’ятай: одна підозріла штуковина — мотлох. Повний комплект — уже археологія.'],
       'claim-reward': ['ДИВИСЬ, ТОБІ ЩОСЬ ДАЛИ', 'Сім етапів позаду, планета не вибухнула, а в слоті навіть з’явилася нагорода. Неймовірний збіг обставин. Натисни CLAIM, поки система не передумала.'],
       home: ['ЗАБИРАЙМОСЯ ЗВІДСИ', 'Планета пережила твоє втручання. Не випробовуй її терпіння. Повертаймося на головну — там ще багато кнопок, про призначення яких ти поки навіть не здогадуєшся.'],
@@ -762,8 +804,8 @@ function ActiveTutorial({ profile, activeTab, activeModal, onUpdateProfile, onNa
     const localizedCopy = language === 'ru'
       ? {
         quests: ['НАЧНЁМ С КВЕСТОВ', 'Здесь энергия превращается в опыт, награды и ложное ощущение личностного роста. Тыкай сюда. Посмотрим, сколько проблем можно создать одним пальцем.'],
-        'task-location': ['ВЫБИРАЙ ПЕРВУЮ ПЛАНЕТУ', `Первый цикл здесь стоит ${FIRST_QUEST_TUTORIAL_ENERGY} энергии. Во время гайда трать её только на подсвеченные GO в квестах этой планеты — остальные траты временно заблокированы.`],
-        'quest-sector': [`ТРАТИМ ЭНЕРГИЮ · КВЕСТ ${sectorIndex + 1}/7`, `Первый цикл требует ${FIRST_QUEST_TUTORIAL_ENERGY} энергии. Нажимай только подсвеченную GO на этой планете и заполни все 7 полос по порядку. Остальные траты энергии временно заблокированы.`],
+      'task-location': ['ВЫБИРАЙ ПЕРВУЮ ПЛАНЕТУ', 'Квесты дают опыт и ресурсы. Заверши только первое задание — 4 нажатия GO.'],
+      'quest-sector': ['ОПЫТ И ПЕРВЫЙ АРТЕФАКТ', 'Каждое GO даёт опыт и ресурсы. Заполни первую полосу, чтобы получить артефакт.'],
         artifacts: ['НЕ МУСОР, А АРТЕФАКТЫ', 'Во время квестов выпадают странные предметы, от которых нормальная цивилизация давно бы избавилась. На каждой планете свой набор. Собери его полностью и получи бонус. Запомни: одна подозрительная штуковина — хлам. Полный комплект — уже археология.'],
         'claim-reward': ['СМОТРИ, ТЕБЕ ЧТО-ТО ДАЛИ', 'Все семь этапов позади, планета не взорвалась, а в слоте даже появилась награда. Невероятное совпадение обстоятельств. Нажми CLAIM, пока система не передумала.'],
         home: ['ВАЛИМ ОТСЮДА', 'Планета пережила твоё вмешательство. Не испытывай её терпение. Возвращаемся на главную — там ещё много кнопок, о назначении которых ты пока даже не догадываешься.'],
@@ -789,8 +831,8 @@ function ActiveTutorial({ profile, activeTab, activeModal, onUpdateProfile, onNa
       : language === 'en'
         ? ({
           quests: ['LET’S START WITH QUESTS', 'This is where energy turns into XP, rewards, and the comforting illusion of personal growth. Tap here. Let’s see how much trouble one finger can cause.'],
-          'task-location': ['PICK THE FIRST PLANET', `The first cycle costs ${FIRST_QUEST_TUTORIAL_ENERGY} energy. During the tutorial, spend it only on the highlighted GO buttons in this planet’s quests; other energy spending is temporarily blocked.`],
-          'quest-sector': [`SPEND ENERGY · QUEST ${sectorIndex + 1}/7`, `The first cycle needs ${FIRST_QUEST_TUTORIAL_ENERGY} energy. Tap only the highlighted GO on this planet and fill all 7 bars in order. Other energy spending is temporarily blocked.`],
+      'task-location': ['PICK THE FIRST PLANET', 'Quests earn XP and resources. Complete just the first quest — 4 GO taps.'],
+      'quest-sector': ['XP AND YOUR FIRST ARTIFACT', 'Every GO earns XP and resources. Fill the first bar to earn an artifact.'],
           artifacts: ['NOT TRASH—ARTIFACTS', 'Quests can drop strange objects that any sensible civilization would have thrown away centuries ago. Every planet has its own set. Complete it to earn a bonus. Remember: one suspicious object is junk. A complete set is archaeology.'],
           'claim-reward': ['LOOK, SOMEONE GAVE YOU SOMETHING', 'All seven stages are complete, the planet hasn’t exploded, and a reward has appeared in the slot. An astonishing chain of coincidences. Tap CLAIM before the system changes its mind.'],
           home: ['LET’S GET OUT OF HERE', 'The planet survived your intervention. Don’t test its patience. Return to the main screen—there are plenty more buttons whose purpose you don’t understand yet.'],
@@ -996,81 +1038,26 @@ function ActiveTutorial({ profile, activeTab, activeModal, onUpdateProfile, onNa
         >
           <span className="relative z-10">{isWelcome ? welcomeText.go : 'ЗРОЗУМІЛО'}</span>
         </GameTextureButton>
+        {isWelcome ? <button
+          type="button"
+          className="mt-3 w-full font-mono text-[11px] uppercase text-[#9cb087] underline"
+          onClick={() => { void onUpdateProfile?.({ playerAction: { type: 'tutorial-skip' } }).catch(() => setWelcomeBonusError(true)); }}
+        >{{ uk: 'Пропустити навчання', ru: 'Пропустить обучение', en: 'Skip the tutorial' }[language] || 'Skip the tutorial'}</button> : null}
       </div>
     </div>
   );
 }
 
-const PANEL_WARMUP_LOADERS = [
-  loadTasksPanel,
-  loadBossPanel,
-  loadSkillsPanel,
-  loadEquipmentPanel,
-  loadDailyPanel,
-  loadClanPanel,
-  loadLeaderboardPanel,
-  loadRaidPanel,
-  loadChatPanel,
-  loadMailPanel,
-  loadRoulettePanel,
-  loadBackgroundPanel,
-  loadProfilePanel,
-  loadShopPanel,
-];
-
-const LOADING_BG_URL = loadingBackground;
-
-function usePanelChunkWarmup(enabled) {
-  useEffect(() => {
-    if (!enabled || typeof window === 'undefined') return undefined;
-
-    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    if (connection?.saveData || ['slow-2g', '2g'].includes(connection?.effectiveType)) return undefined;
-
-    let cancelled = false;
-    let timerId = null;
-    let idleId = null;
-    let nextIndex = 0;
-
-    const schedule = (callback) => {
-      if ('requestIdleCallback' in window) {
-        idleId = window.requestIdleCallback(callback, { timeout: 600 });
-        return;
-      }
-      timerId = window.setTimeout(callback, 150);
-    };
-
-    const warmNext = () => {
-      if (cancelled || nextIndex >= PANEL_WARMUP_LOADERS.length) return;
-      const loadPanel = PANEL_WARMUP_LOADERS[nextIndex];
-      nextIndex += 1;
-      loadPanel()
-        .catch(() => {})
-        .finally(() => {
-          if (!cancelled && nextIndex < PANEL_WARMUP_LOADERS.length) schedule(warmNext);
-        });
-    };
-
-    schedule(warmNext);
-    return () => {
-      cancelled = true;
-      if (idleId !== null && 'cancelIdleCallback' in window) window.cancelIdleCallback(idleId);
-      if (timerId !== null) window.clearTimeout(timerId);
-    };
-  }, [enabled]);
-}
-
 function PanelLoading() {
   return (
     <div className="flex h-full min-h-[180px] w-full min-w-0 flex-1 items-center justify-center bg-[#090d08]">
-      <span className="h-7 w-7 rounded-full border-2 border-[#83b83d]/25 border-t-[#a7d860] animate-spin" aria-label="Loading" />
+      <CombatLoader/>
     </div>
   );
 }
 
 const CRITICAL_ASSET_PATHS = [
   heroNavIcon,
-  shopNavIcon,
   tentaclesIcon,
   starIcon,
   levelIcon,
@@ -1080,85 +1067,6 @@ const CRITICAL_ASSET_PATHS = [
   clansNavIcon,
   heroBase,
 ];
-
-function LoadingOverlay({ progress = 0, visible = true }) {
-  const clamped = Math.max(0, Math.min(100, Math.round(progress)));
-  const width = `${clamped}%`;
-  const stars = useMemo(() => [
-    [8, 16, 1.8, 0.2, '#b7f7ff'], [21, 28, 2.4, 1.1, '#d8b8ff'], [37, 12, 2.1, 0.7, '#8defff'],
-    [54, 24, 2.8, 1.8, '#cbb4ff'], [72, 14, 1.6, 0.4, '#a9f7ff'], [89, 31, 2.3, 2.2, '#d7c0ff'],
-    [14, 48, 2.6, 1.4, '#8defff'], [31, 61, 1.7, 2.8, '#d8b8ff'], [48, 43, 2.2, 0.9, '#b7f7ff'],
-    [66, 55, 2.5, 1.7, '#cbb4ff'], [84, 64, 1.8, 2.5, '#8defff'], [7, 78, 2.1, 0.6, '#d7c0ff'],
-    [27, 86, 2.7, 2.1, '#a9f7ff'], [58, 79, 1.6, 1.3, '#d8b8ff'], [78, 91, 2.4, 3.2, '#b7f7ff'],
-    [4, 37, 1.9, 0.8, '#8defff'], [17, 7, 2.9, 2.4, '#d8b8ff'], [28, 39, 1.5, 1.6, '#b7f7ff'],
-    [43, 5, 2.2, 3.4, '#a9f7ff'], [61, 36, 1.8, 0.3, '#d7c0ff'], [76, 45, 2.6, 2.7, '#8defff'],
-    [94, 11, 1.7, 1.2, '#b7f7ff'], [92, 52, 2.5, 3.1, '#d8b8ff'], [11, 68, 2.1, 1.9, '#a9f7ff'],
-    [39, 72, 2.8, 0.5, '#8defff'], [69, 73, 1.6, 2.6, '#d7c0ff'], [88, 82, 2.3, 1.5, '#b7f7ff'],
-  ], []);
-
-  return (
-    <div
-      aria-hidden="true"
-      className={`absolute inset-0 z-[100] overflow-hidden bg-black transition-opacity duration-500 ease-out ${visible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-    >
-      <div className="loading-stage absolute inset-0 m-auto" aria-hidden="true">
-      <img
-        src={loadingSpaceBackground || LOADING_BG_URL}
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-fill"
-        draggable="false"
-      />
-      <div className="absolute inset-0 z-[1]" aria-hidden="true">
-        {stars.map(([left, top, duration, delay, color], index) => <i key={index} className="loading-star" style={{ left: `${left}%`, top: `${top}%`, width: `${index % 3 ? 3 : 4}px`, height: `${index % 3 ? 3 : 4}px`, background: color, animationDuration: `${duration}s`, animationDelay: `${delay}s` }} />)}
-      </div>
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.12)_0%,rgba(0,0,0,0.4)_55%,rgba(0,0,0,0.72)_100%)]" />
-      <div className="loading-planet-layer absolute inset-0 z-[2]" aria-hidden="true">
-        <img src={loadingPlanet360 || loadingPlanet} alt="" className="loading-planet absolute left-4 top-[29%] h-auto w-[calc(100%-2rem)] object-contain" draggable="false" />
-      </div>
-      <img src={loadingGreenPlanet} alt="" aria-hidden="true" className="absolute inset-0 z-[3] h-full w-full object-fill" draggable="false" />
-      <img src={loadingHero} alt="" aria-hidden="true" className="loading-hero absolute inset-0 z-[4] h-full w-full object-fill" draggable="false" />
-      <img src={loadingLogo} alt="NUVELORIAN" aria-hidden="true" className="loading-logo absolute inset-0 z-[5] h-full w-full object-fill" draggable="false" />
-      </div>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col items-center justify-center gap-1 px-4 pb-[max(18px,env(safe-area-inset-bottom,0px))]">
-        <div
-          className="h-[12px] min-w-[160px] overflow-hidden rounded-full border-2 border-[#d8ff5a] bg-[#10180b]/90 shadow-[0_0_18px_rgba(216,255,90,.8)]"
-          style={{ width: 'min(60vw, 360px)' }}
-        >
-          <div
-            className="h-full rounded-full transition-[width] duration-300 ease-out"
-            style={{
-              width,
-              backgroundImage: 'linear-gradient(90deg, #8CB138 0%, #94B83D 50%, #A9CB52 100%)',
-              backgroundSize: '200% 100%',
-              animation: 'loading-bar-shift 1.8s linear infinite',
-              boxShadow: '0 0 12px rgba(148, 184, 61, 0.45)',
-            }}
-          />
-        </div>
-      </div>
-      <p className="pointer-events-none absolute inset-x-0 bottom-1 z-20 text-center font-mono text-[10px] font-bold text-[#d8ff5a]">{APP_VERSION_LABEL}</p>
-      <style>{`
-        .loading-stage { width: min(100%, 56.28vh); height: min(100%, 177.8vw); aspect-ratio: 941 / 1672; }
-        .loading-star { position: absolute; border-radius: 999px; opacity: .3; box-shadow: 0 0 10px currentColor, 0 0 18px currentColor; animation: loading-star-twinkle ease-in-out infinite alternate; }
-        .loading-planet { transform-origin: 50% 50%; animation: loading-planet-spin 40s linear infinite; }
-        .loading-planet { filter: drop-shadow(0 0 8px rgba(82,234,255,.72)) drop-shadow(0 0 20px rgba(82,234,255,.42)); }
-        .loading-hero { animation: loading-hero-breathe 4s ease-in-out infinite; }
-        .loading-logo { animation: loading-logo-glow 4.5s ease-in-out infinite; }
-        @keyframes loading-star-twinkle { from { opacity: .25; transform: scale(.8); } to { opacity: 1; transform: scale(1.25); } }
-        @keyframes loading-planet-spin { to { transform: rotate(360deg); } }
-        @keyframes loading-planet-glow { 0%,100% { opacity: .55; transform: scale(1); } 50% { opacity: .85; transform: scale(1.015); } }
-        @keyframes loading-hero-breathe { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-1px) scale(1.003); } }
-        @keyframes loading-logo-glow { 0%,100% { filter: drop-shadow(0 0 5px rgba(133,255,70,.25)); } 50% { filter: drop-shadow(0 0 12px rgba(133,255,70,.45)); } }
-        @keyframes loading-bar-shift {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 200% 50%; }
-        }
-        @media (prefers-reduced-motion: reduce) { .loading-star, .loading-planet, .loading-hero, .loading-logo { animation: none; } }
-      `}</style>
-    </div>
-  );
-}
 
 const I18N = {
   uk: {
@@ -1179,9 +1087,8 @@ const I18N = {
     close: '\u0417\u0430\u043A\u0440\u0438\u0442\u0438',
     loading: '\u0417\u0430\u0432\u0430\u043D\u0442\u0430\u0436\u0443\u044E \u0442\u0430\u0431\u0456\u0440...',
     profileFailTitle: '\u041F\u0440\u043E\u0444\u0456\u043B\u044C \u043D\u0435 \u0437\u0430\u0432\u0430\u043D\u0442\u0430\u0436\u0438\u0432\u0441\u044F',
-    profileFailText:
-      '\u041F\u043E\u043A\u0438 \u0449\u043E \u043D\u0435 \u0432\u0434\u0430\u043B\u043E\u0441\u044F \u043F\u0456\u0434\u043D\u044F\u0442\u0438 \u0441\u0442\u0430\u043D \u0433\u0440\u0430\u0432\u0446\u044F. \u041E\u043D\u043E\u0432\u0438 \u0441\u0442\u043E\u0440\u0456\u043D\u043A\u0443 \u0430\u0431\u043E \u0434\u0430\u0439 \u043C\u0435\u043D\u0456 \u0434\u043E\u0431\u0438\u0442\u0438 \u043F\u043E\u043C\u0438\u043B\u043A\u0443.',
-    retry: '\u041E\u041D\u041E\u0412\u0418\u0422\u0418',
+    profileFailText: "Не вдалося завантажити профіль. Спробуй ще раз.",
+    retry: "Спробувати ще раз",
   },
   ru: {
     modalTitles: {
@@ -1201,9 +1108,8 @@ const I18N = {
     close: '\u0417\u0430\u043A\u0440\u044B\u0442\u044C',
     loading: '\u0417\u0430\u0433\u0440\u0443\u0436\u0430\u044E \u043B\u0430\u0433\u0435\u0440\u044C...',
     profileFailTitle: '\u041F\u0440\u043E\u0444\u0438\u043B\u044C \u043D\u0435 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u043B\u0441\u044F',
-    profileFailText:
-      '\u041F\u043E\u043A\u0430 \u043D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u043E\u0434\u043D\u044F\u0442\u044C \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u0438\u0433\u0440\u043E\u043A\u0430. \u041E\u0431\u043D\u043E\u0432\u0438 \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0443 \u0438\u043B\u0438 \u0434\u0430\u0439 \u043C\u043D\u0435 \u0434\u043E\u0431\u0438\u0442\u044C \u043E\u0448\u0438\u0431\u043A\u0443.',
-    retry: '\u041E\u0411\u041D\u041E\u0412\u0418\u0422\u042C',
+    profileFailText: "Не удалось загрузить профиль. Попробуй ещё раз.",
+    retry: "Попробовать ещё раз",
   },
   en: {
     modalTitles: {
@@ -1223,8 +1129,8 @@ const I18N = {
     close: 'Close',
     loading: 'Loading camp...',
     profileFailTitle: 'Profile failed to load',
-    profileFailText: "Couldn't load player state yet. Refresh the page or let me fix the issue.",
-    retry: 'REFRESH',
+    profileFailText: "We couldn’t load your profile. Please try again.",
+    retry: "Try again",
   },
 };
 
@@ -1239,16 +1145,20 @@ function ModalShell({
   frameless = false,
   centered = false,
   reserveBottomNav = false,
+  overlayBottomNav = false,
   fullscreen = false,
   coverNavigation = false,
+  dismissOnBackdrop = false,
   contentClassName = '',
 }) {
   return (
     <div
+      data-modal-backdrop={dismissOnBackdrop ? 'dismissible' : undefined}
+      onClick={dismissOnBackdrop ? (event) => { if (event.target === event.currentTarget) onClose?.(); } : undefined}
       className={`absolute inset-0 ${fullscreen ? 'z-[60]' : reserveBottomNav || coverNavigation ? 'z-40' : 'z-20'} flex justify-center ${fullscreen ? 'px-0' : 'px-2 sm:px-3'} ${frameless ? 'bg-transparent backdrop-blur-0' : 'bg-black/65 backdrop-blur-[2px]'} ${lockContentScroll ? 'items-stretch pt-0' : centered ? 'items-center pt-0' : 'items-end pt-6 sm:pt-8'}`}
       style={{
         bottom: reserveBottomNav ? 'var(--bottom-nav-space, 0px)' : 0,
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)',
+        paddingBottom: overlayBottomNav ? 0 : 'calc(env(safe-area-inset-bottom, 0px) + 8px)',
       }}
     >
       <div
@@ -1299,7 +1209,7 @@ function ModalShell({
   );
 }
 
-function CampHome({ profile, onOpenTab, onOpenModal, onUpdateProfile, onAddXp = null, onRefreshProfile = null, readonlyProfile = false, onBackToRanking, cleanupRequested = false, onOpenPlayerProfile = null, activeModal = null, onVoidFlushModeChange = null, chatUnread = false }) {
+function CampHome({ profile, onOpenTab, onOpenModal, onUpdateProfile, onSyncProfile = null, onAddXp = null, onRefreshProfile = null, readonlyProfile = false, onBackToRanking, cleanupRequested = false, onOpenPlayerProfile = null, activeModal = null, onVoidFlushModeChange = null, chatUnread = false, patchUnread = false }) {
   return (
     <div className="flex h-full min-h-0 flex-1 overflow-hidden">
       <CampView
@@ -1307,6 +1217,7 @@ function CampHome({ profile, onOpenTab, onOpenModal, onUpdateProfile, onAddXp = 
         onOpenTab={onOpenTab}
         onOpenModal={onOpenModal}
         onUpdateProfile={onUpdateProfile}
+        onSyncProfile={onSyncProfile}
         onAddXp={onAddXp}
         onRefreshProfile={onRefreshProfile}
         readonlyProfile={readonlyProfile}
@@ -1316,6 +1227,7 @@ function CampHome({ profile, onOpenTab, onOpenModal, onUpdateProfile, onAddXp = 
         activeModal={activeModal}
         onVoidFlushModeChange={onVoidFlushModeChange}
         chatUnread={chatUnread}
+        patchUnread={patchUnread}
       />
     </div>
   );
@@ -1334,16 +1246,31 @@ function GameContent() {
     return () => { document.removeEventListener('visibilitychange', syncVisibility); delete document.documentElement.dataset.gameHidden; };
   }, []);
   const { profile, user, loading, initError, retryInit, refreshProfile, syncProfile, updateProfile, addXp, spendEnergy, bootProgress, bootStage } = useGameState();
-  const [activeTab, setActiveTab] = useState('camp');
+  useClanQuestNotifications(profile,refreshProfile);
+  const [activeTab, setActiveTab] = useState(() => import.meta.env.DEV && (new URLSearchParams(window.location.search).get('localBoss') === 'boss7' || new URLSearchParams(window.location.search).get('localShipBoss') === 'hangar') ? 'boss' : 'camp');
+  const [mountedCombatTabs, setMountedCombatTabs] = useState(() => ({
+    personal: activeTab === 'boss',
+    raid: activeTab === 'raidBoss',
+  }));
+  useEffect(() => {
+    if (activeTab !== 'boss' && activeTab !== 'raidBoss') return;
+    setMountedCombatTabs(current => activeTab === 'boss'
+      ? current.personal ? current : { ...current, personal: true }
+      : current.raid ? current : { ...current, raid: true });
+  }, [activeTab]);
   const [bottomNavHeight, setBottomNavHeight] = useState(null);
   const [energyPurchaseRequested, setEnergyPurchaseRequested] = useState(false);
   const handleEnergyPurchaseRequestHandled = useCallback(() => setEnergyPurchaseRequested(false), []);
   const [voidFlushActive, setVoidFlushActive] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
-  const [chatUnread, setChatUnread] = useState(false);
+  const [casinoInitialTab,setCasinoInitialTab]=useState('roulette');
+  const [chatIndicators,setChatIndicators]=useState({clan:{},world:{}});
+  const chatUnread=Object.values(chatIndicators).some(value=>value.unread||value.patch);
   const [dailyPanelTab, setDailyPanelTab] = useState('event');
   const [dailyPanelScene, setDailyPanelScene] = useState(null);
   const [viewPlayer, setViewPlayer] = useState(null);
+  const playerProfileReturn = useRef(null);
+  const leaderboardViewState = useRef({ activeTab: 'players', scroll: {} });
   const [campSceneKey, setCampSceneKey] = useState(0);
   const [puddleBossWarning, setPuddleBossWarning] = useState(false);
   const [puddleCleanupRequested, setPuddleCleanupRequested] = useState(false);
@@ -1354,38 +1281,32 @@ function GameContent() {
 
   useEffect(() => {
     if (!profile?.id || loading || viewPlayer) {
-      setChatUnread(false);
+      setChatIndicators({clan:{},world:{}});
       return undefined;
     }
-    const channel = profile?.clan_id || String(profile?.clan_name || '').trim() ? 'clan' : 'world';
-    const storageKey = `chat-last-read:${profile.id}:${channel}`;
-    let disposed = false;
-    const pollUnread = async () => {
-      try {
-        const messages = await listChatMessages(channel, 100);
-        if (disposed) return;
-        const latestTime = (Array.isArray(messages) ? messages : []).reduce((latest, message) => {
-          const time = Date.parse(message?.created_at || '');
-          return Number.isFinite(time) ? Math.max(latest, time) : latest;
-        }, 0);
-        const readTime = Number(window.localStorage.getItem(storageKey) || 0);
-        if (!readTime) {
-          window.localStorage.setItem(storageKey, String(Math.max(Date.now(), latestTime)));
-          setChatUnread(false);
-        } else if (activeModal === 'chat') {
-          window.localStorage.setItem(storageKey, String(Math.max(Date.now(), latestTime)));
-          setChatUnread(false);
-        } else {
-          setChatUnread((messages || []).some((message) => !message?.own && !message?.system && Date.parse(message?.created_at || '') > readTime));
-        }
-      } catch {
-        // Preserve the current badge while chat is temporarily unavailable.
-      }
+    let disposed=false,busy=false;
+    const snapshots={};
+    const updateReadIndicators=()=>{if(!disposed)setChatIndicators(current=>({...current,...Object.fromEntries(Object.entries(snapshots).map(([channel,messages])=>[channel,getChatIndicators(messages,profile.id,channel)]))}));};
+    const pollUnread=async()=>{
+      if(busy||document.hidden)return;busy=true;
+      try{
+        const channels=profile?.clan_id||String(profile?.clan_name||'').trim()?['clan','world']:['world'];
+        const results=await Promise.allSettled(channels.map(async channel=>({channel,messages:await listChatMessages(channel,100,{playerId:profile.id,clanId:profile.clan_id||profile.clan_name})})));
+        if(disposed)return;
+        setChatIndicators(current=>{
+          const next={...current};
+          for(const result of results)if(result.status==='fulfilled'){const {channel,messages}=result.value;snapshots[channel]=messages;next[channel]=getChatIndicators(messages,profile.id,channel);}
+          if(!channels.includes('clan'))next.clan={};
+          return next;
+        });
+      }finally{busy=false;}
     };
-    pollUnread();
-    const timer = window.setInterval(() => { if (!document.hidden) pollUnread(); }, 10000);
-    return () => { disposed = true; window.clearInterval(timer); };
-  }, [profile?.id, profile?.clan_id, profile?.clan_name, loading, viewPlayer, activeModal]);
+    void pollUnread();
+    const timer=window.setInterval(pollUnread,10000);
+    window.addEventListener(CHAT_READ_EVENT,updateReadIndicators);
+    document.addEventListener('visibilitychange',pollUnread);
+    return()=>{disposed=true;window.clearInterval(timer);window.removeEventListener(CHAT_READ_EVENT,updateReadIndicators);document.removeEventListener('visibilitychange',pollUnread);};
+  },[profile?.id,profile?.clan_id,profile?.clan_name,loading,viewPlayer,activeModal]);
 
   const handleJoinedBossInvite = (fight) => {
     setJoinedBossFight(fight);
@@ -1431,18 +1352,24 @@ function GameContent() {
     };
   }, []);
 
-  // Warm panels sequentially after boot, leaving constrained connections on demand.
-  usePanelChunkWarmup(bootStage === 'ready' && !loading);
+  // Load panels only on pointer intent or navigation. Parsing every large panel
+  // after boot caused long main-thread stalls while the player was interacting.
 
   const settingsReturnModal = useRef(null);
-  const openSettings = () => { if (activeModal !== 'profile') settingsReturnModal.current = activeModal; setActiveModal('profile'); };
+  const openSettings = () => { loadProfilePanel().catch(() => {}); if (activeModal !== 'profile') settingsReturnModal.current = activeModal; setActiveModal('profile'); };
   const openProfile = () => {
+    loadProfilePanel().catch(() => {});
+    if (viewPlayer && String(viewPlayer.id) !== String(profile?.id)) {
+      setActiveModal('public-profile');
+      return;
+    }
     void updateProfile({ playerAction: { type: 'newbie-visit', target: 'hero' } }).catch(() => {});
     setActiveModal('profile');
   };
-  const openShop = () => setActiveTab('shop');
-  const openEnergyPurchase = () => { setEnergyPurchaseRequested(true); setActiveTab('shop'); };
+  const openShop = () => { loadShopPanel().catch(() => {}); setActiveTab('shop'); };
+  const openEnergyPurchase = () => { loadShopPanel().catch(() => {}); setEnergyPurchaseRequested(true); setActiveTab('shop'); };
   const openMail = () => {
+    loadMailPanel().catch(() => {});
     setActiveModal('mail');
     void refreshProfile().catch(() => {});
   };
@@ -1453,16 +1380,19 @@ function GameContent() {
     setActiveTab('events');
   };
   const openRaidBoss = () => {
+    loadBossPanel().catch(() => {});
     setActiveModal(null);
     setDailyPanelScene(null);
     setActiveTab('raidBoss');
   };
   const openSpaceFishing = () => {
+    loadDailyPanel().catch(() => {});
     setActiveModal(null);
     setDailyPanelScene(null);
     setActiveTab('fishing');
   };
   const closeModal = () => {
+    if(activeModal==='roulette')setCasinoInitialTab('roulette');
     if (activeModal === 'profile' && settingsReturnModal.current) { setActiveModal(settingsReturnModal.current); settingsReturnModal.current = null; return; }
     setActiveModal(null);
     setDailyPanelScene(null);
@@ -1477,13 +1407,14 @@ function GameContent() {
   };
 
   const openPlayerProfile = async (player) => {
+    if (!viewPlayer) playerProfileReturn.current = { tab: activeTab, modal: activeModal };
     setActiveModal(null);
     setViewPlayer(player);
     const lookup = player?.username || player?.nickname;
-    if (!lookup) return;
+    if (!player?.id && !lookup) return;
     try {
-      const matches = await findPlayerProfiles({ username: lookup });
-      const fullProfile = (matches || []).find((item) => String(item?.id) === String(player?.id)) || matches?.[0];
+      const matches = await findPlayerProfiles(player?.id ? { id: player.id } : { username: lookup });
+      const fullProfile = (matches || []).find((item) => String(item?.id) === String(player?.id));
       if (fullProfile) setViewPlayer((current) => current?.id === player?.id ? { ...current, ...fullProfile } : current);
     } catch {
       // Keep the leaderboard snapshot if the public profile lookup is unavailable.
@@ -1491,12 +1422,15 @@ function GameContent() {
   };
 
   const closePlayerProfile = () => {
+    const origin = playerProfileReturn.current;
     setViewPlayer(null);
-    setActiveModal('leaderboard');
+    if (origin) setActiveTab(origin.tab);
+    setActiveModal(origin?.modal || null);
+    playerProfileReturn.current = null;
   };
   const viewingOwnProfile = Boolean(viewPlayer && profile && String(viewPlayer.id) === String(profile.id));
   const sceneProfile = viewingOwnProfile ? profile : viewPlayer || profile;
-  const language = profile?.language || 'uk';
+  const language = (profile?.language || window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code || navigator.language || 'uk').split(/[-_]/)[0];
   const labels = I18N[language] || I18N.uk;
   const puddleWarning = language === 'ru'
     ? {
@@ -1523,8 +1457,8 @@ function GameContent() {
   const playerLevel = Math.max(1, Number(profile?.level || 1));
   const unlocks = GAME_CONFIG.CONTENT_UNLOCK_LEVELS || {};
   const criticalAssetUrls = useMemo(
-    () => [...new Set(CRITICAL_ASSET_PATHS)],
-    []
+    () => [...new Set([...CRITICAL_ASSET_PATHS, getCampBackgroundById(profile?.selected_camp_background).source])],
+    [profile?.selected_camp_background]
   );
   const {
     loadingProgress,
@@ -1536,8 +1470,52 @@ function GameContent() {
     bootProgress,
     criticalAssetUrls,
   });
+  useEffect(() => {
+    if (loaderVisible || loading || !profile?.id || activeTab !== 'camp' || activeModal) return;
+    const connection = navigator.connection;
+    if (connection?.saveData || ['slow-2g', '2g', '3g'].includes(connection?.effectiveType)) return;
+    if (!window.requestIdleCallback) return;
+    const tabs = [
+      playerLevel >= (unlocks.bossTab || 1) ? 'boss' : 'tasks',
+      'tasks', 'skills', 'clan',
+    ].filter((tab, index, all) => all.indexOf(tab) === index && !isTabLocked(tab));
+    let cancelled = false;
+    let idleId;
+    const schedule = () => {
+      if (cancelled || !tabs.length || document.hidden) return;
+      idleId = window.requestIdleCallback(async () => {
+        if (cancelled || document.hidden) return;
+        await warmTab(tabs.shift());
+        schedule();
+      });
+    };
+    schedule();
+    return () => {
+      cancelled = true;
+      window.cancelIdleCallback(idleId);
+    };
+  }, [loaderVisible, loading, profile?.id, activeTab, activeModal, playerLevel, unlocks.bossTab]);
+  useEffect(()=>{
+    if(loaderVisible || loading || !profile?.id || !(profile?.clan_id || profile?.clan_name))return;
+    const connection=navigator.connection;
+    if(connection?.saveData || ['slow-2g','2g'].includes(connection?.effectiveType))return;
+    let cancelled=false;
+    const timer=setTimeout(async()=>{
+      const options=clanOverviewQueries(profile,gameApi,warmSceneImage);
+      await Promise.all([queryClientInstance.prefetchQuery(options.members),queryClientInstance.prefetchQuery(options.clan)]);
+      if(!cancelled)void queryClientInstance.prefetchQuery(options.raid);
+    },500);
+    return()=>{cancelled=true;clearTimeout(timer);};
+  },[loaderVisible,loading,profile?.id,profile?.clan_id,profile?.clan_name]);
 
+  // A guest preview session sees every tab from the first click — a quick way to look at the
+  // whole game (bosses, talents, clans) without grinding through the normal level gates. Writes
+  // that would leave a trace in someone else's clan (join/create/chat) stay blocked server-side
+  // regardless of this flag — see server/app.js GUEST_CLAN_RESTRICTED. The real unlock levels in
+  // GAME_CONFIG.CONTENT_UNLOCK_LEVELS are untouched, so normal progression pacing never changes.
+  const previewAllUnlocked = Boolean(profile?.guest_account);
   const isTabLocked = (tabId) => {
+    if (previewAllUnlocked) return false;
     if (tabId === 'boss') return playerLevel < (unlocks.bossTab || 1);
     if (tabId === 'skills') return playerLevel < (unlocks.skillsTab || 1);
     if (tabId === 'clan') return playerLevel < (unlocks.clanTab || 1);
@@ -1545,6 +1523,7 @@ function GameContent() {
   };
 
   const isModalLocked = (modalId) => {
+    if (previewAllUnlocked) return false;
     if (modalId === 'daily') return playerLevel < (unlocks.daily || 1);
     if (modalId === 'roulette') return playerLevel < (unlocks.roulette || 1);
     if (modalId === 'equipment') return playerLevel < (unlocks.equipment || 1);
@@ -1560,6 +1539,7 @@ function GameContent() {
       return;
     }
     if (isTabLocked(nextTab)) return;
+    warmTab(nextTab);
     if (nextTab === 'boss' && profile?.puddle_active) {
       setPuddleBossWarning(true);
       return;
@@ -1571,6 +1551,7 @@ function GameContent() {
   };
   const guardedSetActiveModal = (nextModal) => {
     if (isModalLocked(nextModal)) return;
+    MODAL_LOADERS[nextModal]?.().then(panel => panel.warmFirstFrame?.()).catch(() => {});
     if (nextModal === 'events') {
       backToEvents();
       return;
@@ -1608,6 +1589,12 @@ function GameContent() {
       guardedSetActiveTab('skills');
       return;
     }
+    if (task?.baseId === 'catchFish') {
+      setActiveModal(null);
+      setViewPlayer(null);
+      openSpaceFishing();
+      return;
+    }
     const raidRelated = new Set(['raidBoss']);
     const bossRelated = new Set(['bossHits', 'bossDamage', 'poisonUse', 'boxes']);
     if (raidRelated.has(task?.baseId)) {
@@ -1637,21 +1624,19 @@ function GameContent() {
             disabled={loading}
             className="mt-4 h-11 w-full font-mono text-[12px] font-black uppercase text-[#172016] disabled:opacity-60"
           >
-            {loading ? labels.loading : labels.retry}
+            <span className="relative z-10 text-[#172016]">{loading ? labels.loading : labels.retry}</span>
           </GameTextureButton>
-          {initError ? (
-            <p className="mt-2 font-mono text-[10px] text-[#89a06f]">{String(initError?.message || '')}</p>
-          ) : null}
         </div>
       </div>
     );
   }
 
-  const renderMainTab = () => {
+  const renderPlayerScene = () => {
     if (viewPlayer) {
       return (
           <CampHome
             profile={sceneProfile}
+            onSyncProfile={syncProfile}
             onOpenTab={guardedSetActiveTab}
             onOpenModal={guardedSetActiveModal}
             onUpdateProfile={updateProfile}
@@ -1665,31 +1650,36 @@ function GameContent() {
       );
     }
 
+    return null;
+  };
+  const renderMainTab = () => {
     switch (activeTab) {
+      case 'market':
+        return <MarketPanel profile={profile} onSyncProfile={syncProfile} />;
       case 'boss':
-        if (isTabLocked('boss')) return <CampHome profile={profile} onOpenTab={guardedSetActiveTab} onOpenModal={guardedSetActiveModal} onUpdateProfile={updateProfile} onAddXp={addXp} onRefreshProfile={refreshProfile} activeModal={activeModal} chatUnread={chatUnread} />;
-        return <BossPanel key="personal-boss" profile={profile} onAddXp={addXp} onRefreshProfile={refreshProfile} onUpdateProfile={updateProfile} onSyncProfile={syncProfile} onOpenPlayerProfile={openPlayerProfile} onOpenClan={() => guardedSetActiveTab('clan')} suppressLootModal={activeModal === 'mail'} joinedBossFight={joinedBossFight} />;
+        if (isTabLocked('boss')) return <CampHome profile={profile} onOpenTab={guardedSetActiveTab} onOpenModal={guardedSetActiveModal} onUpdateProfile={updateProfile} onSyncProfile={syncProfile} onAddXp={addXp} onRefreshProfile={refreshProfile} activeModal={activeModal} patchUnread={chatIndicators.world.patch} chatUnread={chatUnread} />;
+        return null;
       case 'raidBoss':
-        return <BossPanel key="raid-boss" profile={profile} onAddXp={addXp} onRefreshProfile={refreshProfile} onUpdateProfile={updateProfile} onSyncProfile={syncProfile} onOpenPlayerProfile={openPlayerProfile} onBackToEvents={backToEvents} raidMode />;
+        return null;
       case 'events':
-        return <DailyPanel key="events-list" suspended={activeModal === 'profile'} profile={profile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} onClose={returnToCampHome} onGoToTask={handleDailyGoToTask} onOpenRaidBoss={openRaidBoss} onOpenSpaceFishing={openSpaceFishing} panelMode="events" initialEventScene={null} />;
+        return <DailyPanel onSyncProfile={syncProfile} key="events-list" suspended={activeModal === 'profile'} profile={profile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} onClose={returnToCampHome} onGoToTask={handleDailyGoToTask} onOpenRaidBoss={openRaidBoss} onOpenSpaceFishing={openSpaceFishing} panelMode="events" initialEventScene={null} />;
       case 'fishing':
-        return <DailyPanel suspended={activeModal === 'profile'} profile={profile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} onClose={() => guardedSetActiveTab('camp')} onGoToTask={handleDailyGoToTask} onOpenRaidBoss={openRaidBoss} onOpenSpaceFishing={openSpaceFishing} onBackToEvents={backToEvents} panelMode="events" initialEventScene="space-fishing" />;
+        return <DailyPanel onSyncProfile={syncProfile} suspended={activeModal === 'profile'} profile={profile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} onClose={() => guardedSetActiveTab('camp')} onGoToTask={handleDailyGoToTask} onOpenRaidBoss={openRaidBoss} onOpenSpaceFishing={openSpaceFishing} onBackToEvents={backToEvents} panelMode="events" initialEventScene="space-fishing" />;
       case 'tasks':
         return <TasksPanel profile={profile} onSpendEnergy={spendEnergy} onUpdateProfile={updateProfile} onAddXp={addXp} onSyncProfile={syncProfile} onRefreshProfile={refreshProfile} />;
       case 'skills':
-        if (isTabLocked('skills')) return <CampHome profile={profile} onOpenTab={guardedSetActiveTab} onOpenModal={guardedSetActiveModal} onUpdateProfile={updateProfile} onAddXp={addXp} onRefreshProfile={refreshProfile} activeModal={activeModal} chatUnread={chatUnread} />;
+        if (isTabLocked('skills')) return <CampHome profile={profile} onOpenTab={guardedSetActiveTab} onOpenModal={guardedSetActiveModal} onUpdateProfile={updateProfile} onAddXp={addXp} onRefreshProfile={refreshProfile} activeModal={activeModal} patchUnread={chatIndicators.world.patch} chatUnread={chatUnread} />;
         return <SkillsPanel profile={profile} onUpdateProfile={updateProfile} onGoQuests={() => guardedSetActiveTab('tasks')} onOpenShop={() => guardedSetActiveTab('shop')} />;
       case 'raid':
         return <RaidPanel profile={profile} user={user} onAddXp={addXp} onRefreshProfile={refreshProfile} />;
       case 'shop':
         return <ShopPanel profile={profile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} energyPurchaseRequested={energyPurchaseRequested} onEnergyPurchaseRequestHandled={handleEnergyPurchaseRequestHandled} />;
       case 'clan':
-        if (isTabLocked('clan')) return <CampHome profile={profile} onOpenTab={guardedSetActiveTab} onOpenModal={guardedSetActiveModal} onUpdateProfile={updateProfile} onAddXp={addXp} onRefreshProfile={refreshProfile} activeModal={activeModal} chatUnread={chatUnread} />;
-        return <ClanPanel profile={profile} onOpenChat={() => guardedSetActiveModal('chat')} onOpenPlayerProfile={openPlayerProfile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} onClose={() => guardedSetActiveTab('camp')} />;
+        if (isTabLocked('clan')) return <CampHome profile={profile} onOpenTab={guardedSetActiveTab} onOpenModal={guardedSetActiveModal} onUpdateProfile={updateProfile} onAddXp={addXp} onRefreshProfile={refreshProfile} activeModal={activeModal} patchUnread={chatIndicators.world.patch} chatUnread={chatUnread} />;
+        return <ClanPanel onSyncProfile={syncProfile} onNavigate={tab=>{closeModal();guardedSetActiveTab(tab);}} profile={profile} onOpenChat={() => guardedSetActiveModal('chat')} onOpenPlayerProfile={openPlayerProfile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} onClose={() => guardedSetActiveTab('camp')} />;
       case 'camp':
       default:
-        return <CampHome key={campSceneKey} profile={profile} onOpenTab={guardedSetActiveTab} onOpenModal={guardedSetActiveModal} onUpdateProfile={updateProfile} onAddXp={addXp} onRefreshProfile={refreshProfile} cleanupRequested={puddleCleanupRequested} onOpenPlayerProfile={openPlayerProfile} activeModal={activeModal} onVoidFlushModeChange={setVoidFlushActive} chatUnread={chatUnread} />;
+        return <CampHome key={campSceneKey} profile={profile} onOpenTab={guardedSetActiveTab} onOpenModal={guardedSetActiveModal} onUpdateProfile={updateProfile} onSyncProfile={syncProfile} onAddXp={addXp} onRefreshProfile={refreshProfile} cleanupRequested={puddleCleanupRequested} onOpenPlayerProfile={openPlayerProfile} activeModal={activeModal} onVoidFlushModeChange={setVoidFlushActive} patchUnread={chatIndicators.world.patch} chatUnread={chatUnread} />;
     }
   };
 
@@ -1697,27 +1687,31 @@ function GameContent() {
     switch (modal) {
       case 'daily':
         if (isModalLocked('daily')) return null;
-        return <DailyPanel suspended={activeModal === 'profile'} profile={profile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} onClose={closeModal} onGoToTask={handleDailyGoToTask} initialTab={dailyPanelTab} initialEventScene={dailyPanelScene} />;
+        return <DailyPanel onSyncProfile={syncProfile} suspended={activeModal === 'profile'} profile={profile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} onClose={closeModal} onGoToTask={handleDailyGoToTask} initialTab={dailyPanelTab} initialEventScene={dailyPanelScene} />;
       case 'events':
-        return <DailyPanel suspended={activeModal === 'profile'} profile={profile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} onClose={closeModal} onGoToTask={handleDailyGoToTask} onOpenRaidBoss={openRaidBoss} onOpenSpaceFishing={openSpaceFishing} onBackToEvents={backToEvents} panelMode="events" initialTab={dailyPanelTab} initialEventScene={dailyPanelScene} />;
+        return <DailyPanel onSyncProfile={syncProfile} suspended={activeModal === 'profile'} profile={profile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} onClose={closeModal} onGoToTask={handleDailyGoToTask} onOpenRaidBoss={openRaidBoss} onOpenSpaceFishing={openSpaceFishing} onBackToEvents={backToEvents} panelMode="events" initialTab={dailyPanelTab} initialEventScene={dailyPanelScene} />;
+      case 'public-profile':
+        return viewPlayer ? <PublicPlayerProfile profile={sceneProfile} language={language} onClose={closeModal} onGoHome={returnToCampHome} /> : null;
       case 'profile':
         return <ProfilePanel profile={profile} user={user} onClose={closeModal} onUpdateProfile={updateProfile} onSyncProfile={syncProfile} />;
       case 'leaderboard':
-        return <LeaderboardPanel profile={profile} onOpenPlayerProfile={openPlayerProfile} onClose={closeModal} />;
+        return <LeaderboardPanel profile={profile} viewStateRef={leaderboardViewState} onOpenPlayerProfile={openPlayerProfile} onClose={closeModal} />;
       case 'equipment':
         if (isModalLocked('equipment')) return null;
         return <EquipmentPanel profile={profile} onClose={closeModal} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} />;
       case 'clan':
         if (isModalLocked('clan')) return null;
-        return <ClanPanel profile={profile} onOpenChat={() => guardedSetActiveModal('chat')} onOpenPlayerProfile={openPlayerProfile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} onClose={closeModal} />;
+        return <ClanPanel onSyncProfile={syncProfile} onNavigate={tab=>{closeModal();guardedSetActiveTab(tab);}} profile={profile} onOpenChat={() => guardedSetActiveModal('chat')} onOpenPlayerProfile={openPlayerProfile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} onClose={closeModal} />;
       case 'chat':
         if (isModalLocked('chat')) return null;
-        return <ChatPanel profile={profile} onClose={closeModal} onRefreshProfile={refreshProfile} onJoinBossInvite={handleJoinedBossInvite} />;
+        return <ChatPanel indicators={chatIndicators} profile={profile} onNavigate={tab=>{closeModal();guardedSetActiveTab(tab);}} onClose={closeModal} onRefreshProfile={refreshProfile} onJoinBossInvite={handleJoinedBossInvite} />;
       case 'roulette':
         if (isModalLocked('roulette')) return null;
-        return <RoulettePanel suspended={activeModal === 'profile'} profile={profile} onUpdateProfile={updateProfile} onClose={closeModal} />;
+        return <RoulettePanel onSyncProfile={syncProfile} initialTab={casinoInitialTab} suspended={activeModal === 'profile'} profile={profile} onUpdateProfile={updateProfile} onClose={closeModal} />;
       case 'mail':
         return <MailPanel profile={profile} onSyncProfile={syncProfile} onUpdateProfile={updateProfile} onRefreshProfile={refreshProfile} onClose={closeModal} />;
+      case 'pvp':
+        return <PvpPanel profile={profile} onClose={closeModal} onSyncProfile={syncProfile} />;
       case 'backgrounds':
         return <BackgroundPanel profile={profile} onUpdateProfile={updateProfile} />;
       default:
@@ -1726,12 +1720,15 @@ function GameContent() {
   };
 
   const isCampTab = activeTab === 'camp';
+  const isWebWorld = false;
   const isBossTab = activeTab === 'boss' || activeTab === 'raidBoss' || activeTab === 'fishing';
   const isFishingScene = activeTab === 'fishing';
   const isSkillsTab = activeTab === 'skills';
   const isTasksTab = activeTab === 'tasks';
   const isPlayerScene = Boolean(viewPlayer);
-  const topBarMode = voidFlushActive ? 'compact' : isPlayerScene || (isCampTab && (!activeModal || activeModal === 'mail')) ? 'full' : 'compact';
+  // Never render the shell of a modal the player cannot open yet: its empty body would block every click.
+  const profileModal = activeModal && isModalLocked(activeModal) ? null : activeModal;
+  const topBarMode = isPlayerScene ? 'full' : voidFlushActive ? 'compact' : (isCampTab && (!activeModal || activeModal === 'mail')) ? 'full' : 'compact';
   const bottomNavSpace = bottomNavHeight === null ? 'calc(clamp(66px, 18vw, 92px) + 12px)' : `${bottomNavHeight}px`;
   const loadingPreview = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('loadingPreview') === '1';
   const showLoadingOverlay = loadingPreview || (!initError && (loaderVisible || loading || !profile?.id || bootStage !== 'ready'));
@@ -1743,7 +1740,11 @@ function GameContent() {
       : { title: 'НЕПРАВИЛЬНА ОРІЄНТАЦІЯ', subtitle: 'NUVELOR ПРАЦЮЄ ЛИШЕ У ВЕРТИКАЛЬНОМУ РЕЖИМІ', action: '↕ ПОВЕРНІТЬ ТЕЛЕФОН ВЕРТИКАЛЬНО' };
 
   return (
+    <ViewerLanguageContext.Provider value={profile?.language || 'en'}>
+    <RaidRewardReceipt profile={profile} automatic />
+    <AchievementClaimContext.Provider value={{ profile, equipHeader: theme => updateProfile({ equipProfileHeaderTheme: theme }), claim: async id => { const result = await claimAchievement(id); syncProfile(result.player); return result; } }}>
     <div
+      data-screen={activeModal || activeTab}
       data-modal-open={Boolean(activeModal)}
       className="game-app min-h-[100svh] overflow-hidden bg-[radial-gradient(circle_at_top,#23341a_0%,#0e120d_42%,#050605_100%)] text-white"
       onContextMenu={(event) => {
@@ -1754,20 +1755,28 @@ function GameContent() {
       }}
       style={{
         height: 'var(--app-viewport-height, 100dvh)',
-        paddingTop: 'var(--app-top-offset, var(--app-safe-top, 0px))',
-        paddingBottom: showLoadingOverlay ? '0px' : 'var(--app-safe-bottom, 0px)',
+        paddingTop: isWebWorld ? '0px' : 'var(--app-top-offset, var(--app-safe-top, 0px))',
+        paddingBottom: showLoadingOverlay || isWebWorld ? '0px' : 'var(--app-safe-bottom, 0px)',
         boxSizing: 'border-box',
         overflow: 'hidden',
       }}
     >
-      <div className="game-shell ui-uppercase relative mx-auto flex h-full min-h-0 w-full max-w-[520px] flex-col overflow-hidden border-x border-[#1e2418] bg-[linear-gradient(180deg,rgba(9,12,9,0.96)_0%,rgba(5,6,5,0.985)_100%)] shadow-[0_0_70px_rgba(0,0,0,0.55)]">
-        {!isFishingScene ? <TopBar mode={topBarMode} profile={sceneProfile} resourceProfile={profile} onOpenShop={openShop} onOpenEnergyPurchase={openEnergyPurchase} onOpenSettings={openSettings} onOpenProfile={openProfile} onOpenMail={openMail} hideActions={Boolean(viewPlayer)} showSettings /> : null}
+      <DesktopSpaceBackdrop/>
+      {!loading && profile?.id && <RetentionTelemetry playerId={profile.id} screen={activeModal || activeTab} />}
+      <CardGameDailyTrigger playerId={profile?.id} ready={!isModalLocked('roulette')&&!loading&&!showLoadingOverlay&&bootStage==='ready'&&activeTab==='camp'&&!activeModal&&!viewPlayer&&!voidFlushActive&&!puddleBossWarning&&!caRankRewardQueue.length&&!isNewbieTutorialActive(profile)&&Boolean(profile?.update_notices?.['ship-forge-v1'])} onOpen={()=>{if(isModalLocked('roulette'))return;setCasinoInitialTab('cards');setActiveModal('roulette');}} />
+      <AchievementNotifications profile={profile} ready={!loading && !showLoadingOverlay && !activeModal && !caRankRewardQueue.length} />
+      {!loading && !showLoadingOverlay && profile?.id ? <JudgeTour profile={profile} onOpenMarket={() => guardedSetActiveTab('market')} onOpenProfile={openSettings} /> : null}
+      <Suspense fallback={null}><ShipUpdateWelcome key={profile?.id} profile={profile} ready={!loading&&!showLoadingOverlay&&bootStage==='ready'&&activeTab==='camp'&&!activeModal&&!viewPlayer&&!voidFlushActive&&!puddleBossWarning&&!caRankRewardQueue.length&&!isNewbieTutorialActive(profile)} onRead={()=>updateProfile({playerAction:{type:'update-notice-read',noticeId:'ship-forge-v1'}})}/></Suspense>
+      <Suspense fallback={null}><HalloweenWelcome key={profile?.id} profile={profile} ready={Boolean(profile?.update_notices?.['ship-forge-v1']) && !loading && !showLoadingOverlay && bootStage === 'ready' && activeTab === 'camp' && !activeModal && !viewPlayer && !voidFlushActive && !puddleBossWarning && !caRankRewardQueue.length && !isNewbieTutorialActive(profile)} onEnter={() => window.dispatchEvent(new Event('open-halloween-event'))} /></Suspense>
+      <div className={`game-shell ${isWebWorld ? 'web-world-shell' : ''} ui-uppercase relative mx-auto flex h-full min-h-0 w-full max-w-[520px] flex-col overflow-hidden border-x border-[#1e2418] bg-[linear-gradient(180deg,rgba(9,12,9,0.96)_0%,rgba(5,6,5,0.985)_100%)] shadow-[0_0_70px_rgba(0,0,0,0.55)]`} style={{ '--bottom-nav-space': isWebWorld ? '0px' : bottomNavSpace, ...(isWebWorld ? {maxWidth:'none',border:0} : {}) }}>
+        {!isFishingScene && !isWebWorld ? <TopBar mode={topBarMode} profile={sceneProfile} resourceProfile={profile} onOpenShop={openShop} onOpenEnergyPurchase={openEnergyPurchase} onOpenSettings={openSettings} onOpenProfile={openProfile} onOpenMail={openMail} hideActions={Boolean(viewPlayer)} showSettings /> : null}
 
         <div className="relative min-h-0 flex-1 overflow-hidden overflow-x-hidden" style={{ '--bottom-nav-space': bottomNavSpace }}>
           <div
             style={{
-              ...(!isCampTab && !isTasksTab && (!isBossTab || activeTab === 'fishing') && !isPlayerScene ? { paddingBottom: bottomNavSpace } : {}),
+              ...(!isWebWorld && !isCampTab && !isTasksTab && (!isBossTab || activeTab === 'fishing') && !isPlayerScene ? { paddingBottom: bottomNavSpace } : {}),
               WebkitOverflowScrolling: 'touch',
+              display: viewPlayer ? 'none' : undefined,
             }}
             className={
               isPlayerScene
@@ -1781,35 +1790,45 @@ function GameContent() {
                       : 'h-full min-h-0 touch-pan-y overflow-y-auto overscroll-y-contain px-2 pt-2 sm:px-3 sm:pt-3 [-webkit-overflow-scrolling:touch]'
             }
           >
-            <Suspense fallback={<PanelLoading />}>
-              {renderMainTab()}
+            <Suspense fallback={activeTab==='boss'?null:<PanelLoading />}>
+              {!viewPlayer && (mountedCombatTabs.personal || activeTab==='boss') ? <div className="h-full min-h-0" style={{display:activeTab==='boss'?'block':'none'}}>
+                <BossPanel key="personal-boss" suspended={activeTab!=='boss'} onNavigate={guardedSetActiveTab} profile={profile} onAddXp={addXp} onRefreshProfile={refreshProfile} onUpdateProfile={updateProfile} onSyncProfile={syncProfile} onOpenPlayerProfile={openPlayerProfile} onOpenClan={() => guardedSetActiveTab('clan')} suppressLootModal={activeModal === 'mail'} joinedBossFight={joinedBossFight} onJoinedBossFightConsumed={id=>setJoinedBossFight(current=>current?.id===id?null:current)} />
+              </div> : null}
+              {!viewPlayer && (mountedCombatTabs.raid || activeTab==='raidBoss') ? <div className="h-full min-h-0" style={{display:activeTab==='raidBoss'?'block':'none'}}>
+                <BossPanel key="raid-boss" suspended={activeTab!=='raidBoss'} profile={profile} onAddXp={addXp} onRefreshProfile={refreshProfile} onUpdateProfile={updateProfile} onSyncProfile={syncProfile} onOpenPlayerProfile={openPlayerProfile} onBackToEvents={backToEvents} raidMode />
+              </div> : null}
+              {!viewPlayer && activeTab!=='boss' && activeTab!=='raidBoss' ? renderMainTab() : null}
             </Suspense>
           </div>
 
-          {activeModal && (
+          {viewPlayer ? <div className="absolute inset-0 z-30 h-full min-h-0 overflow-hidden"><Suspense fallback={<PanelLoading />}>{renderPlayerScene()}</Suspense></div> : null}
+
+          {profileModal && (<div style={{ display: viewPlayer && !activeModal ? 'none' : undefined }}>
               <ModalShell
-                title={labels.modalTitles[activeModal] || I18N.uk.modalTitles[activeModal]}
+                title={labels.modalTitles[profileModal] || I18N.uk.modalTitles[profileModal]}
                 labels={labels}
                 onClose={closeModal}
-                headerIcon={activeModal === 'mail' ? inboxIcon : null}
-                hideHeader={activeModal === 'equipment' || activeModal === 'chat' || activeModal === 'leaderboard' || activeModal === 'profile' || activeModal === 'daily' || activeModal === 'events' || activeModal === 'roulette' || activeModal === 'mail'}
-                fullscreen={activeModal === 'chat' || activeModal === 'daily' || activeModal === 'roulette'}
-                coverNavigation={activeModal === 'leaderboard' || activeModal === 'profile' || activeModal === 'roulette'}
-                lockContentScroll={activeModal === 'chat' || activeModal === 'leaderboard' || activeModal === 'profile' || activeModal === 'daily' || activeModal === 'events' || activeModal === 'roulette'}
-                frameless={activeModal === 'chat' || activeModal === 'profile' || activeModal === 'roulette' || activeModal === 'mail'}
-                centered={activeModal === 'mail'}
-                reserveBottomNav={activeModal !== 'chat' && activeModal !== 'leaderboard' && activeModal !== 'daily' && activeModal !== 'profile' && activeModal !== 'roulette'}
-                contentClassName={activeModal === 'chat' ? 'px-0 py-0 sm:px-0 sm:py-0' : activeModal === 'daily' || activeModal === 'roulette' ? 'px-0 py-0 sm:px-0 sm:py-0' : ''}
+                headerIcon={profileModal === 'mail' ? inboxIcon : null}
+                hideHeader={profileModal === 'public-profile' || profileModal === 'equipment' || profileModal === 'chat' || profileModal === 'leaderboard' || profileModal === 'profile' || profileModal === 'daily' || profileModal === 'events' || profileModal === 'roulette' || profileModal === 'mail' || profileModal === 'pvp'}
+                fullscreen={profileModal === 'chat' || profileModal === 'daily' || profileModal === 'roulette' || profileModal === 'pvp'}
+                coverNavigation={profileModal === 'leaderboard' || profileModal === 'profile' || profileModal === 'roulette' || profileModal === 'pvp'}
+                lockContentScroll={profileModal === 'public-profile' || profileModal === 'chat' || profileModal === 'leaderboard' || profileModal === 'profile' || profileModal === 'daily' || profileModal === 'events' || profileModal === 'roulette' || profileModal === 'pvp'}
+                frameless={profileModal === 'public-profile' || profileModal === 'chat' || profileModal === 'profile' || profileModal === 'roulette' || profileModal === 'mail' || profileModal === 'pvp'}
+                centered={profileModal === 'mail'}
+                dismissOnBackdrop={profileModal === 'mail'}
+                overlayBottomNav={profileModal === 'pvp'}
+                reserveBottomNav={profileModal !== 'chat' && profileModal !== 'leaderboard' && profileModal !== 'daily' && profileModal !== 'profile' && profileModal !== 'roulette' && profileModal !== 'pvp'}
+                contentClassName={profileModal === 'chat' ? 'px-0 py-0 sm:px-0 sm:py-0' : profileModal === 'daily' || profileModal === 'roulette' || profileModal === 'pvp' ? 'px-0 py-0 sm:px-0 sm:py-0' : ''}
               >
                 <Suspense fallback={<PanelLoading />}>
-                  {<><div className="h-full min-h-0 w-full min-w-0 flex-1" style={{ display: activeModal === 'profile' ? 'none' : undefined }} key={activeModal === 'profile' ? settingsReturnModal.current : activeModal}>{renderModalContent(activeModal === 'profile' ? settingsReturnModal.current : activeModal)}</div>{activeModal === 'profile' ? renderModalContent('profile') : null}</>}
+                  {<><div className="h-full min-h-0 w-full min-w-0 flex-1" style={{ display: profileModal === 'profile' ? 'none' : undefined }} key={profileModal === 'profile' ? settingsReturnModal.current : profileModal}>{renderModalContent(profileModal === 'profile' ? settingsReturnModal.current : profileModal)}</div>{profileModal === 'profile' ? renderModalContent('profile') : null}</>}
                 </Suspense>
-              </ModalShell>
+              </ModalShell></div>
             )}
 
           {puddleBossWarning ? (
             <ModalShell title="" labels={labels} onClose={() => setPuddleBossWarning(false)} centered hideHeader>
-              <div className="relative flex flex-col gap-4 px-3 py-5">
+              <div className="reaction-modal-background reaction-modal-background--dislikes relative flex flex-col gap-4 px-3 py-5">
                 <button type="button" aria-label={labels.close} onClick={() => setPuddleBossWarning(false)} className="absolute right-2 top-2 h-8 w-8 font-mono text-[25px] leading-none text-[#d8f67a] transition hover:text-white">×</button>
                 <div className="pr-9">
                   <p className="font-mono text-[10px] font-black uppercase tracking-[.14em] text-[#88a560]">ЕКРАН</p>
@@ -1828,13 +1847,18 @@ function GameContent() {
             </ModalShell>
           ) : null}
 
-          {!loading && !showLoadingOverlay && bootStage === 'ready' && !viewPlayer && !isNewbieTutorialActive(profile) && caRankRewardQueue.length ? (
+          {!loading && !showLoadingOverlay && bootStage === 'ready' && !viewPlayer && !isNewbieTutorialActive(profile) && (caRankRewardQueue.length || (!profile?.update_notices?.['ca-rank-backfill-v1'] && profile?.ca_rank_backfill_notice?.length)) ? (
             <ModalShell title="" labels={labels} centered hideHeader frameless>
               {(() => {
-                const rankNumber = caRankRewardQueue[0];
+                const credited = !caRankRewardQueue.length;
+                const creditedRanks = profile.ca_rank_backfill_notice || [];
+                const rankNumber = credited ? creditedRanks.at(-1) : caRankRewardQueue[0];
                 const rank = getCARankProgress(getPlayerCA(profile)).current;
                 const milestoneRank = CA_RANKS.find((entry) => entry.rank === rankNumber) || rank;
-                const reward = getCARankReward(rankNumber);
+                const reward = credited ? creditedRanks.reduce((total, number) => {
+                  for (const [key, amount] of Object.entries(getCARankReward(number) || {})) total[key] = (total[key] || 0) + amount;
+                  return total;
+                }, {}) : getCARankReward(rankNumber);
                 const rankIcon = getCARankIcon(milestoneRank);
                 const rankNames = milestoneRank?.names || {};
                 const rankName = rankNames[language === 'uk' ? 'ua' : language] || rankNames.ua || rankNames.en || milestoneRank?.id || '';
@@ -1850,7 +1874,7 @@ function GameContent() {
                   ['medium-poison', reward.mediumPoison], ['large-poison', reward.largePoison], ['spins', reward.spins],
                 ].filter(([, amount]) => Number(amount) > 0);
                 return <div className="mx-auto w-full max-w-[390px] border border-[#28ee90] bg-[#060b07f5] p-3 text-center shadow-[0_0_0_3px_#08180f,0_24px_90px_#000b]">
-                  <h2 className="font-mono text-[13px] font-black tracking-[.12em] text-[#dfff82]">{copy.title}</h2>
+                  <h2 className="font-mono text-[13px] font-black tracking-[.12em] text-[#dfff82]">{credited ? ({ru:"НАГРАДЫ ЗА РАНГИ CA УЖЕ НАЧИСЛЕНЫ",en:"CA RANK REWARDS ALREADY CREDITED"}[language] || "НАГОРОДИ ЗА РАНГИ CA ВЖЕ НАРАХОВАНО") : copy.title}</h2>
                   <div className="mx-auto flex h-[168px] max-w-[310px] items-center justify-center">
                     {rankIcon ? <div className="relative grid h-[164px] w-[164px] place-items-center">
                       <span aria-hidden="true" className="battle-pass-icon-glow" />
@@ -1858,7 +1882,7 @@ function GameContent() {
                       <img src={rankIcon} alt={rankName} className="relative z-[1] h-full w-full object-contain drop-shadow-[0_0_18px_rgba(255,210,50,.38)]" />
                     </div> : null}
                   </div>
-                  <p className="-mt-1 font-mono text-[12px] font-black uppercase text-[#fff4d4]">{rankName}</p>
+                  <p className="-mt-1 font-mono text-[12px] font-black uppercase text-[#fff4d4]">{credited ? "CA " + creditedRanks.join(", ") : rankName}</p>
                   <div className="mx-auto mt-2 max-w-[300px] text-left">
                     <div className="mb-1 flex justify-between gap-2 font-mono text-[8px] font-black uppercase text-[#a9c584]"><span>{copy.progress}</span><span>{rankProgress.next ? `${getPlayerCA(profile).toLocaleString('en-US')} / ${rankProgress.next.minCA.toLocaleString('en-US')} CA` : copy.max}</span></div>
                     <div className="h-2 overflow-hidden rounded-full border border-[#86a93b] bg-[#10170d]"><div className="h-full rounded-full bg-[linear-gradient(90deg,#7fbd21,#dfff61)] transition-[width]" style={{ width: `${progressPercent}%` }} /></div>
@@ -1871,8 +1895,14 @@ function GameContent() {
                       <strong className="whitespace-nowrap font-mono text-[clamp(9px,3.1vw,14px)] font-black text-[#dfff82]">×{Number(amount).toLocaleString('en-US')}</strong>
                     </div>)}
                   </div>
-                  <GameTextureButton type="button" disabled={claimingCARankReward} onClick={claimCARankMilestoneReward} className="mx-auto mt-3 h-12 w-[min(100%,240px)]">
-                    <span className="relative z-10 font-mono text-[12px] font-black uppercase text-[#17220e]">{claimingCARankReward ? '…' : copy.claim}</span>
+                  <GameTextureButton type="button" disabled={claimingCARankReward} onClick={credited ? async () => {
+                    setClaimingCARankReward(true);
+                    setCARankRewardClaimError(false);
+                    try { await updateProfile({ playerAction: {type:'update-notice-read',noticeId:'ca-rank-backfill-v1'} }); }
+                    catch { setCARankRewardClaimError(true); }
+                    finally { setClaimingCARankReward(false); }
+                  } : claimCARankMilestoneReward} className="mx-auto mt-3 h-12 w-[min(100%,240px)]">
+                    <span className="relative z-10 font-mono text-[12px] font-black uppercase text-[#17220e]">{claimingCARankReward ? '…' : credited ? 'OK' : copy.claim}</span>
                   </GameTextureButton>
                   {caRankRewardClaimError ? <p role="alert" className="mt-2 font-mono text-[10px] font-bold text-[#ff8b78]">{language === 'en' ? 'Reward not confirmed. Check connection or update the server.' : language === 'ru' ? 'Награда не подтверждена. Проверьте соединение или обновите сервер.' : 'Нагороду не підтверджено. Перевірте з’єднання або оновіть сервер.'}</p> : null}
                 </div>;
@@ -1884,8 +1914,8 @@ function GameContent() {
 
           <div id="game-window-root" className="pointer-events-none absolute inset-x-0 top-0 z-40" style={{ bottom: bottomNavSpace }} />
 
-          <style>{'html[data-void-flush-scene="true"] .void-flush-bottom-nav { display: none !important; }'}</style>
-          <div className="void-flush-bottom-nav">{!voidFlushActive ? <BottomNav
+          {!isPlayerScene ? <style>{'html[data-void-flush-scene="true"] .void-flush-bottom-nav, .game-shell:has([data-halloween-scene="true"]) .void-flush-bottom-nav { display: none !important; }'}</style> : null}
+          <div className="void-flush-bottom-nav">{!isWebWorld && (!voidFlushActive || isPlayerScene) ? <BottomNav
             onHeightChange={setBottomNavHeight}
             onTabIntent={warmTab}
             activeTab={activeTab}
@@ -1914,12 +1944,15 @@ function GameContent() {
         </div>
         <LoadingOverlay progress={displayedLoadingProgress} visible={showLoadingOverlay} />
       </div>
-      <div className="portrait-only-overlay" role="alert" aria-live="assertive">
+      <div className="portrait-only-overlay" role="alert" aria-live="assertive" style={isWebWorld ? {display:'none'} : undefined}>
         <span className="text-[28px]">⚠</span>
         <strong>{portraitCopy.title}</strong>
         <span>{portraitCopy.subtitle}</span>
         <span className="mt-3 text-[#d5f58c]">{portraitCopy.action}</span>
       </div>
     </div>
+    </AchievementClaimContext.Provider>
+    </ViewerLanguageContext.Provider>
   );
 }
+

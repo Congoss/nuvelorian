@@ -19,3 +19,5 @@ test('global activation limit blocks other accounts after limit is reached',()=>
  const limited=[{...codes[0],maxActivations:1,activationCount:0}];redeemPromoCode({},'TEST',limited);assert.equal(limited[0].activationCount,1);
  const p={};assert.throws(()=>redeemPromoCode(p,'TEST',limited),{code:'PROMO_LIMIT_REACHED'});assert.deepEqual(p,{});
 });
+
+ test('spin promo adds bonus spins once and preserves existing balance',()=>{const player={roulette_bonus_spins:3};const defs=[{code:'SPINS',enabled:true,rewards:[{type:'spin',amount:7}]}];redeemPromoCode(player,'SPINS',defs);assert.equal(player.roulette_bonus_spins,10);assert.throws(()=>redeemPromoCode(player,'SPINS',defs),{code:'PROMO_ALREADY_USED'});assert.equal(player.roulette_bonus_spins,10);});

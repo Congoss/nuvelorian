@@ -1,0 +1,6 @@
+Built-in ImageGen. Assets: public/ship-soldier-boss/medals/{bronze,silver,gold}-v1.webp.
+
+Create ONE isolated circular game boss medal on genuinely transparent background. Square canvas, full medal fits with 7% margins. Reference1 is the exact medal FORMAT and art style: worn thick metal rim, triangular inner rays, boss portrait embossed in relief, hand-inked dark contours, simple matte cartoon cel shading. Reference2 is BOSS IDENTITY: infected alien soldier with olive helmet and radio antenna, TWO bulging eyes, long dangling tentacled jaw, and small mushrooms on helmet. Center only this soldier's recognizable HEAD and helmet as embossed metal relief, not full body, no rifle. Match the established game's Rick and Morty / Futurama inspired adult sci-fi cartoon, no photorealistic texture or glossy 3D. Same frontal medallion design for the bronze/silver/gold family. No text, no lettering, no digits, no ribbon, no UI, no background or shadow outside medal. 
+
+Finishes: warm copper bronze with brown recesses; cool silver pewter with charcoal recesses; rich ochre gold with amber recesses.
+Silver follow-up: recolor the entire portrait and frame to monochrome silver pewter relief, preserving contours, pose and transparency.

@@ -1,9 +1,13 @@
+import { openLootReward } from '@/lib/lootOpening';
+import pumpkinIcon from '@/assets/ui/halloween-pumpkin.webp';
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import MarkerFrame from './MarkerFrame';
+import chestScanner from '@/assets/boss-reward-backgrounds/chest-scanner.webp';
+import lootVault from '@/assets/boss-reward-backgrounds/loot-vault.webp';
 import grayBox from '@/assets/box/gray-box.png';
 import greenBox from '@/assets/box/green-box.png';
 import blueBox from '@/assets/box/blue-box.png';
@@ -118,6 +122,7 @@ function normalizeModalDrop(drop, lang = 'ua') {
 }
 
 function getDropImage(drop) {
+  if (drop?.type === 'pumpkin') return pumpkinIcon;
   if (drop?.type === 'equipment' || drop?.type === 'pet') {
     const equipmentIcon = drop?.icon || drop?.item?.uiIcon || drop?.item?.icon || null;
     if (isRenderableIcon(equipmentIcon)) return equipmentIcon;
@@ -143,12 +148,16 @@ function getDropImage(drop) {
 }
 
 function localizeDropName(drop, lang = 'ua') {
+  if (drop?.type === 'enhancement_gum') {
+    const names = {ua:{normal:'Звичайна жувачка',improved:'Покращена жувачка',premium:'Гарантована жувачка'},ru:{normal:'Обычная жвачка',improved:'Улучшенная жвачка',premium:'Гарантированная жвачка'},en:{normal:'Ordinary gum',improved:'Improved gum',premium:'Guaranteed gum'}};
+    return (names[lang] || names.ua)[drop.gum || drop.id] || 'Gum';
+  }
   const t = {
-    ua: { tentacles: 'tentacles', xp: 'EXP', strength: 'CA', energy: 'Енергія', premium: 'T-Pape', stars: 'T-Pape', crystal: 'T-Pape', crystals: 'T-Pape', spin: 'Спін', poison: 'Яд', keycard: 'Ключ боса', equipment: 'Екіпіровка', boss_pet: 'Пет боса', boss_gear_piece: 'Шмотка боса', boss_background: 'Сцена бою з босом', background: 'Сцена бою з босом', collection_item: 'Колекційний предмет', satchel: 'Малий яд', f1: 'Середній яд', f4: 'Середній яд', c4: 'Фляга з отрутою' },
-    en: { tentacles: 'tentacles', xp: 'EXP', strength: 'CA', energy: 'Energy', premium: 'T-Pape', stars: 'T-Pape', crystal: 'T-Pape', crystals: 'T-Pape', spin: 'Spin', poison: 'Poison', keycard: 'Boss Key', equipment: 'Equipment', boss_pet: 'Boss Pet', boss_gear_piece: 'Boss Gear Piece', boss_background: 'Boss Fight Scene', background: 'Boss Fight Scene', collection_item: 'Collection Item', satchel: 'Small Poison', f1: 'Medium Poison', f4: 'Medium Poison', c4: 'Poison flask' },
-    ru: { tentacles: 'tentacles', xp: 'EXP', strength: 'CA', energy: 'Энергия', premium: 'T-Pape', stars: 'T-Pape', crystal: 'T-Pape', crystals: 'T-Pape', spin: 'Спин', poison: 'Яд', keycard: 'Ключ босса', equipment: 'Экипировка', boss_pet: 'Пет босса', boss_gear_piece: 'Шмотка босса', boss_background: 'Сцена боя с боссом', background: 'Сцена боя с боссом', collection_item: 'Коллекционный предмет', satchel: 'Малый яд', f1: 'Средний яд', f4: 'Средний яд', c4: 'Фляга с ядом' },
+    ua: { pumpkin: 'Гарбуз', tentacles: 'tentacles', xp: 'EXP', strength: 'CA', energy: 'Енергія', premium: 'T-Pape', stars: 'T-Pape', crystal: 'T-Pape', crystals: 'T-Pape', spin: 'Спін', poison: 'Яд', keycard: 'Ключ боса', equipment: 'Екіпіровка', boss_pet: 'Пет боса', boss_gear_piece: 'Шмотка боса', boss_background: 'Сцена бою з босом', background: 'Сцена бою з босом', collection_item: 'Колекційний предмет', satchel: 'Малий яд', f1: 'Середній яд', f4: 'Середній яд', c4: 'Фляга з отрутою' },
+    en: { pumpkin: 'Pumpkin', tentacles: 'tentacles', xp: 'EXP', strength: 'CA', energy: 'Energy', premium: 'T-Pape', stars: 'T-Pape', crystal: 'T-Pape', crystals: 'T-Pape', spin: 'Spin', poison: 'Poison', keycard: 'Boss Key', equipment: 'Equipment', boss_pet: 'Boss Pet', boss_gear_piece: 'Boss Gear Piece', boss_background: 'Boss Fight Scene', background: 'Boss Fight Scene', collection_item: 'Collection Item', satchel: 'Small Poison', f1: 'Medium Poison', f4: 'Medium Poison', c4: 'Poison flask' },
+    ru: { pumpkin: 'Тыква', tentacles: 'tentacles', xp: 'EXP', strength: 'CA', energy: 'Энергия', premium: 'T-Pape', stars: 'T-Pape', crystal: 'T-Pape', crystals: 'T-Pape', spin: 'Спин', poison: 'Яд', keycard: 'Ключ босса', equipment: 'Экипировка', boss_pet: 'Пет босса', boss_gear_piece: 'Шмотка босса', boss_background: 'Сцена боя с боссом', background: 'Сцена боя с боссом', collection_item: 'Коллекционный предмет', satchel: 'Малый яд', f1: 'Средний яд', f4: 'Средний яд', c4: 'Фляга с ядом' },
   }[lang] || {
-    tentacles: 'tentacles', xp: 'EXP', strength: 'CA', energy: 'Енергія', premium: 'T-Pape', stars: 'T-Pape', crystal: 'T-Pape', crystals: 'T-Pape', spin: 'Спін', poison: 'Яд', keycard: 'Ключ боса', equipment: 'Екіпіровка', boss_pet: 'Пет боса', boss_gear_piece: 'Шмотка боса', boss_background: 'Сцена бою з босом', background: 'Сцена бою з босом', collection_item: 'Колекційний предмет', satchel: 'Малий яд', f1: 'Середній яд', f4: 'Середній яд', c4: 'Фляга з отрутою',
+    pumpkin: 'Гарбуз', tentacles: 'tentacles', xp: 'EXP', strength: 'CA', energy: 'Енергія', premium: 'T-Pape', stars: 'T-Pape', crystal: 'T-Pape', crystals: 'T-Pape', spin: 'Спін', poison: 'Яд', keycard: 'Ключ боса', equipment: 'Екіпіровка', boss_pet: 'Пет боса', boss_gear_piece: 'Шмотка боса', boss_background: 'Сцена бою з босом', background: 'Сцена бою з босом', collection_item: 'Колекційний предмет', satchel: 'Малий яд', f1: 'Середній яд', f4: 'Середній яд', c4: 'Фляга з отрутою',
   };
   const isBrokenText = (value) => typeof value === 'string' && /[РЃЄІЇҐёЁ]/.test(value);
   const keyCandidates = [
@@ -195,7 +204,7 @@ function DropTile({ drop, delay, lang }) {
       className="flex min-h-[clamp(108px,29vw,124px)] w-[clamp(72px,22vw,84px)] shrink-0 flex-col items-center gap-1 rounded-[10px] px-1 py-1.5"
     >
       <div className="flex h-[clamp(52px,16vw,64px)] w-[clamp(52px,16vw,64px)] items-center justify-center">
-        <img src={getDropImage(normalizedDrop)} alt={localizeDropName(normalizedDrop, lang)} className="h-[clamp(48px,15vw,60px)] w-[clamp(48px,15vw,60px)] object-contain" />
+        {normalizedDrop.type === 'enhancement_gum' ? <span role="img" aria-label={localizeDropName(normalizedDrop, lang)} className="h-[clamp(48px,15vw,60px)] w-[clamp(48px,15vw,60px)]" style={{backgroundImage:"url('/local-enhancement/gums.webp')",backgroundSize:'300% 100%',backgroundRepeat:'no-repeat',backgroundPosition:({normal:'0%',improved:'50%',premium:'100%'})[normalizedDrop.gum || normalizedDrop.id] + ' center'}}/> : <img src={getDropImage(normalizedDrop)} alt={localizeDropName(normalizedDrop, lang)} className="h-[clamp(48px,15vw,60px)] w-[clamp(48px,15vw,60px)] object-contain" />}
       </div>
       <p className="w-full whitespace-normal break-words text-center font-mono text-[9px] leading-[11px] uppercase tracking-[0.04em] text-[#eef7d9]">
         {localizeDropName(normalizedDrop, lang)}
@@ -205,10 +214,10 @@ function DropTile({ drop, delay, lang }) {
   );
 }
 
-export default function LootBoxModal({ boxType, boxName = '', bossId, fightId, instanceId = null, onClose, onOpenBox, onApplyDrops, lang = 'ua', initialDrops = null }) {
-  const gameWindowRoot = typeof document !== 'undefined'
+export default function LootBoxModal({ boxType, boxName = '', bossId, fightId, instanceId = null, portalRoot = null, onClose, onOpenBox, onApplyDrops, lang = 'ua', initialDrops = null }) {
+  const gameWindowRoot = portalRoot || (typeof document !== 'undefined'
     ? document.getElementById('game-window-root')
-    : null;
+    : null);
   const openingRef = useRef(false);
   const [phase, setPhase] = useState(initialDrops ? 'result' : 'preview');
   const [drops, setDrops] = useState(initialDrops || []);
@@ -220,20 +229,14 @@ export default function LootBoxModal({ boxType, boxName = '', bossId, fightId, i
   const handleOpen = async () => {
     if (openingRef.current) return;
     openingRef.current = true;
-    let timeoutId;
     setErrorMessage('');
     setPhase('opening');
     try {
-      const [result] = await Promise.all([
-        Promise.race([
-          onOpenBox?.({ boxType, bossId, fightId, instanceId }),
-          new Promise((_, reject) => { timeoutId = setTimeout(() => reject(Object.assign(new Error('Chest opening timed out'), { code: 'CHEST_TIMEOUT' })), 30000); }),
-        ]),
-        new Promise((resolve) => setTimeout(resolve, 900)),
-      ]);
-      const nextDrops = result || [];
+      const nextDrops = await openLootReward({
+        open: onOpenBox, apply: onApplyDrops,
+        context: { boxType, bossId, fightId, instanceId },
+      });
       setDrops(nextDrops);
-      await onApplyDrops?.(nextDrops);
       setPhase('result');
     } catch (error) {
       const alreadyClaimed = error?.code === 'LOOT_ALREADY_CLAIMED' || error?.status === 409 || error?.status === 404;
@@ -247,15 +250,14 @@ export default function LootBoxModal({ boxType, boxName = '', bossId, fightId, i
       setErrorMessage(error?.code === 'CHEST_TIMEOUT' ? messages[language] : `${t('mail_panel.open_error')} (${error?.code || 'UNKNOWN_ERROR'})`);
       setPhase('preview');
     } finally {
-      clearTimeout(timeoutId);
       openingRef.current = false;
     }
   };
 
   return createPortal(
-    <div data-tutorial-loot-box="true" className={`${gameWindowRoot ? 'absolute' : 'fixed'} inset-0 z-[99999] pointer-events-auto flex min-h-0 items-center justify-center overflow-y-auto overscroll-contain bg-black/70 px-2 py-2 sm:px-4 sm:py-6 touch-pan-y`}>
+    <div data-tutorial-loot-box="true" onClick={event => { if (event.target === event.currentTarget && !openingRef.current) onClose?.(); }} className={`${gameWindowRoot ? 'absolute' : 'fixed'} inset-0 z-[99999] pointer-events-auto flex min-h-0 items-center justify-center overflow-y-auto overscroll-contain bg-black/70 px-2 py-2 sm:px-4 sm:py-6 touch-pan-y`}>
       <div className="my-auto max-h-full w-full max-w-[min(390px,calc(100vw-16px))] overflow-y-auto overscroll-contain touch-pan-y [-webkit-overflow-scrolling:touch]">
-        <MarkerFrame className="w-full bg-[rgba(6,9,6,0.96)]" innerClassName="relative px-2 pb-2 pt-2 sm:px-3 sm:pb-3 sm:pt-3" variant="transparent">
+        <MarkerFrame className="w-full bg-[rgba(6,9,6,0.96)]" innerClassName="relative px-2 pb-2 pt-2 sm:px-3 sm:pb-3 sm:pt-3" variant="transparent" backgroundImage={fightId && !initialDrops ? (phase === 'result' ? lootVault : chestScanner) : undefined}>
           {
             <button
               type="button"

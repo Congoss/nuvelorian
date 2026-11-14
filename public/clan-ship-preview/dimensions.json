@@ -1,0 +1,77 @@
+{
+  "habitat": {
+    "width": 800,
+    "height": 566,
+    "alpha": true
+  },
+  "reactor": {
+    "width": 572,
+    "height": 1000,
+    "alpha": true
+  },
+  "bridge": {
+    "width": 800,
+    "height": 674,
+    "alpha": true
+  },
+  "radar": {
+    "width": 656,
+    "height": 1000,
+    "alpha": true
+  },
+  "lab": {
+    "width": 800,
+    "height": 512,
+    "alpha": true
+  },
+  "garden": {
+    "width": 800,
+    "height": 576,
+    "alpha": true
+  },
+  "engine": {
+    "width": 800,
+    "height": 511,
+    "alpha": true
+  },
+  "portal": {
+    "width": 800,
+    "height": 504,
+    "alpha": true
+  },
+  "hangar": {
+    "width": 800,
+    "height": 357,
+    "alpha": true
+  },
+  "core": {
+    "width": 800,
+    "height": 874,
+    "alpha": true
+  },
+  "hull": {
+    "width": 800,
+    "height": 263,
+    "alpha": true
+  },
+  "worker-left": {
+    "width": 201,
+    "height": 1000,
+    "alpha": true
+  },
+  "worker-right": {
+    "width": 202,
+    "height": 1000,
+    "alpha": true
+  },
+  "hammer": {
+    "width": 784,
+    "height": 1000,
+    "alpha": true
+  },
+  "background": {
+    "width": 1000,
+    "height": 1500,
+    "alpha": false
+  }
+}

@@ -1,12 +1,26 @@
+import clanHeaderBackground from '@/assets/clan-header/alien-outpost.webp';
+import { warmFirstFrameImages } from '@/lib/sceneAssets';
+import FirstFrameImage from './FirstFrameImage';
+import damageFull from "@/assets/clan-achievements/damage.webp";
+import donationsFull from "@/assets/clan-achievements/donations.webp";
+import helperFull from "@/assets/clan-achievements/helper.webp";
+import questsFull from "@/assets/clan-achievements/quests.webp";
+import { kyivDayKey } from "../../lib/kyivDay.js";
+import CombatLoader from './CombatLoader';
+import {clanOverviewQueries} from '@/lib/clanOverviewQueries';
+import {warmSceneImage} from '@/lib/sceneAssets';
+import { lazy, Suspense } from 'react';
+const LocalClanShip = lazy(() => import('./ShipTesterGate'));
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { translateUiText } from '@/lib/uiTextTranslations';
 import GameWindow from './GameWindow';
 import { getClanJoinState } from '@/lib/clanJoinState';
-import { getClanDonationState } from '@/lib/clanDonationState';
+import { getClanDonationState, currentClanDonationWindow } from '@/lib/clanDonationState';
+import { serverNow } from '@/lib/serverClock';
 import { localizeClanActivityText } from '@/lib/clanActivityText';
 import { localizeClanDescription } from '@/lib/clanDescription';
 import { useEffect, useRef, useState } from "react";
 import {
-  Loader2,
   LogOut,
   MessageCircle,
   Megaphone,
@@ -51,20 +65,14 @@ import { getCARankProgress, getCARankIcon } from "@/lib/caRanks";
 import { getResourceIcon } from "@/lib/resourceIcons";
 import { DEFAULT_GUILD_LOGO, GUILD_LOGOS } from "@/lib/clanLogos";
 import { CLAN_ACHIEVEMENT_CONFIG, CLAN_QUEST_DEFINITIONS } from "@/lib/clanAchievements";
-import damageAchievement from "@/assets/clan-achievements/damage.webp";
+import damageAchievement from "@/assets/optimized/first-frame/clan-damage.webp?inline";
 import damageFlag from "@/assets/clan-achievements/damage-flag.webp";
-import donationsAchievement from "@/assets/clan-achievements/donations.webp";
+import donationsAchievement from "@/assets/optimized/first-frame/clan-donations.webp?inline";
 import donationsFlag from "@/assets/clan-achievements/donations-flag.webp";
-import helperAchievement from "@/assets/clan-achievements/helper.webp";
+import helperAchievement from "@/assets/optimized/first-frame/clan-helper.webp?inline";
 import helperFlag from "@/assets/clan-achievements/helper-flag.webp";
-import questsAchievement from "@/assets/clan-achievements/quests.webp";
+import questsAchievement from "@/assets/optimized/first-frame/clan-quests.webp?inline";
 import questsFlag from "@/assets/clan-achievements/quests-flag.webp";
-import clanAchiv1 from "@/assets/clan-achievements/unlockable/clan-achiv1.png";
-import clanAchiv2 from "@/assets/clan-achievements/unlockable/clan-achiv2.png";
-import clanAchiv5 from "@/assets/clan-achievements/unlockable/clan-achiv5.png";
-import clanAchiv6 from "@/assets/clan-achievements/unlockable/clan-achiv6.png";
-import clanAchiv7 from "@/assets/clan-achievements/unlockable/clan-achiv7.png";
-import clanAchiv9 from "@/assets/clan-achievements/unlockable/clan-achiv9.png";
 
 const CLAN_SIGNS = [
   { id: "cn", label: "CN", badge: "C" },
@@ -165,12 +173,14 @@ function getLeaderboardFrameId(member) {
   return frameId && ownedFrames.includes(frameId) ? frameId : null;
 }
 
-function Frame({ children, className = "" }) {
+function Frame({ children, className = "", backgroundImage }) {
   return (
     <MarkerFrame
       className={className}
       innerClassName="relative z-10"
       variant="transparent"
+      backgroundImage={backgroundImage}
+      backgroundPosition="right center"
     >
       {children}
     </MarkerFrame>
@@ -263,73 +273,7 @@ function TopTabButton({ active, label, onClick }) {
   );
 }
 
-function ClanRewardAchievements({ clan }) {
-  const achievements = [
-    {
-      id: "boss100",
-      icon: clanAchiv2,
-      label: "100 bosses",
-      unlocked: clan.totalBossKills >= 100,
-    },
-    {
-      id: "members25",
-      icon: clanAchiv7,
-      label: "25 players",
-      unlocked: clan.members.length >= 25,
-    },
-    {
-      id: "topWeek",
-      icon: clanAchiv1,
-      label: "Top 1 · week",
-      unlocked: Boolean(clan.milestones?.topWeek),
-    },
-    {
-      id: "raidTop",
-      icon: clanAchiv6,
-      label: "Raid top 1",
-      unlocked: Boolean(clan.milestones?.raidTop),
-    },
-    {
-      id: "topFive",
-      icon: clanAchiv9,
-      label: "5 in top 10",
-      unlocked: Boolean(clan.milestones?.topFive),
-    },
-    {
-      id: "members50",
-      icon: clanAchiv5,
-      label: "50 players",
-      unlocked: Boolean(clan.milestones?.members50),
-    },
-  ];
-  const unlockedAchievements = achievements.filter(
-    (achievement) => achievement.unlocked,
-  );
-
-  if (!unlockedAchievements.length) return null;
-
-  return (
-    <div className="mt-3 grid grid-cols-6 gap-1.5">
-      {unlockedAchievements.map(({ id, icon, label }) => (
-        <div
-          key={id}
-          title={label}
-          className="flex min-w-0 flex-col items-center justify-center px-1 py-2"
-        >
-          <img
-            src={icon}
-            alt=""
-            aria-hidden="true"
-            className="h-9 w-9 object-contain"
-          />
-          <span className="mt-1 w-full truncate text-center font-mono text-[7px] font-black uppercase tracking-tight">
-            {label}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
+const FULL_ACHIEVEMENT_ART = new Map([[damageAchievement, damageFull], [donationsAchievement, donationsFull], [helperAchievement, helperFull], [questsAchievement, questsFull]]);
 
 function AchievementBadge({ icon, flag, level, label }) {
   return (
@@ -337,9 +281,10 @@ function AchievementBadge({ icon, flag, level, label }) {
       className="achievement-badge relative h-[82px] w-[62px] shrink-0 overflow-visible sm:h-[92px] sm:w-[70px]"
       aria-label={`${label}: ${level}`}
     >
-      <img
+      <FirstFrameImage
         className="achievement-icon relative z-[2] block h-auto w-full"
-        src={icon}
+        preview={icon}
+        src={FULL_ACHIEVEMENT_ART.get(icon) || icon}
         alt=""
         loading="lazy"
         decoding="async"
@@ -541,54 +486,43 @@ function formatQuestCondition(quest, t) {
 }
 
 function ClanFeaturePanel({ clan, mode, onClose, onChanged }) {
-  const { t } = useTranslation();
-  const [items, setItems] = useState([]);
-  const [questOffers, setQuestOffers] = useState([]);
+  const { t, i18n } = useTranslation();
+  const helpText = ({ ru, uk, en }) => i18n.language?.startsWith("ru") ? ru : i18n.language?.startsWith("en") ? en : uk;
+  const queryClient = useQueryClient();
   const [error, setError] = useState("");
+  const actionBusy = useRef(false);
   const [now, setNow] = useState(Date.now());
-  const loadInFlight = useRef(false);
   const clanId = clan.id || clan.name;
-  const load = useCallback(async () => {
-    if (loadInFlight.current) return;
-    loadInFlight.current = true;
-    try {
-      setError("");
-      if (mode === "quests") {
-        const result = await listClanQuests(clanId);
-        setItems(Array.isArray(result) ? result : result?.quests || []);
-        setQuestOffers(Array.isArray(result) ? [] : result?.offers || []);
-      }
-      if (mode === "helper") setItems(await listClanEnergyRequests(clanId));
-    } catch (caught) {
-      setError(translateUiText(caught?.message || "Помилка"));
-    } finally {
-      loadInFlight.current = false;
-    }
-  }, [clanId, mode]);
-  useEffect(() => {
-    load();
-  }, [load]);
-  useEffect(() => {
-    if (mode !== "quests") return undefined;
-    const timer = setInterval(() => {
-      if (document.visibilityState === "visible") void load();
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [load, mode]);
+  const queryKey = ['clan-feature', clanId, clan.viewerId, mode];
+  const feature = useQuery({
+    queryKey,
+    queryFn: () => mode === 'quests' ? listClanQuests(clanId) : listClanEnergyRequests(clanId),
+    enabled: ['quests','helper'].includes(mode),
+    staleTime: 5000,
+    refetchInterval: mode === 'quests' ? 5000 : false,
+    retry: 1,
+  });
+  const items = Array.isArray(feature.data) ? feature.data : feature.data?.quests || [];
+  const questOffers = Array.isArray(feature.data) ? [] : feature.data?.offers || [];
+  const load = async () => {
+    await queryClient.invalidateQueries({queryKey});
+  };
   useEffect(() => {
     if (mode !== "quests") return undefined;
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [mode]);
   const act = async (action) => {
+    if (actionBusy.current) return;
+    actionBusy.current = true;
     try {
       setError("");
       await action();
       await load();
-      await onChanged?.();
+      void Promise.resolve(onChanged?.()).catch(() => {});
     } catch (caught) {
       setError(translateUiText(caught?.message || "Помилка"));
-    }
+    } finally { actionBusy.current = false; }
   };
   if (mode === "donations")
     return (
@@ -706,6 +640,8 @@ function ClanFeaturePanel({ clan, mode, onClose, onChanged }) {
           ×
         </button>
       </div>
+      {feature.isPending ? <p role="status" className="mt-2 text-xs text-[#b9d58d]">{helpText({ru:'Загрузка квестов…',uk:'Завантаження квестів…',en:'Loading quests…'})}</p> : null}
+      {feature.error ? <p role="alert" className="mt-2 text-xs text-[#ff7770]">{translateUiText(feature.error.message)} <button type="button" onClick={() => feature.refetch()}>↻</button></p> : null}
       <div className="mt-2 space-y-2">
         {/** A member may work on one clan quest at a time. */}
         {questOffers.map((offer) => {
@@ -749,13 +685,13 @@ function ClanFeaturePanel({ clan, mode, onClose, onChanged }) {
                 <Swords className="h-5 w-5" strokeWidth={2.5} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate font-sans text-[11px] font-black">
+                    <p className="whitespace-normal break-words font-sans text-[13px] font-black leading-snug">
                       T{quest.tier} · {formatQuestCondition(quest, t)}
                     </p>
                     <p
-                      className={`mt-0.5 truncate font-mono text-[8px] font-black ${activeQuest || unlocked ? "text-[#91ba75]" : "text-[#71806c]"}`}
+                      className={`mt-0.5 whitespace-normal break-words font-mono text-[11px] leading-snug font-black ${activeQuest || unlocked ? "text-[#91ba75]" : "text-[#71806c]"}`}
                     >
                       {activeQuest
                         ? `${activeQuest.progress.toLocaleString()}/${activeQuest.target.toLocaleString()}`
@@ -763,7 +699,7 @@ function ClanFeaturePanel({ clan, mode, onClose, onChanged }) {
                     </p>
                   </div>
                   {activeQuest ? (
-                    <span className="shrink-0 font-mono text-[9px] font-black text-[#d6ad75]">
+                    <span className="shrink-0 font-mono text-[11px] font-black text-[#d6ad75]">
                       {formatCountdown(activeQuest.expires_at, now)}
                     </span>
                   ) : null}
@@ -806,23 +742,24 @@ function ClanFeaturePanel({ clan, mode, onClose, onChanged }) {
               quest.help_enabled &&
               String(quest.owner_id) !== String(clan.viewerId),
           )
-          .map((quest) => (
-            <div
-              key={quest.id}
-              className="flex items-center gap-2 border border-[#497238] bg-[#10170d] p-1.5"
-            >
-              <span className="min-w-0 flex-1 font-mono text-[8px] text-[#a8d96b]">
-                T{quest.tier} · {quest.progress}/{quest.target} ·{" "}
-                {formatCountdown(quest.expires_at, now)}
-              </span>
-              <ClaimButton
-                label={t("clan_panel.help")}
-                tone="yellow"
-                className="h-7"
-                onClick={() => act(() => helpClanQuest(clanId, quest.id))}
-              />
-            </div>
-          ))}
+          .map((quest) => {
+            const joined = (quest.participants || []).map(String).includes(String(clan.viewerId));
+            const progress = Math.max(0, Number(quest.progress) || 0);
+            const target = Math.max(1, Number(quest.target) || 1);
+            const contribution = Number(quest.contributions?.[clan.viewerId] || 0);
+            return (
+              <div key={quest.id} className="rounded-lg border border-[#497238] bg-[#10170d] p-2">
+                <div className="flex items-center gap-2">
+                  <p className="min-w-0 flex-1 text-[10px] font-black text-[#e4efce]">T{quest.tier} · {formatQuestCondition(quest, t)}</p>
+                  <ClaimButton label={joined ? helpText({ru:"✓ Вы помогаете",uk:"✓ Ви допомагаєте",en:"✓ Helping"}) : t("clan_panel.help")} tone={joined ? "gray" : "yellow"} disabled={joined} className="h-7" onClick={() => act(() => helpClanQuest(clanId, quest.id))} />
+                </div>
+                <div className="mt-2 flex justify-between text-[9px] text-[#a8d96b]"><span>{helpText({ru:"Общий прогресс",uk:"Спільний прогрес",en:"Shared progress"})}</span><span>{progress}/{target}</span></div>
+                <div role="progressbar" aria-label={formatQuestCondition(quest,t)} aria-valuemin={0} aria-valuemax={target} aria-valuenow={Math.min(progress,target)} className="mt-1 h-2 overflow-hidden rounded bg-[#303b25]"><div className="h-full bg-[#a5da32] transition-all" style={{width: Math.min(100,progress/target*100)+"%"}} /></div>
+                {joined && <p className="mt-1 text-[9px] text-[#d6e8bc]">{contribution > 0 ? helpText({ru:"Ваш вклад",uk:"Ваш внесок",en:"Your contribution"})+": "+contribution : helpText({ru:"Вы присоединились — выполняйте задание, чтобы добавить прогресс",uk:"Ви приєдналися — виконуйте завдання, щоб додати прогрес",en:"Joined — perform the task to add progress"})}</p>}
+                <p className="mt-1 font-mono text-[8px] text-[#a8d96b]">{helpText({ru:"До завершения",uk:"До завершення",en:"Time remaining"})}: {formatCountdown(quest.expires_at, now)}</p>
+              </div>
+            );
+          })}
       </div>
       {error ? (
         <p className="mt-2 font-mono text-[8px] text-[#ff7770]">{error}</p>
@@ -892,6 +829,8 @@ function buildClanProfile(
     power: playerPower,
     avatar: profile?.avatar || profile?.photoUrl || "",
     avatar_frame_id: profile?.avatar_frame_id || "frame1",
+    profile_header_theme: profile?.profile_header_theme || null,
+    battle_pass_tier: profile?.battle_pass_tier,
     battle_pass_view: profile?.battle_pass_view,
     unlocked_avatar_frames: profile?.unlocked_avatar_frames || [],
     last_login_date: profile?.last_login_date || "",
@@ -905,12 +844,14 @@ function buildClanProfile(
         power: member.stat_strength || member.power || member.attack_power || 0,
         avatar: member.avatar || member.photoUrl || member.photo_url || "",
         avatar_frame_id: member.avatar_frame_id || "frame1",
+        profile_header_theme: member.profile_header_theme || null,
+        battle_pass_tier: member.battle_pass_tier,
         battle_pass_view: member.battle_pass_view,
         unlocked_avatar_frames: member.unlocked_avatar_frames || [],
         last_login_date: member.last_login_date || "",
       }))
     : [fallbackMember];
-  const today = new Date().toISOString().slice(0, 10);
+  const today = kyivDayKey();
   const activeMemberCount = members.filter(
     (member) => String(member.last_login_date || "").slice(0, 10) === today,
   ).length;
@@ -1053,7 +994,11 @@ function ClanLobbyRow({ clan, onJoin, profile, joiningClanId, joinFeedback }) {
   const requested = feedback?.requested;
   const levelLocked = Number(profile?.level || 1) < Number(clan.min_level || 1);
   const full = clan.members >= (clan.memberLimit || 25);
-  const label = requested ? (language === 'ru' ? 'ЗАЯВКА ОТПРАВЛЕНА' : language === 'en' ? 'APPLIED' : 'ЗАЯВУ НАДІСЛАНО')
+  // A guest can look at real clans (this whole lobby) but never join one — see server/app.js
+  // GUEST_CLAN_RESTRICTED. Disabling it here just avoids a dead-end error for them.
+  const guestLocked = Boolean(profile?.guest_account);
+  const label = guestLocked ? (language === 'ru' ? 'НУЖЕН КОШЕЛЁК' : language === 'en' ? 'NEED A WALLET' : 'ПОТРІБЕН ГАМАНЕЦЬ')
+    : requested ? (language === 'ru' ? 'ЗАЯВКА ОТПРАВЛЕНА' : language === 'en' ? 'APPLIED' : 'ЗАЯВУ НАДІСЛАНО')
     : levelLocked ? 'LVL ' + clan.min_level
     : full ? (language === 'ru' ? 'КЛАН ПОЛОН' : language === 'en' ? 'CLAN FULL' : 'КЛАН ПОВНИЙ')
     : joiningClanId === clan.id ? '…' : state.label;
@@ -1062,7 +1007,7 @@ function ClanLobbyRow({ clan, onJoin, profile, joiningClanId, joinFeedback }) {
       <div className="flex w-full items-center gap-2">
         <img src={GUILD_LOGOS.find(logo => logo.id === clan.logoId)?.src || DEFAULT_GUILD_LOGO} alt="" className="h-11 w-11 shrink-0 object-contain" />
         <strong className="min-w-0 flex-1 break-words font-mono text-[13px] text-[#fff0db]">{clan.name}</strong>
-        <GreenButton label={label} small disabled={state.disabled || levelLocked || full || Boolean(joiningClanId) || requested} onClick={() => onJoin?.(clan)} />
+        <GreenButton label={label} small disabled={guestLocked || state.disabled || levelLocked || full || Boolean(joiningClanId) || requested} onClick={() => onJoin?.(clan)} />
       </div>
       {feedback?.message ? <p role={feedback.error ? 'alert' : 'status'} className={feedback.error ? 'mt-2 font-mono text-[11px] text-[#ffb3a9]' : 'mt-2 font-mono text-[11px] text-[#b9d58d]'}>{feedback.message}</p> : null}
     </div>
@@ -1073,7 +1018,7 @@ function ClanLobbyView({ clans, loading, onCreateClan, onJoinClan, profile, join
   const { t } = useTranslation();
   return (
     <div className="space-y-2.5">
-      <Frame className="p-3">
+      <Frame className="trophy-ranking-background p-3">
         <div className="flex items-center justify-between gap-2">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#87a55f]">
@@ -1090,7 +1035,7 @@ function ClanLobbyView({ clans, loading, onCreateClan, onJoinClan, profile, join
 
         {loading ? (
           <div className="flex min-h-[180px] items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-[#b9ff6b]" />
+            <CombatLoader/>
           </div>
         ) : clans.length ? (
           <div className="mt-3 space-y-2">
@@ -1239,7 +1184,7 @@ function ClanManagementModal({ clanId, onClose, onChanged }) {
         ) : null}
         {!data ? (
           <div className="py-12 text-center">
-            <Loader2 className="mx-auto animate-spin text-[#dfff9c]" />
+            <CombatLoader/>
           </div>
         ) : null}
         {data && tab === "members" ? (
@@ -1515,6 +1460,7 @@ function ClanManagementModal({ clanId, onClose, onChanged }) {
 
 export function ClanBioView({
   clan,
+  onOpenShip = null,
   onOpenPlayerProfile = null,
   onOpenChat,
   onLeaveClan,
@@ -1526,6 +1472,15 @@ export function ClanBioView({
   const { t: translate } = useTranslation();
   const t = (key, options) => translate(key, { ...options, ...(language ? { lng: language === 'ua' ? 'uk' : language } : {}) });
   const topMembers = [...clan.members].sort((a, b) => b.power - a.power);
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (externalAction || !clan.viewerId) return;
+    void queryClient.prefetchQuery({
+      queryKey: ['clan-feature', clan.id || clan.name, clan.viewerId, 'quests'],
+      queryFn: () => listClanQuests(clan.id || clan.name),
+      staleTime: 5000,
+    });
+  }, [queryClient, clan.id, clan.name, clan.viewerId, externalAction]);
   const [panel, setPanel] = useState(null);
   const [achievementPopup, setAchievementPopup] = useState(null);
   const [donateOpen, setDonateOpen] = useState(false);
@@ -1536,6 +1491,16 @@ export function ClanBioView({
   const inviteCopy = language === 'ru' ? { title: 'Приглашение в клан', placeholder: 'Напишите, кого ищете в клан...', send: 'Отправить', cancel: 'Назад', done: 'Приглашение отправлено в мировой чат', cooldown: 'Приглашение можно отправить раз в 20 минут.' } : language === 'en' ? { title: 'Clan invitation', placeholder: 'Tell players who your clan is looking for...', send: 'Send', cancel: 'Back', done: 'Invitation sent to world chat', cooldown: 'One invitation per clan every 20 minutes.' } : { title: 'Запрошення в клан', placeholder: 'Напишіть, кого шукаєте в клан...', send: 'Надіслати', cancel: 'Назад', done: 'Запрошення надіслано у світовий чат', cooldown: 'Одне запрошення від клану раз на 20 хвилин.' };
   const [donateAmount, setDonateAmount] = useState("");
   const [donating, setDonating] = useState(false);
+  const donationBusyRef = useRef(false);
+  const donationRequestRef = useRef(null);
+  const [donationNow, setDonationNow] = useState(serverNow);
+  useEffect(() => {
+    if (!donateOpen) return;
+    setDonationNow(serverNow());
+    const timer = setInterval(() => setDonationNow(serverNow()), 1000);
+    return () => clearInterval(timer);
+  }, [donateOpen]);
+  const currentDonation = currentClanDonationWindow(clan.donation, donationNow);
   const [donateError, setDonateError] = useState("");
   const [managementOpen, setManagementOpen] = useState(false);
   const canManage = ["leader", "deputy"].includes(
@@ -1548,8 +1513,8 @@ export function ClanBioView({
   );
   const donationRemaining = Math.max(
     0,
-    Number(clan.donation?.contribution_cap || 0) -
-      Number(clan.donation?.contribution || 0),
+    Number(currentDonation?.contribution_cap || 0) -
+      Number(currentDonation?.contribution || 0),
   );
   const donationMax = Math.min(
     Number(clan.playerTentacles || 0),
@@ -1566,25 +1531,31 @@ export function ClanBioView({
   };
   const confirmDonation = async () => {
     const amount = Math.min(donationMax, Math.floor(Number(donateAmount || 0)));
-    if (!amount || donating) return;
+    if (!amount || donationBusyRef.current) return;
+    donationBusyRef.current = true;
     setDonating(true);
     setDonateError("");
     try {
-      await donateToClan(clan.id, amount);
+      const key = clan.id + ':' + amount;
+      if (donationRequestRef.current?.key !== key) donationRequestRef.current = {key,id:crypto.randomUUID()};
+      const result = await donateToClan(clan.id, amount, donationRequestRef.current.id);
+      donationRequestRef.current = null;
       setDonateOpen(false);
       setDonateAmount("");
-      await onRefreshClan?.();
+      // A committed donation must not become an error if a decorative refresh fails.
+      void Promise.resolve(onRefreshClan?.(result)).catch(() => {});
     } catch (caught) {
       setDonateError(translateUiText(caught?.message || "Помилка"));
     } finally {
+      donationBusyRef.current = false;
       setDonating(false);
     }
   };
 
   return (
     <div className="space-y-2.5">
-      <Frame className="p-3">
-        <div className="flex gap-3 px-2 pt-1">
+      <Frame className="p-3" backgroundImage={clanHeaderBackground}>
+        <div className="flex min-h-[110px] gap-3 px-2 pt-1">
           <div className="-mt-1.5 ml-1 flex h-[106px] w-[106px] shrink-0 items-center justify-center overflow-visible text-[34px] sm:h-[118px] sm:w-[118px]">
             {clan.logoId ? (
               <ClanEmblem
@@ -1667,7 +1638,6 @@ export function ClanBioView({
           </div>
         </div>
 
-        <ClanRewardAchievements clan={clan} />
 
         <div className="mt-3 grid grid-cols-3 gap-2">
           {[
@@ -1722,7 +1692,7 @@ export function ClanBioView({
           <GameTextureButton type="button" tone={externalAction.tone || "yellow"} disabled={externalAction.disabled} onClick={externalAction.onClick} className="mt-3 h-10 w-full">
             <span className="relative z-10 font-mono text-[11px] font-black uppercase text-[#17220e]">{externalAction.label}</span>
           </GameTextureButton>
-        ) : <div className={`mt-3 grid gap-2 ${canManage ? 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_36px_36px_36px]' : 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_40px_40px]'}`}>
+        ) : <div className={`mt-3 grid gap-2 ${canManage ? 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_36px_36px_36px]' : 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_40px_40px]'}`}>
           <ClaimButton
             label={t("clan_panel.quests")}
             tone="yellow"
@@ -1738,6 +1708,13 @@ export function ClanBioView({
               setDonateError("");
               setDonateOpen(true);
             }}
+            className="h-10"
+          />
+          <ClaimButton
+            label={language === 'ru' ? 'КОРАБЛЬ' : language === 'en' ? 'SHIP' : 'КОРАБЕЛЬ'}
+            tone={onOpenShip ? 'yellow' : 'gray'}
+            disabled={!onOpenShip}
+            onClick={onOpenShip}
             className="h-10"
           />
           {canManage ? <GameTextureButton type="button" tone="yellow" disabled={inviteBusy} aria-label={language === 'ru' ? 'Пригласить в мировой чат' : language === 'en' ? 'Invite in world chat' : 'Запросити у світовий чат'} onClick={() => { setInviteNotice(''); setInviteOpen(true); }} className="flex h-10 w-9 items-center justify-center"><Megaphone className="relative z-10 h-5 w-5 text-[#13200e]" /></GameTextureButton> : null}
@@ -1802,7 +1779,7 @@ export function ClanBioView({
       ) : null}
 
       {donateOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div onClick={event=>{if(event.target===event.currentTarget)setDonateOpen(false);}} className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-[360px] border border-[#28ee90] bg-[#0b100a] p-4 shadow-[0_0_28px_rgba(40,238,144,0.2)]">
             <div className="flex items-center justify-between gap-3">
               <h3 className="font-mono text-[14px] font-black uppercase text-[#fff0db]">
@@ -1817,8 +1794,8 @@ export function ClanBioView({
               </button>
             </div>
             <p className="mt-2 font-mono text-[9px] text-[#a8d96b]">
-              {Number(clan.donation?.contribution || 0).toLocaleString()} /{" "}
-              {Number(clan.donation?.contribution_cap || 0).toLocaleString()}{" "}
+              {Number(currentDonation?.contribution || 0).toLocaleString()} /{" "}
+              {Number(currentDonation?.contribution_cap || 0).toLocaleString()}{" "}
               tentacles · {t("clan_panel.donation_daily_limit")}
             </p>
             {donationsLocked ? (
@@ -1943,8 +1920,9 @@ function ClanCreateView({ profile, onCreateClan, onClose }) {
   const [selectedTypeIndex, setSelectedTypeIndex] = useState(0);
   const [requiredTrophies, setRequiredTrophies] = useState(0);
 
+  // Guests can look at the create-clan form but not submit it — see GUEST_CLAN_RESTRICTED.
   const canCreate =
-    (profile?.level || 0) >= 10 && (profile?.tentacles || 0) >= 10000;
+    !profile?.guest_account && (profile?.level || 0) >= 10 && (profile?.tentacles || 0) >= 10000;
   const clanTypes = [
     {
       label: t("clan_panel.clan_type_open"),
@@ -2234,22 +2212,43 @@ function ClanBadge({ label, tone = "green" }) {
   );
 }
 
-export default function ClanPanel({
+export default function ClanPanel({ onNavigate = null,
   profile,
   onOpenChat,
   onOpenPlayerProfile = null,
   onRefreshProfile,
+  onSyncProfile = null,
   onClose = null,
 }) {
   const { t } = useTranslation();
   const hasClan = Boolean(profile?.clan_name || profile?.clan_id);
   const [view, setView] = useState(hasClan ? "bio" : "lobby");
+  const [shipOpen,setShipOpen] = useState(false);
+  useEffect(()=>{if(hasClan)void import('./ShipTesterGate').catch(()=>{});},[hasClan]);
   const [clanRows, setClanRows] = useState([]);
-  const [clanMembers, setClanMembers] = useState([]);
-  const [clanRecord, setClanRecord] = useState(null);
-  const [raidLeaderboard, setRaidLeaderboard] = useState([]);
+  const overviewClient=useQueryClient();
+  const overviewOptions=clanOverviewQueries(profile,{listClanMembers,getClan,listRaidBossLeaderboard},warmSceneImage);
+  const membersQuery=useQuery(overviewOptions.members);
+  const clanQuery=useQuery(overviewOptions.clan);
+  const raidQuery=useQuery(overviewOptions.raid);
+  const clanMembers=membersQuery.data || [];
+  const clanRecord=clanQuery.data || null;
+  const raidLeaderboard=raidQuery.data || [];
   const [loadingClans, setLoadingClans] = useState(true);
   const [leaveError, setLeaveError] = useState('');
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const leaveBusyRef = useRef(false);
+  const leaveDialogRef = useRef(null);
+  const leaveCopy = profile?.language === 'ru'
+    ? {title:'Выйти из клана?',text:'Снова вступить в клан можно будет через 24 часа.',cancel:'Остаться',confirm:'Выйти из клана',busy:'Выходим…'}
+    : profile?.language === 'en'
+      ? {title:'Leave the clan?',text:'You can join a clan again after 24 hours.',cancel:'Stay',confirm:'Leave clan',busy:'Leaving…'}
+      : {title:'Вийти з клану?',text:'Повторний вступ до клану буде доступний через 24 години.',cancel:'Залишитися',confirm:'Вийти з клану',busy:'Виходимо…'};
+  useEffect(() => {
+    if (leaveConfirmOpen && hasClan) leaveDialogRef.current?.showModal();
+    else leaveDialogRef.current?.close();
+  }, [leaveConfirmOpen, hasClan]);
   const [joiningClanId, setJoiningClanId] = useState(null);
   const joinBusyRef = useRef(false);
   const [joinFeedback, setJoinFeedback] = useState(null);
@@ -2277,43 +2276,12 @@ export default function ClanPanel({
   }, [t]);
 
   useEffect(() => {
-    loadClans();
-  }, [loadClans, profile?.clan_name, profile?.clan_id]);
+    if(!hasClan || view==='lobby')void loadClans();
+  }, [loadClans, hasClan, view, profile?.clan_name, profile?.clan_id]);
 
   const refreshClanData = useCallback(async () => {
-    const clanId = profile?.clan_id || profile?.clan_name;
-    if (!clanId) {
-      setClanMembers([]);
-      setClanRecord(null);
-      setRaidLeaderboard([]);
-      return;
-    }
-    const requests = [
-      listClanMembers(clanId).then((members) => {
-        setClanMembers(Array.isArray(members) ? members : []);
-      }),
-      getClan(clanId).then((record) => {
-        setClanRecord(record || null);
-      }),
-      listRaidBossLeaderboard().then((leaderboard) => {
-        setRaidLeaderboard(Array.isArray(leaderboard) ? leaderboard : []);
-      }),
-    ];
-    await Promise.allSettled(requests);
-  }, [profile?.clan_id, profile?.clan_name]);
-
-  useEffect(() => {
-    let active = true;
-    refreshClanData().catch(() => {
-      if (!active) return;
-      setClanMembers([]);
-      setRaidLeaderboard([]);
-      setClanRecord(null);
-    });
-    return () => {
-      active = false;
-    };
-  }, [refreshClanData]);
+    await overviewClient.invalidateQueries({queryKey:['clan-overview',String(profile?.id || ''),String(profile?.clan_id || profile?.clan_name || '')]});
+  }, [overviewClient,profile?.id,profile?.clan_id,profile?.clan_name]);
 
   const joinClan = async (selectedClan) => {
     if (!selectedClan || hasClan || joinBusyRef.current) return;
@@ -2352,25 +2320,52 @@ export default function ClanPanel({
   };
 
   const leaveClan = async () => {
-    if (!hasClan) return;
+    if (!hasClan || !leaveConfirmOpen || leaveBusyRef.current) return;
+    leaveBusyRef.current = true;
+    setLeaving(true);
     setLeaveError('');
     try {
       await leaveClanRequest(profile?.clan_id || profile?.clan_name);
+      setLeaveConfirmOpen(false);
       await onRefreshProfile?.();
       await loadClans();
     } catch (error) {
       setLeaveError(error?.message || 'Unable to leave clan');
+    } finally {
+      leaveBusyRef.current = false;
+      setLeaving(false);
     }
   };
 
-  const handleClanMutation = useCallback(async () => {
-    await onRefreshProfile?.();
+  const handleClanMutation = useCallback(async (result) => {
+    if (result?.player) onSyncProfile?.(result.player);
+    if (result?.clan) {
+      overviewClient.setQueryData(overviewOptions.clan.queryKey, {...clanRecord,...result.clan,donation:getClanDonationState(result.player,result.clan,serverNow())});
+    }
+    if (!result?.player || !onSyncProfile) await onRefreshProfile?.();
     await refreshClanData();
     await loadClans();
-  }, [loadClans, onRefreshProfile, refreshClanData]);
+  }, [loadClans, onRefreshProfile, onSyncProfile, refreshClanData, overviewClient, clanRecord, profile?.id, profile?.clan_id]);
 
   return (
     <div className="space-y-2.5 pb-2">
+      {leaveConfirmOpen && hasClan && createPortal(
+        <dialog ref={leaveDialogRef} aria-labelledby="leave-clan-title" className="m-auto w-[90vw] max-w-[360px] border border-[#28ee90] bg-[#0b100a] p-0 text-[#edf8d9] backdrop:bg-black/75"
+          onCancel={event => { event.preventDefault(); if (!leaveBusyRef.current) setLeaveConfirmOpen(false); }}
+          onClick={event => { if (event.target === event.currentTarget && !leaveBusyRef.current) setLeaveConfirmOpen(false); }}>
+          <section className="p-4">
+            <h2 id="leave-clan-title" className="font-mono text-sm font-black">{leaveCopy.title}</h2>
+            <p className="mt-2 text-sm">{leaveCopy.text}</p>
+            {leaveError && <p role="alert" className="mt-2 text-xs text-[#ffb3a9]">{leaveError}</p>}
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <GameTextureButton autoFocus type="button" disabled={leaving} onClick={() => setLeaveConfirmOpen(false)} className="h-11"><span className="relative z-10 text-xs font-bold text-[#172016]">{leaveCopy.cancel}</span></GameTextureButton>
+              <GameTextureButton type="button" tone="red" disabled={leaving} onClick={leaveClan} className="h-11"><span className="relative z-10 text-xs font-bold text-[#fff0db]">{leaving ? leaveCopy.busy : leaveCopy.confirm}</span></GameTextureButton>
+            </div>
+          </section>
+        </dialog>, document.body)}
+
+      {LocalClanShip && shipOpen && createPortal(<div className="fixed inset-0 z-[300] overflow-y-auto bg-[#090e0b]"><Suspense fallback={<p className="p-5 text-white">…</p>}><LocalClanShip onNavigate={tab=>{setShipOpen(false);void onRefreshProfile?.();if(onNavigate)onNavigate(tab);else onClose?.();}} profile={profile} onClose={()=>{setShipOpen(false);void onRefreshProfile?.();}}/></Suspense></div>,document.body)}
+
       {leaveError ? <p className="border border-[#ff7566] bg-[#29100d] px-3 py-2 font-mono text-[10px] text-[#ffb3a9]">{leaveError}</p> : null}
       {!hasClan ? (
         <div className="flex h-12 gap-2">
@@ -2401,10 +2396,11 @@ export default function ClanPanel({
       {view === "bio" ? (
         <ClanBioView
           clan={clan}
+          onOpenShip={LocalClanShip ? ()=>setShipOpen(true) : null}
           onOpenPlayerProfile={onOpenPlayerProfile}
           language={profile?.language}
           onOpenChat={onOpenChat}
-          onLeaveClan={leaveClan}
+          onLeaveClan={() => { setLeaveError(''); setLeaveConfirmOpen(true); }}
           onClose={onClose}
           onRefreshClan={handleClanMutation}
         />
@@ -2418,4 +2414,8 @@ export default function ClanPanel({
       ) : null}
     </div>
   );
+}
+
+export function warmFirstFrame() {
+  return warmFirstFrameImages([damageFull, donationsFull, helperFull, questsFull]);
 }

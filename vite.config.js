@@ -1,3 +1,7 @@
+import pvpPrototypePlugin from './scripts/pvp-prototype-plugin.mjs';
+import { randomUUID } from 'node:crypto';
+import enhancementDemoPlugin from './scripts/enhancement-demo-plugin.mjs';
+import { APP_VERSION } from './src/lib/appVersion.js';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
@@ -33,8 +37,23 @@ function optimizedRasterImports() {
   };
 }
 
+const buildId = randomUUID();
+
 export default defineConfig({
+  cacheDir: process.env.VITE_LOCAL_CACHE_DIR || 'node_modules/.vite',
+  define: { __GAME_BUILD_ID__: JSON.stringify(buildId) },
+  optimizeDeps: { entries: ['index.html'] },
   plugins: [
+    {
+      name: 'local-mock-telegram-sdk',
+      transformIndexHtml(html, context) {
+        if (!context.server || process.env.VITE_TELEGRAM_USE_MOCK !== 'true') return html;
+        return html.replace('<script src="https://telegram.org/js/telegram-web-app.js"></script>', '');
+      },
+    },
+    { name: 'release-version', generateBundle() { this.emitFile({ type: 'asset', fileName: 'release-version.json', source: JSON.stringify({version:APP_VERSION, buildId}) }); } },
+    enhancementDemoPlugin(),
+    pvpPrototypePlugin(),
     optimizedRasterImports(),
     react(),
     ...(process.env.ANALYZE === 'true'
@@ -69,10 +88,15 @@ export default defineConfig({
     },
   },
   server: {
+    watch: { ignored: ['**/deploy/**', '**/.local/**', '**/.tmp/**', '**/.tmp-*/**'] },
     host: '0.0.0.0',
     port: 5173,
     allowedHosts: ['.trycloudflare.com'],
     proxy: {
+      '/api/public/pl4-quote': {
+        target: 'https://nearly.trade', changeOrigin: true,
+        rewrite: () => '/api/launch/pl4.nearlytrade.near',
+      },
       '/api': {
         target: 'http://127.0.0.1:3001',
         changeOrigin: true,

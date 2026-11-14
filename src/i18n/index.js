@@ -1,23 +1,25 @@
-﻿import i18n from 'i18next';
+import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import ua from './locales/uk.json';
-import ru from './locales/ru.json';
-import en from './locales/en.json';
 
-const storedLanguage = typeof window !== 'undefined' ? window.localStorage.getItem('game_language') : null;
-
-const resources = {
-  ua: { translation: ua },
-  uk: { translation: ua },
-  ru: { translation: ru },
-  en: { translation: en },
+const loaders = {
+  en: () => import('./locales/en.json'),
+  ru: () => import('./locales/ru.json'),
+  uk: () => import('./locales/uk.json'),
 };
-
-i18n.use(initReactI18next).init({
-  resources,
-  lng: storedLanguage || 'en',
-  fallbackLng: 'en',
+const backend = {
+  type: 'backend',
+  read(language, namespace, callback) {
+    const key = language === 'ua' ? 'uk' : language;
+    (loaders[key] || loaders.en)().then(module => callback(null, module.default), callback);
+  },
+};
+let language = 'en';
+try { language = window.localStorage.getItem('game_language') || 'en'; } catch {}
+export const i18nReady = i18n.use(backend).use(initReactI18next).init({
+  lng: language,
+  supportedLngs: ['en', 'ru', 'uk', 'ua'],
+  load: 'languageOnly',
+  fallbackLng: false,
   interpolation: { escapeValue: false },
 });
-
 export default i18n;

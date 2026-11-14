@@ -1,0 +1,81 @@
+.bp-season-preview{display:flex;flex-direction:column;flex:1;min-height:0;height:100%;overflow:hidden}
+.bp-preview-controls{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;padding:7px 12px;background:#09241f;border-bottom:1px solid #426953;font-size:9px;color:#a8d7bf}
+.bp-preview-controls label{display:flex;align-items:center;gap:5px}.bp-preview-controls input,.bp-preview-controls select{background:#122c25;color:#e4ffe9;border:1px solid #496d52;border-radius:4px;padding:3px;font-size:10px}.bp-preview-controls input{width:42px}
+.bp-season-preview .bp-season-art{min-height:120px;justify-content:flex-start;padding:12px 10px 12px 94px;background:radial-gradient(ellipse at 20% 70%,#255c4b 0%,#101d1a 60%,#101713 100%);overflow:hidden}
+.bp-season-preview .bp-season-hero{position:absolute;left:0;bottom:-3px;height:130px;width:88px;object-fit:contain;filter:drop-shadow(0 0 13px #4bffc632)}
+.bp-season-preview .bp-season-art h1{font-size:clamp(17px,4.5vw,24px);color:#f1e0b9;margin:7px 0}.bp-season-preview .bp-season-art small{color:#94ceb5;font-size:8px}.bp-season-preview .bp-season-art p{font-size:10px;line-height:1.5}.bp-season-perks{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}.bp-season-perks span{font-size:8px;padding:4px 6px;border:1px solid #775e35;background:#272216;color:#f1d28c;border-radius:5px}.bp-season-perks span:first-child{border-color:#684b87;background:#251c34;color:#d0acf4}
+.bp-season-preview .bp-reward-item img{filter:drop-shadow(0 3px 4px #0008)}.bp-season-preview .bp-reward.bp-legendary:has(.bp-season-special){box-shadow:inset 0 0 24px #73dfc537,0 0 9px #e0b83f45}
+.bp-season-pet{height:42px;display:flex;align-items:center;justify-content:center;color:#ffe298;font-size:30px;font-weight:bold}
+.bp-season-preview .bp-finish{border-color:#816b3c;background:radial-gradient(ellipse at top,#334436,#111b16)}
+.bp-season-preview .bp-season-art.bp-season-illustrated{padding:14px 12px 14px 49%;background-size:cover;background-position:center 35%;min-height:132px;border-bottom:1px solid #568d72;justify-content:flex-end;text-align:right}
+.bp-season-illustrated>div{position:relative;z-index:1;text-shadow:0 2px 4px #000}
+.bp-season-preview .bp-season-illustrated h1{font-size:clamp(16px,4vw,21px);line-height:1.1;color:#ffe8ad}
+.bp-season-preview .bp-season-illustrated p{color:#d0e5d3;font-size:10px;line-height:1.6;margin-top:9px}
+.bp-season-preview .bp-season-illustrated small{font-size:7px;letter-spacing:1.5px}
+.bp-season-illustrated .bp-season-perks{gap:4px;margin-top:8px}.bp-season-illustrated .bp-season-perks span{font-size:7px;padding:4px}
+
+/* Cold crypt stone, drifting soul mist, and bone-gold legendary rewards. */
+.bp-bone-season{background:#080f14;color:#e4eee9}
+.bp-bone-season:before{inset:-12%;background:radial-gradient(ellipse at 12% 65%,#20574c55,transparent 44%),radial-gradient(ellipse at 85% 22%,#23445d55,transparent 40%),repeating-linear-gradient(90deg,transparent 0 82px,#6888780a 83px 84px,transparent 86px 164px),repeating-linear-gradient(0deg,#080e13 0 87px,#64786f18 88px 89px,#0c171c 90px 178px);animation:bp-crypt-breath 19s ease-in-out infinite alternate}
+.bp-bone-season:after{content:'';position:absolute;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(ellipse 90% 20% at 20% 80%,#55c9ac16,transparent),radial-gradient(ellipse 80% 15% at 85% 30%,#8cb9dc13,transparent);animation:bp-crypt-fog 15s ease-in-out infinite alternate}
+.bp-bone-season .bp-scroll{background:linear-gradient(90deg,#0005,transparent 24% 76%,#0005)}
+.bp-bone-season .bp-header,.bp-bone-season .bp-road-head{background:#0a151bee;border-color:#354f53}
+.bp-bone-season .bp-road-head span:first-child{color:#9dcac2}.bp-bone-season .bp-road-head span:nth-child(3){color:#a4c8ef}.bp-bone-season .bp-road-head span:last-child{color:#eed5a1}
+.bp-bone-season .bp-reward{--bone-rgb:112,184,172;--bone-dark:#101f23;--bone-border:#527e78;border:1px solid var(--bone-border);background:var(--bone-dark);box-shadow:inset 0 0 20px rgba(var(--bone-rgb),.1),0 4px 10px #0005;animation:none}
+.bp-bone-season .bp-reward.bp-epic{--bone-rgb:123,176,235;--bone-dark:#111e32;--bone-border:#6389bb}
+.bp-bone-season .bp-reward.bp-legendary{--bone-rgb:228,194,127;--bone-dark:#25241b;--bone-border:#b59c68}
+.bp-bone-season .bp-reward.is-ready{border-color:rgb(var(--bone-rgb));box-shadow:0 0 0 1px rgba(var(--bone-rgb),.25),0 0 12px rgba(var(--bone-rgb),.3),inset 0 0 20px rgba(var(--bone-rgb),.14);animation:bp-bone-ready 3.8s ease-in-out infinite}
+.bp-bone-season .bp-reward.is-ready .bp-reward-status{background:rgba(var(--bone-rgb),.9);color:#0b171c}
+.bp-bone-season .bp-reward-status{color:#a6b6b6;background:#040b10a8}
+.bp-bone-season .bp-level:before{background:#48605c55;width:2px;left:14px;right:auto}.bp-bone-season .bp-level span{background:#152526;border-color:#49655e;color:#a8c4bc}.bp-bone-season .bp-level.is-reached span{background:#c4b58c;color:#19251f;border-color:#f1deb4}.bp-bone-season .bp-level.is-reached:before{background:#c4b58c80}
+.bp-bone-season .bp-xp progress::-webkit-progress-bar{background:#0b171e}.bp-bone-season .bp-xp progress::-webkit-progress-value{background:linear-gradient(90deg,#387d79,#c9d4b5)}.bp-bone-season .bp-xp progress::-moz-progress-bar{background:linear-gradient(90deg,#387d79,#c9d4b5)}
+.bp-bone-season .bp-stats strong{color:#e7d5aa}
+.bp-bone-season .bp-reward>.bp-bone-effect{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:inherit;background:radial-gradient(ellipse at 50% 90%,rgba(var(--bone-rgb),.18),transparent 75%)}
+.bp-bone-sigil{position:absolute;width:115%;height:115%;top:-8%;left:-8%;stroke:rgb(var(--bone-rgb));stroke-width:.75;opacity:.22;animation:bp-sigil-breath 7s ease-in-out infinite}
+.bp-bone-mist{position:absolute;inset:0;overflow:hidden}.bp-bone-mist i{position:absolute;bottom:-70%;left:-30%;width:130%;height:140%;border-radius:45%;background:radial-gradient(ellipse,rgba(var(--bone-rgb),.16),transparent 65%);transform:rotate(-25deg);animation:bp-soul-rise 8s ease-in-out infinite}.bp-bone-mist i:nth-child(2){left:20%;animation-delay:-3s;animation-duration:11s}.bp-bone-mist i:nth-child(3){left:-70%;animation-delay:-6s;animation-duration:10s}
+.bp-bone-embers{position:absolute;inset:0}.bp-bone-embers i{position:absolute;left:calc(12% + var(--i)*18%);bottom:-5px;width:2px;height:4px;border-radius:50%;background:rgb(var(--bone-rgb));box-shadow:0 0 5px rgba(var(--bone-rgb),.8);opacity:0;animation:bp-soul-ember calc(5s + var(--i)*.7s) linear infinite;animation-delay:calc(var(--i)*-1.6s)}
+.bp-bone-effect.bp-effect-static *{animation:none!important}.bp-effect-static .bp-bone-embers i{opacity:.3;bottom:30%}
+@keyframes bp-soul-rise{0%,100%{transform:translate(-7%,12%) rotate(-25deg);opacity:.3}50%{transform:translate(9%,-24%) rotate(8deg);opacity:.9}}
+@keyframes bp-sigil-breath{0%,100%{opacity:.13;transform:scale(.94)}50%{opacity:.3;transform:scale(1.02)}}
+@keyframes bp-soul-ember{0%{opacity:0;transform:translate(0,0)}18%{opacity:.6}80%{opacity:.25}100%{opacity:0;transform:translate(10px,-105px)}}
+@keyframes bp-bone-ready{0%,100%{box-shadow:0 0 0 1px rgba(var(--bone-rgb),.2),0 0 6px rgba(var(--bone-rgb),.16)}50%{box-shadow:0 0 0 1px rgba(var(--bone-rgb),.5),0 0 14px rgba(var(--bone-rgb),.38)}}
+@keyframes bp-crypt-breath{from{transform:translateY(-1%);opacity:.75}to{transform:translateY(1%);opacity:1}}
+@keyframes bp-crypt-fog{from{transform:translate(-5%,3%);opacity:.4}to{transform:translate(6%,-4%);opacity:.9}}
+@media(prefers-reduced-motion:reduce){.bp-bone-season,.bp-bone-season:before,.bp-bone-season:after,.bp-bone-season *{animation:none!important}}
+
+/* One illustrated surface instead of stacked opaque toolbar bands. */
+.bp-season-preview{background-image:linear-gradient(#061215a6,#071418b8),var(--bp-season-backdrop);background-size:cover;background-position:75% center}
+.bp-season-preview .bp-bone-season{background:transparent}
+.bp-season-preview .bp-bone-season:before{background:radial-gradient(ellipse at 10% 65%,#47ad9140,transparent 48%),radial-gradient(ellipse at 92% 25%,#58799e38,transparent 46%);opacity:.65}
+.bp-season-preview .bp-header-compact{background:linear-gradient(90deg,#0b1d24d9,#0b1c20b3),var(--bp-season-backdrop);background-position:center,80% 40%;background-size:cover;border:0;box-shadow:0 5px 15px #0004;padding-top:3px}
+.bp-season-preview .bp-preview-controls{padding:3px 10px;font-size:8px;background:#07191cb3;border:0}
+.bp-season-preview .bp-preview-controls input,.bp-season-preview .bp-preview-controls select{padding:2px;font-size:9px;background:#102a2a99;border-color:#41625a66}
+.bp-season-preview .bp-header-compact .bp-topline{min-height:25px}
+.bp-season-preview .bp-header-compact .bp-tabs{padding:3px 0 5px}
+.bp-season-preview .bp-header-compact .bp-tabs .bp-tab-button{height:27px}
+.bp-season-preview .bp-help{display:none}
+.bp-season-preview .bp-scroll{background:linear-gradient(90deg,#02101433,transparent 30% 70%,#02101433)}
+.bp-season-preview .bp-scroll>.bp-season-art{margin-bottom:8px;border:0;box-shadow:0 6px 18px #0003}
+.bp-season-preview .bp-claim-all{width:78%;height:34px;margin:0 auto 5px;box-shadow:0 3px 12px #0005}
+.bp-season-preview .bp-road-head{background:linear-gradient(90deg,#0c2023d9,#122d31e8,#0c2023d9);backdrop-filter:blur(8px);padding:7px 0;border:1px solid #7d9f7b33;border-radius:9px;margin:0 0 4px;font-size:8px;box-shadow:0 3px 10px #0003}
+.bp-season-preview .bp-road-head>span{align-self:center}
+.bp-season-preview .bp-road-head>span:first-child,.bp-season-preview .bp-road-head>span:nth-child(3),.bp-season-preview .bp-road-head>span:last-child{text-shadow:0 0 10px currentColor;letter-spacing:1px}
+.bp-season-preview .bp-row{min-height:106px;position:relative}
+.bp-season-preview .bp-level:before{background:linear-gradient(90deg,transparent,#b9c6a188,transparent);width:3px;left:13px}
+.bp-season-preview .bp-level span{width:28px;height:32px;clip-path:polygon(50% 0,100% 22%,100% 78%,50% 100%,0 78%,0 22%);border-radius:0;border:0;box-shadow:inset 0 0 12px #a8d4b322;font-size:11px}
+
+/* Quest panels etched into the same illustrated crypt surface. */
+.bp-season-preview .bp-tasks{padding:8px 0 20px;color:#e0ece7}
+.bp-season-preview .bp-tasks>h3{padding:18px 14px 5px;font-size:18px;letter-spacing:2px;color:#f0ddb4;background:linear-gradient(90deg,#081719cc,#08171966),var(--bp-season-backdrop);background-size:cover;background-position:75% 40%;border:1px solid #879b7944;border-bottom:0;border-radius:12px 12px 0 0;text-shadow:0 2px 4px #000}
+.bp-season-preview .bp-tasks>.bp-muted{margin:0 0 12px;padding:2px 14px 14px;border:1px solid #879b7944;border-top:0;border-radius:0 0 12px 12px;background:#0b2022b3;color:#b1c6bd}
+.bp-season-preview .bp-tasks>section{position:relative;padding:3px 9px 7px;margin:0 0 12px;border:1px solid #759e912e;border-radius:12px;background:linear-gradient(105deg,#122a2dd6,#08151bd9),var(--bp-season-backdrop);background-size:cover;background-position:85% 50%;box-shadow:0 5px 15px #0003}
+.bp-season-preview .bp-tasks h4{display:flex;align-items:center;gap:8px;margin:10px 2px 12px;font-size:11px;letter-spacing:1px;color:#dfcd9f}
+.bp-season-preview .bp-tasks h4:before{content:'◇';color:#89cfb6;font-size:20px;line-height:12px;text-shadow:0 0 8px #79d2b555}
+.bp-season-preview .bp-tasks h4:after{content:'';height:1px;flex:1;background:linear-gradient(90deg,#8ba18b66,transparent)}
+.bp-season-preview .bp-task{position:relative;margin:7px 0;padding:11px 10px;gap:10px;min-height:79px;border:1px solid #72998a66;border-left:3px solid #76b5a7;border-radius:9px;background:radial-gradient(ellipse at 10% 100%,#43897420,transparent 70%),linear-gradient(110deg,#10282bf0,#0b191fe6);box-shadow:inset 0 1px 0 #b6d6c20b,0 3px 9px #0004}
+.bp-season-preview .bp-task.is-done{border-left-color:#b6ab80;background:linear-gradient(110deg,#27332ace,#122422e6);opacity:.8}
+.bp-season-preview .bp-task span{color:#dfebe6;font-size:10px;line-height:1.5}.bp-season-preview .bp-task small{color:#9db9ae;font-size:9px}
+.bp-season-preview .bp-task strong{color:#c4b68e;font-size:8px}.bp-season-preview .bp-task progress{height:4px;margin-top:9px;background:#243b3b}
+.bp-season-preview .bp-task progress::-webkit-progress-bar{background:#243b3b}.bp-season-preview .bp-task progress::-webkit-progress-value{background:linear-gradient(90deg,#408f8c,#b5d9ba)}.bp-season-preview .bp-task progress::-moz-progress-bar{background:linear-gradient(90deg,#408f8c,#b5d9ba)}
+.bp-season-preview .bp-task-button{height:30px!important}.bp-season-preview .bp-task>.bp-task-action{flex-basis:72px;width:72px}
+.bp-skeleton-details{font-size:11px;line-height:1.6;color:#bfd1c6}.bp-skeleton-details>small{font-size:9px;color:#a9b9a1}.bp-skeleton-details h4{font-weight:800;color:#efdaa4;margin:13px 0 5px}.bp-skeleton-details .bp-skeleton-stat{padding:10px;margin:10px 0;border:1px solid #5b8a75;border-radius:8px;background:#224135;color:#e1ffdc;font-weight:700}.bp-curse-description{display:flow-root;padding:10px;border:1px solid #448f7f;border-radius:10px;background:radial-gradient(ellipse at top left,#1d5848,#0b211d);margin:14px 0}.bp-curse-description>img{float:left;width:54px;height:54px;object-fit:contain;margin:0 8px 5px 0}.bp-curse-description h4{margin:3px 0;color:#a6f0d9}.bp-curse-description small{font-size:8px}.bp-curse-description>p{clear:both;margin-top:8px;font-size:10px}

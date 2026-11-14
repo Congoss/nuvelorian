@@ -1,0 +1,6 @@
+.bone-curse-burst{position:absolute;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.bone-curse-burst-inner{position:relative;width:min(290px,85vw);height:290px;display:flex;align-items:center;justify-content:center}
+.bone-curse-smoke{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:hue-rotate(75deg) saturate(1.35) brightness(1.2) drop-shadow(0 0 18px #21c9ae99)}
+.bone-curse-aura{position:absolute;inset:12%;background:radial-gradient(ellipse,#3ef1cf66,transparent 68%);border-radius:50%}
+.bone-curse-skull{position:relative;width:45%;height:45%;object-fit:contain;filter:drop-shadow(0 0 10px #52ffddaa)}
+.bone-curse-burst-inner>span{position:absolute;top:77%;width:100%;text-align:center;color:#c3ffec;font-size:15px;font-weight:900;letter-spacing:1px;text-shadow:0 2px 2px #031b16,0 0 10px #00aa89}

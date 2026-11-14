@@ -1,3 +1,6 @@
+import { warmFirstFrameImages } from '@/lib/sceneAssets';
+import { kyivDayKey, nextKyivMidnight } from "../../lib/kyivDay.js";
+import {GUM_PACKS} from '@/lib/resourcePacks';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import nearIcon from '@/assets/ui/near-logo.svg';
@@ -53,6 +56,9 @@ import { GAME_CONFIG } from '@/lib/gameConfig';
 import { dailyShopOffers } from '@/lib/dailyShopOffers';
 import { DEFAULT_EQUIPMENT_ITEMS, localizeEquipmentItemName } from './equipmentData';
 import { isTelegramPlatform, isWebPlatform } from '@/lib/platform/config';
+import { applyFriday13SaleToProduct, friday13SalePrice, isFriday13SaleActive } from '@/lib/friday13Event';
+
+
 
 const BOSS_KEY_ICONS = [bossKey1, bossKey2, bossKey3, bossKey4, bossKey5, bossKey6, bossKey7, bossKey8];
 
@@ -297,9 +303,20 @@ function getCurrentGemPackIcon(pack) {
   return byAmount[Number(pack?.cdm)] || getGemPackIcon(pack?.assetKey);
 }
 
-function formatPrice(item) {
-  if (item.costTentacles) return { value: item.costTentacles.toLocaleString(), icon: getResourceIcon('tentacles'), label: 'tentacles' };
-  return { value: item.costStars.toLocaleString(), icon: getResourceIcon('cdm'), label: 'T-Pape' };
+function SalePrice({ original, current, icon, suffix = '' }) {
+  const discounted = original !== undefined && Number(String(original).replace(/,/g,'')) > Number(String(current).replace(/,/g,''));
+  return <span className="inline-flex items-center gap-1">
+    {discounted ? <del className="text-[8px] font-bold text-[#392b22] opacity-80">{original}</del> : null}
+    <img src={icon} alt="" aria-hidden="true" className="h-4 w-4 object-contain" />
+    <b className={discounted ? 'text-[#203b08]' : ''}>{current}{suffix}</b>
+  </span>;
+}
+
+function formatPrice(item, saleActive) {
+  const base = item.costTentacles || item.costStars || 0;
+  const value = saleActive ? friday13SalePrice(base) : base;
+  if (item.costTentacles) return { value: value.toLocaleString(), original: saleActive ? base.toLocaleString() : '', icon: getResourceIcon('tentacles'), label: 'tentacles' };
+  return { value: value.toLocaleString(), original: saleActive ? base.toLocaleString() : '', icon: getResourceIcon('cdm'), label: 'T-Pape' };
 }
 
 function SectionHeader({ title }) {
@@ -325,8 +342,8 @@ function DailyRefreshTimer({ language = 'ua' }) {
   return <span className="ml-auto font-mono text-[9px] font-black uppercase tracking-normal text-[#9fe75d]">{label} {hours}:{minutes}:{seconds}</span>;
 }
 
-function PriceButton({ item, disabled, onClick }) {
-  const price = formatPrice(item);
+function PriceButton({ item, disabled, onClick, saleActive }) {
+  const price = formatPrice(item, saleActive);
   return (
     <GameTextureButton
       type="button"
@@ -335,12 +352,13 @@ function PriceButton({ item, disabled, onClick }) {
       className={`mt-auto flex h-[36px] w-full items-center justify-center gap-1 px-2 ${disabled ? 'opacity-45 grayscale-[0.15]' : ''}`}
       >
       <img src={price.icon} alt="" className="relative z-[1] h-[26px] w-[26px] object-contain" />
+      {price.original ? <span className="relative z-[1] text-[8px] font-black text-[#5b612e] line-through">{price.original}</span> : null}
       <span className="relative z-[1] font-sans text-[11px] font-black leading-none text-[#173207]">{price.value}</span>
     </GameTextureButton>
   );
 }
 
-function ShopCard({ item, titleText, ownedText, disabled, onBuy, onPreview }) {
+function ShopCard({ item, titleText, ownedText, disabled, onBuy, onPreview, saleActive }) {
   const hasBoxContentsHint =
     String(item.id || '').includes('pack') ||
     String(item.id || '').includes('offer') ||
@@ -369,25 +387,29 @@ function ShopCard({ item, titleText, ownedText, disabled, onBuy, onPreview }) {
         {ownedText ? <p className="font-mono text-[9px] text-[#d8ffb6]">{ownedText}</p> : null}
       </div>
 
-      <PriceButton item={item} disabled={disabled} onClick={onBuy} />
+      <PriceButton item={item} disabled={disabled} onClick={onBuy} saleActive={saleActive} />
     </MarkerFrame>
   );
 }
 
-function GemPackCard({ pack, titleText, onClick, buyLabel }) {
+function GemPackCard({ pack, titleText, onClick, buyLabel, disabled=false }) {
   return (
     <MarkerFrame className="flex min-h-[clamp(156px,42vw,188px)] flex-col shadow-[0_12px_20px_rgba(0,0,0,0.22)]" innerClassName="flex min-h-[clamp(156px,42vw,188px)] flex-col px-2 py-2 sm:px-3 sm:py-3" variant="transparent">
-      {pack.savings ? <span className="absolute -left-5 top-3 z-[4] w-[82px] -rotate-45 rounded-sm border border-[#b7df30] bg-[#629d12] px-1 py-1 text-center font-mono text-[8px] font-black text-white shadow-md">{pack.savings}</span> : null}
       <div className="relative z-[1] pointer-events-none bg-[rgba(13,24,10,0.74)] px-2 py-1 text-center">
         <p className="truncate font-sans text-[11px] font-black leading-none text-[#f5ffe2]">{titleText}</p>
       </div>
+      <div className="pointer-events-none -ml-2 mt-1 flex min-h-[18px] shrink-0 items-center justify-start sm:-ml-3">
+        {pack.savings ? <span className="max-w-full border-y border-r border-[#b7df30] bg-[#629d12] py-1 pl-1.5 pr-3 text-left font-mono text-[8px] font-black leading-tight text-white shadow-sm [clip-path:polygon(0_0,100%_0,calc(100%_-_6px)_50%,100%_100%,0_100%)]">{pack.savings}</span> : null}
+        {pack.friday13SalePercent ? <span className="ml-auto rounded-sm border border-[#171313] bg-[#e83b30] px-1.5 py-1 font-mono text-[8px] font-black leading-none text-white shadow-[1px_2px_0_#171313]">−50%</span> : null}
+      </div>
       <div className="relative z-[1] pointer-events-none flex flex-1 items-center justify-center px-2 py-2">
-        <img src={pack.icon || getCurrentGemPackIcon(pack)} alt={titleText} className="h-[clamp(70px,20vw,86px)] w-[clamp(70px,20vw,86px)] object-contain drop-shadow-[0_10px_14px_rgba(0,0,0,0.28)]" />
+        {Number.isInteger(pack.gumArtIndex) ? <span role="img" aria-label={titleText} className="block h-[clamp(70px,20vw,86px)] w-[clamp(70px,20vw,86px)]" style={{backgroundImage:"url('/local-enhancement/premium-packs.webp')",backgroundSize:'300% 100%',backgroundRepeat:'no-repeat',backgroundPosition:`${pack.gumArtIndex*50}% center`}}/> : <img src={pack.icon || getCurrentGemPackIcon(pack)} alt={titleText} className="h-[clamp(70px,20vw,86px)] w-[clamp(70px,20vw,86px)] object-contain drop-shadow-[0_10px_14px_rgba(0,0,0,0.28)]" />}
       </div>
       {pack.badge && pack.badge !== 'BEST VALUE' ? <div className="mb-1 self-end rounded-sm border border-[#6dd6ff] bg-[#1976a8] px-1.5 py-0.5 font-mono text-[7px] font-black uppercase text-white">{pack.badge}</div> : null}
       <GameTextureButton
         type="button"
         onClick={onClick}
+        disabled={disabled}
         className="mt-auto flex h-[36px] w-full items-center justify-center gap-1 px-2"
         aria-label={titleText}
       >
@@ -398,13 +420,11 @@ function GemPackCard({ pack, titleText, onClick, buyLabel }) {
 }
 
 function getTodayKey() {
-  return new Date().toISOString().slice(0, 10);
+  return kyivDayKey();
 }
 
 function getNextDailyRefresh() {
-  const next = new Date();
-  next.setUTCHours(24, 0, 0, 0);
-  return next.getTime();
+  return nextKyivMidnight();
 }
 
 function getDailyLimitKey(itemId) {
@@ -460,7 +480,14 @@ function getShopBoxPreview(boxType, lang = 'en') {
   return localized[lang] || localized.ua;
 }
 
-function DailyOfferCard({ offer, language, disabled, onBuy }) {
+function canAffordDailyOffer(profile, offer, saleActive) {
+  const field = offer.paymentCurrency === 'tentacles' ? 'tentacles' : 'premium';
+  const base = offer.kind === 'equipment' ? offer.premium : offer.cost?.[field];
+  const cost = saleActive ? friday13SalePrice(base) : base;
+  return Number.isFinite(Number(cost)) && Number(profile?.[field] || 0) >= Number(cost);
+}
+
+function DailyOfferCard({ offer, language, disabled, onBuy, saleActive }) {
   const names = {
     'small-poison': { ua: 'Малий яд', ru: 'Малый яд', en: 'Small poison' },
     'medium-poison': { ua: 'Середній яд', ru: 'Средний яд', en: 'Medium poison' },
@@ -473,6 +500,8 @@ function DailyOfferCard({ offer, language, disabled, onBuy }) {
       : names[offer.id]?.[language] || names[offer.title === 'Малий яд' ? 'small-poison' : offer.title === 'Середній яд' ? 'medium-poison' : offer.title === 'Фляга з отрутою' ? 'large-poison' : '']?.[language] || offer.title || (offer.kind === 'energy' ? (language === 'en' ? `Energy +${offer.qty}` : language === 'ru' ? `Энергия +${offer.qty}` : `Енергія +${offer.qty}`) : offer.kind);
   const keyIndex = offer.kind === 'keycard' ? Math.max(0, GAME_CONFIG.BOSSES.findIndex((boss) => boss.id === offer.boss?.id) - 1) : -1;
   const icon = offer.kind === 'equipment' ? offer.item?.icon : offer.kind === 'keycard' ? BOSS_KEY_ICONS[Math.min(keyIndex, BOSS_KEY_ICONS.length - 1)] : offer.icon;
+  const baseCost = offer.kind === 'equipment' ? offer.premium : offer.kind === 'keycard' ? offer.cost?.tentacles : offer.cost?.[offer.paymentCurrency === 'tentacles' ? 'tentacles' : 'premium'];
+  const saleCost = saleActive ? friday13SalePrice(baseCost) : baseCost;
   return (
     <div className="relative overflow-hidden border border-[#28ee90] bg-[#10180e] p-1.5">
       <p className="truncate bg-[#0a1209] px-1 py-1 text-center font-mono text-[9px] font-black uppercase text-[#e7f3d9]">{title}</p>
@@ -480,10 +509,10 @@ function DailyOfferCard({ offer, language, disabled, onBuy }) {
         {String(icon).startsWith('/') ? <img src={icon} alt="" className="h-[68px] w-[68px] object-contain" style={offer.kind === 'keycard' ? { filter: `drop-shadow(0 0 5px ${offer.boss?.color || '#ffffff'})` } : undefined} /> : <span className="text-[38px]">{icon}</span>}
       </div>
       <p className="text-center font-mono text-[10px] font-black text-[#d8ffb6]">x{offer.qty || 1}</p>
-      <GameTextureButton type="button" disabled={disabled} onClick={onBuy} className="mt-auto flex h-[36px] w-full items-center justify-center gap-1 px-2 disabled:opacity-40">
+      <GameTextureButton type="button" tone={disabled ? 'gray' : 'green'} disabled={disabled} onClick={onBuy} className="mt-auto flex h-[36px] w-full items-center justify-center gap-1 px-2 disabled:opacity-40">
         <img src={getResourceIcon(offer.paymentCurrency === 'tentacles' ? 'tentacles' : 'cdm')} alt="" className="relative z-[1] h-[26px] w-[26px] object-contain" />
         <span className="relative z-[1] font-sans text-[11px] font-black leading-none text-[#173207]">
-          {offer.kind === 'equipment' ? offer.premium : offer.kind === 'keycard' ? offer.cost?.tentacles : offer.paymentCurrency === 'tentacles' ? offer.cost?.tentacles : offer.cost?.premium}
+          {saleActive ? <><s className="mr-1 opacity-60">{baseCost}</s>{saleCost}</> : baseCost}
         </span>
       </GameTextureButton>
     </div>
@@ -494,6 +523,7 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
   const { t } = useTranslation();
   const [buyingId, setBuyingId] = useState(null);
   const [purchaseError, setPurchaseError] = useState('');
+  const [saleClock, setSaleClock] = useState(Date.now());
   const [openingShopBox, setOpeningShopBox] = useState(null);
   const [previewBox, setPreviewBox] = useState(null);
   const [shopConfig, setShopConfig] = useState({ paymentMethods: SHOP_PAYMENT_METHODS, gemPacks: GEM_SHOP_PACKS, paidConsumablePacks: PAID_CONSUMABLE_PACKS });
@@ -508,7 +538,6 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
     (item?.type === 'box' || (!item?.type && (String(item?.id || '').includes('pack') || String(item?.id || '').includes('box'))))
     && Number(item?.count || 0) > 0
   );
-  const totalUnopened = unopenedPacks.reduce((sum, item) => sum + Math.max(0, item?.count || 0), 0);
   const todayKey = getTodayKey();
   const dailyOffersList = useMemo(() => dailyOffers(profile, todayKey), [profile, todayKey]);
   const dailyPurchased = profile?.daily_shop_date === todayKey ? (profile?.daily_shop_purchases || []) : [];
@@ -516,18 +545,21 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
   const isSameDay = dailyLimits?.day === todayKey;
   const dailyCounts = isSameDay ? (dailyLimits?.counts || {}) : {};
   const lang = (profile?.language === 'en' || profile?.language === 'ru') ? profile.language : 'ua';
+  const saleActive = isFriday13SaleActive(saleClock);
   const labels = PACK_INFO_LABELS[lang] || PACK_INFO_LABELS.ua;
   const gemPacks = useMemo(() => Array.isArray(shopConfig?.gemPacks) && shopConfig.gemPacks.length ? shopConfig.gemPacks : GEM_SHOP_PACKS, [shopConfig]);
   const paidConsumablePacks = useMemo(() => Array.isArray(shopConfig?.paidConsumablePacks) && shopConfig.paidConsumablePacks.length ? shopConfig.paidConsumablePacks : PAID_CONSUMABLE_PACKS, [shopConfig]);
   const energySliderMax = 1000;
   const energyPackBase = getPaidEnergyPack(energyAmount);
-  const selectedEnergyPack = energyPackBase ? { ...energyPackBase, title: `${lang === 'ru' ? 'Энергия' : lang === 'en' ? 'Energy' : 'Енергія'} +${energyAmount}`, icon: energy100Ui } : null;
+  const selectedEnergyPackBase = energyPackBase ? { ...energyPackBase, title: `${lang === 'ru' ? 'Энергия' : lang === 'en' ? 'Energy' : 'Енергія'} +${energyAmount}`, icon: energy100Ui } : null;
+  const selectedEnergyPack = applyFriday13SaleToProduct(selectedEnergyPackBase, saleClock);
   const selectedPoisonPackBase = poisonPopupPack ? getPaidPoisonPack(poisonPopupPack.poisonId, poisonAmount) : null;
-  const selectedPoisonPack = selectedPoisonPackBase ? {
+  const selectedPoisonPackFull = selectedPoisonPackBase ? {
     ...selectedPoisonPackBase,
     title: `${lang === 'ru' ? ({ 'small-poison': 'Малый яд', 'medium-poison': 'Средний яд', 'large-poison': 'Большой яд' }[poisonPopupPack.poisonId]) : lang === 'en' ? ({ 'small-poison': 'Small poison', 'medium-poison': 'Medium poison', 'large-poison': 'Large poison' }[poisonPopupPack.poisonId]) : ({ 'small-poison': 'Малий яд', 'medium-poison': 'Середній яд', 'large-poison': 'Великий яд' }[poisonPopupPack.poisonId])} ×${poisonAmount}`,
     icon: poisonPopupPack.icon,
   } : null;
+  const selectedPoisonPack = applyFriday13SaleToProduct(selectedPoisonPackFull, saleClock);
   const paymentMethods = useMemo(() => {
     const configured = Array.isArray(shopConfig?.paymentMethods) && shopConfig.paymentMethods.length ? shopConfig.paymentMethods : SHOP_PAYMENT_METHODS;
     if (isTelegramPlatform) return configured.filter((method) => method.id === 'telegram_stars');
@@ -537,8 +569,14 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
   const shopSections = useMemo(() => [
     { id: 'gems', titleKey: 'shop.sections.gems', items: gemPacks.filter(pack=>pack.id!=='payment_test').map((pack) => ({ ...pack, icon: getCurrentGemPackIcon(pack) })) },
     { id: 'paidConsumables', titleKey: 'shop.sections.paidConsumables', items: paidConsumablePacks.map((pack) => ({ ...pack, title: lang === 'ru' ? ({ paid_poison_small: 'Малый яд ×1', paid_poison_medium: 'Средний яд ×1', paid_poison_large: 'Большой яд ×1' }[pack.id]) : lang === 'en' ? pack.title : ({ paid_poison_small: 'Малий яд ×1', paid_poison_medium: 'Середній яд ×1', paid_poison_large: 'Великий яд ×1' }[pack.id]), icon: { 'small-poison': poisonSmallUi, 'medium-poison': poisonMediumUi, 'large-poison': poisonLargeUi }[pack.poisonId] })) },
+    {id:'enhancementGums',items:[]},
     ...SHOP_SECTIONS,
   ], [gemPacks, paidConsumablePacks, lang]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setSaleClock(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!energyPurchaseRequested) return;
@@ -580,7 +618,7 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
 
   const openGemPackChooser = (pack) => {
     if (!pack) return;
-    setSelectedGemPack(pack);
+    setSelectedGemPack(applyFriday13SaleToProduct(pack));
     setSelectedGemMethod((current) => {
       const available = Array.isArray(pack.paymentMethods) && pack.paymentMethods.length ? pack.paymentMethods : paymentMethods.map((method) => method.id);
       return available.includes(current) ? current : available.find((id) => paymentMethods.some((method) => method.id === id)) || paymentMethods[0]?.id;
@@ -600,8 +638,8 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
 
   const handleBuyPlaceholder = async (item, itemName) => {
     if (buyingId) return;
-    if (item.costTentacles && (profile?.tentacles || 0) < item.costTentacles) return;
-    if (item.costStars && (profile?.premium || 0) < item.costStars) return;
+    if (item.costTentacles && (profile?.tentacles || 0) < (saleActive ? friday13SalePrice(item.costTentacles) : item.costTentacles)) return;
+    if (item.costStars && (profile?.premium || 0) < (saleActive ? friday13SalePrice(item.costStars) : item.costStars)) return;
     const currentCount = Number(dailyCounts[getDailyLimitKey(item.id)] || 0);
     if (item.limitPerDay && currentCount >= item.limitPerDay) return;
     const updates = { playerAction: { type: 'shop-fixed', itemId: item.id } };
@@ -620,10 +658,12 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
   };
 
   const handleBuyDaily = async (offer) => {
-    if (!offer || buyingId || dailyPurchased.includes(offer.id)) return;
+    if (!offer || buyingId || dailyPurchased.includes(offer.id) || !canAffordDailyOffer(profile, offer, saleActive)) return;
     const useTentacles = offer.paymentCurrency === 'tentacles';
-    const tentaclesCost = useTentacles ? (offer.kind === 'equipment' ? 0 : offer.cost.tentacles) : 0;
-    const premiumCost = useTentacles ? 0 : (offer.kind === 'equipment' ? offer.premium : offer.cost.premium);
+    const tentaclesBase = useTentacles ? (offer.kind === 'equipment' ? 0 : offer.cost.tentacles) : 0;
+    const premiumBase = useTentacles ? 0 : (offer.kind === 'equipment' ? offer.premium : offer.cost.premium);
+    const tentaclesCost = saleActive && tentaclesBase ? friday13SalePrice(tentaclesBase) : tentaclesBase;
+    const premiumCost = saleActive && premiumBase ? friday13SalePrice(premiumBase) : premiumBase;
     if (useTentacles ? Number(profile?.tentacles || 0) < tentaclesCost : Number(profile?.premium || 0) < premiumCost) return;
     const updates = { playerAction: { type: 'shop-daily', itemId: offer.id } };
     setBuyingId(offer.id);
@@ -657,6 +697,7 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
 
   return (
     <div className="space-y-5 pb-3">
+
       {purchaseError ? <p role="alert" className="border border-[#ff6c65] bg-[#2b1010] p-2 text-center font-mono text-[11px] text-[#ffd5d0]">{purchaseError}</p> : null}
       {selectedGemPack ? (
         <PaymentMethodPicker
@@ -670,7 +711,7 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
           }}
         />
       ) : null}
-      {energyPopupOpen ? <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 px-4 py-6" role="dialog" aria-modal="true" aria-labelledby="paid-energy-title">
+      {energyPopupOpen ? <div onClick={event => { if (event.target === event.currentTarget) setEnergyPopupOpen(false); }} className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 px-4 py-6" role="dialog" aria-modal="true" aria-labelledby="paid-energy-title">
         <div className="w-full max-w-[360px] border-2 border-[#28ee90] bg-[#10170d] p-4 shadow-[0_0_24px_rgba(40,238,144,.2)]">
           <div className="flex items-center justify-between gap-2"><h2 id="paid-energy-title" className="font-mono text-sm font-black uppercase text-[#eaffd1]">{lang === 'ru' ? 'Купить энергию' : lang === 'en' ? 'Buy Energy' : 'Купити енергію'}</h2><button type="button" onClick={() => setEnergyPopupOpen(false)} aria-label={t('common.close')} className="text-xl text-[#d8ff86]">×</button></div>
           <p className="mt-3 text-center font-mono text-xs font-black text-[#d8ff86]">{lang === 'ru' ? 'Количество энергии' : lang === 'en' ? 'Energy amount' : 'Кількість енергії'}</p>
@@ -678,17 +719,17 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
           {energySliderMax >= 2 ? <input aria-label={lang === 'ru' ? 'Количество энергии' : lang === 'en' ? 'Energy amount' : 'Кількість енергії'} type="range" min="2" max={energySliderMax} step="2" value={Math.min(energyAmount, energySliderMax)} onChange={(event) => setEnergyAmount(Number(event.target.value))} className="mt-3 w-full accent-[#a6db32]" /> : <p className="mt-3 text-center font-mono text-[11px] text-[#ffb7a9]">{lang === 'ru' ? 'Энергия уже на максимуме.' : lang === 'en' ? 'Energy is already full.' : 'Енергія вже на максимумі.'}</p>}
           <div className="mt-2 flex justify-between font-mono text-[9px] text-[#a8bd8e]"><span>2</span><span>{lang === 'ru' ? 'Максимум за покупку' : lang === 'en' ? 'Maximum per purchase' : 'Максимум за покупку'}: {energySliderMax}</span></div>
           <div className="mt-4 border border-[#33452a] bg-[#0b1009] p-2 text-center font-mono text-xs font-black text-[#fff1bd]">{isWebPlatform ? <><img src={nearIcon} alt="" className="mr-1 inline h-4 w-4" />{nearUsd > 0 ? (Number(selectedEnergyPack?.usd || 0) / nearUsd).toLocaleString('en-US', { maximumFractionDigits: 4 }) : '—'} NEAR</> : <><img src={starsCurrencyIcon} alt="" className="mr-1 inline h-4 w-4" />{selectedEnergyPack?.stars || 0} Stars</>}</div>
-          <div className="mt-3 grid grid-cols-2 gap-2"><GameTextureButton type="button" tone="yellow" onClick={() => setEnergyPopupOpen(false)} className="h-10"><span className="relative z-10 font-mono text-[10px] font-black text-[#17220e]">{lang === 'ru' ? 'Назад' : lang === 'en' ? 'Back' : 'Назад'}</span></GameTextureButton><GameTextureButton type="button" disabled={!selectedEnergyPack || energySliderMax < 2} onClick={() => { if (selectedEnergyPack) { setEnergyPopupOpen(false); openGemPackChooser(selectedEnergyPack); } }} className="h-10"><span className="relative z-10 font-mono text-[10px] font-black text-[#17220e]">{lang === 'ru' ? 'Продолжить' : lang === 'en' ? 'Continue' : 'Продовжити'}</span></GameTextureButton></div>
+          <div className="mt-3 grid grid-cols-2 gap-2"><GameTextureButton type="button" tone="yellow" onClick={() => setEnergyPopupOpen(false)} className="h-10"><span className="relative z-10 font-mono text-[10px] font-black text-[#17220e]">{lang === 'ru' ? 'Назад' : lang === 'en' ? 'Back' : 'Назад'}</span></GameTextureButton><GameTextureButton type="button" disabled={!selectedEnergyPackBase || energySliderMax < 2} onClick={() => { if (selectedEnergyPackBase) { setEnergyPopupOpen(false); openGemPackChooser(selectedEnergyPackBase); } }} className="h-10"><span className="relative z-10 font-mono text-[10px] font-black text-[#17220e]">{lang === 'ru' ? 'Продолжить' : lang === 'en' ? 'Continue' : 'Продовжити'}</span></GameTextureButton></div>
         </div>
       </div> : null}
-      {poisonPopupPack ? <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 px-4 py-6" role="dialog" aria-modal="true" aria-labelledby="paid-poison-title">
+      {poisonPopupPack ? <div onClick={event => { if (event.target === event.currentTarget) setPoisonPopupPack(null); }} className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 px-4 py-6" role="dialog" aria-modal="true" aria-labelledby="paid-poison-title">
         <div className="w-full max-w-[360px] border-2 border-[#28ee90] bg-[#10170d] p-4 shadow-[0_0_24px_rgba(40,238,144,.2)]">
           <div className="flex items-center justify-between gap-2"><h2 id="paid-poison-title" className="font-mono text-sm font-black uppercase text-[#eaffd1]">{lang === 'ru' ? 'Купить яд' : lang === 'en' ? 'Buy poison' : 'Купити отруту'}</h2><button type="button" onClick={() => setPoisonPopupPack(null)} aria-label={t('common.close')} className="text-xl text-[#d8ff86]">×</button></div>
           <div className="mt-3 flex items-center justify-center gap-3"><img src={poisonPopupPack.icon} alt="" aria-hidden="true" className="h-16 w-16 object-contain" /><div className="text-center"><p className="font-mono text-xs font-black text-[#d8ff86]">{lang === 'ru' ? 'Количество, шт.' : lang === 'en' ? 'Quantity, pcs' : 'Кількість, шт.'}</p><p className="mt-1 font-mono text-2xl font-black text-white">×{poisonAmount}</p></div></div>
           <input aria-label={lang === 'ru' ? 'Количество яда' : lang === 'en' ? 'Poison quantity' : 'Кількість отрути'} type="range" min="1" max="100" step="1" value={poisonAmount} onChange={(event) => setPoisonAmount(Number(event.target.value))} className="mt-3 w-full accent-[#a6db32]" />
           <div className="mt-2 flex justify-between font-mono text-[9px] text-[#a8bd8e]"><span>1</span><span>{lang === 'ru' ? 'Максимум за покупку' : lang === 'en' ? 'Maximum per purchase' : 'Максимум за покупку'}: 100</span></div>
           <div className="mt-4 border border-[#33452a] bg-[#0b1009] p-2 text-center font-mono text-xs font-black text-[#fff1bd]">{isWebPlatform ? <><img src={nearIcon} alt="" className="mr-1 inline h-4 w-4" />{nearUsd > 0 ? (Number(selectedPoisonPack?.usd || 0) / nearUsd).toLocaleString('en-US', { maximumFractionDigits: 4 }) : '—'} NEAR</> : <><img src={starsCurrencyIcon} alt="" className="mr-1 inline h-4 w-4" />{selectedPoisonPack?.stars || 0} Stars</>}</div>
-          <div className="mt-3 grid grid-cols-2 gap-2"><GameTextureButton type="button" tone="yellow" onClick={() => setPoisonPopupPack(null)} className="h-10"><span className="relative z-10 font-mono text-[10px] font-black text-[#17220e]">{lang === 'en' ? 'Back' : lang === 'ru' ? 'Назад' : 'Назад'}</span></GameTextureButton><GameTextureButton type="button" disabled={!selectedPoisonPack} onClick={() => { if (selectedPoisonPack) { setPoisonPopupPack(null); openGemPackChooser(selectedPoisonPack); } }} className="h-10"><span className="relative z-10 font-mono text-[10px] font-black text-[#17220e]">{lang === 'ru' ? 'Продолжить' : lang === 'en' ? 'Continue' : 'Продовжити'}</span></GameTextureButton></div>
+          <div className="mt-3 grid grid-cols-2 gap-2"><GameTextureButton type="button" tone="yellow" onClick={() => setPoisonPopupPack(null)} className="h-10"><span className="relative z-10 font-mono text-[10px] font-black text-[#17220e]">{lang === 'en' ? 'Back' : lang === 'ru' ? 'Назад' : 'Назад'}</span></GameTextureButton><GameTextureButton type="button" disabled={!selectedPoisonPackFull} onClick={() => { if (selectedPoisonPackFull) { setPoisonPopupPack(null); openGemPackChooser(selectedPoisonPackFull); } }} className="h-10"><span className="relative z-10 font-mono text-[10px] font-black text-[#17220e]">{lang === 'ru' ? 'Продолжить' : lang === 'en' ? 'Continue' : 'Продовжити'}</span></GameTextureButton></div>
         </div>
       </div> : null}
       {openingShopBox ? (
@@ -701,7 +742,7 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
         />
       ) : null}
       {previewBox ? (
-        <div className="fixed inset-0 z-[20] flex items-center justify-center bg-black/75 px-4">
+        <div className="fixed inset-0 z-[20] flex items-center justify-center bg-black/75 px-4" onClick={event => { if (event.target === event.currentTarget) setPreviewBox(null); }}>
           <div className="w-full max-w-[320px] border border-[#28ee90] bg-[#0f160d] p-3">
             <div className="mb-2 flex items-center justify-between">
               <p className="font-mono text-[11px] font-black uppercase text-[#d8ffb6]">{previewBox.title}</p>
@@ -763,36 +804,41 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
           <div className="flex items-center gap-2"><div className="h-[2px] w-6 bg-[#7fd53e]" /><p className="font-mono text-[11px] font-black uppercase tracking-[0.18em] text-[#d8f7a1]">{lang === 'en' ? 'DAILY SHOP' : lang === 'ru' ? 'ЕЖЕДНЕВНЫЕ ТОВАРЫ' : 'ЩОДЕННІ ТОВАРИ'}</p><DailyRefreshTimer language={lang} /></div>
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
             {dailyOffersList.map((offer) => (
-              <DailyOfferCard key={offer.id} offer={offer} language={lang} disabled={Boolean(buyingId) || dailyPurchased.includes(offer.id)} onBuy={() => handleBuyDaily(offer)} />
+              <DailyOfferCard key={offer.id} offer={offer} language={lang} saleActive={saleActive} disabled={Boolean(buyingId) || dailyPurchased.includes(offer.id) || !canAffordDailyOffer(profile, offer, saleActive)} onBuy={() => handleBuyDaily(offer)} />
             ))}
           </div>
         </div>
         {shopSections.map((section) => (
           <div key={section.id} className="space-y-2">
-            <SectionHeader title={t(section.titleKey)} />
+            <SectionHeader title={section.id==='enhancementGums' ? (lang==='en'?'ENHANCEMENT GUM':lang==='ru'?'ЖВАЧКИ ЗАТОЧКИ':'ЖУЙКИ ЗАТОЧКИ') : t(section.titleKey)} />
+            {section.id==='enhancementGums'&&<div className="grid grid-cols-3 gap-1.5">{GUM_PACKS.map((pack,index)=>{const salePack=applyFriday13SaleToProduct(pack,saleClock);return <GemPackCard key={pack.id} pack={{...salePack,gumArtIndex:index}} titleText={(lang==='en'?'Cosmol':'Космол')+' ×'+pack.gums.premium} buyLabel={isWebPlatform?<SalePrice original={nearUsd>0?(pack.usd/nearUsd).toFixed(3):undefined} current={nearUsd>0?(salePack.usd/nearUsd).toFixed(3):'…'} icon={nearIcon} suffix=" NEAR"/>:<SalePrice original={salePack.friday13SalePercent?pack.stars:undefined} current={salePack.stars} icon={starsCurrencyIcon}/>} onClick={()=>openGemPackChooser(pack)}/>})}</div>}
+
             <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
           {section.id === 'gems'
                 ? section.items.map((pack) => {
                     const titleText = pack.title;
+                    const salePack = applyFriday13SaleToProduct(pack, saleClock);
                     return (
                       <GemPackCard
                         key={pack.id}
-                        pack={pack}
+                        pack={salePack}
                         titleText={titleText}
                         buyLabel={isWebPlatform
-                          ? <><img src={nearIcon} alt="" aria-hidden="true" className="h-4 w-4 object-contain" />{nearUsd > 0 ? (Math.ceil((Number(pack.usd || 0) / nearUsd) * 1e6) / 1e6).toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—'} NEAR</>
-                          : <><img src={starsCurrencyIcon} alt="" aria-hidden="true" className="h-4 w-4 object-contain" />{Number(pack.stars || Math.ceil(Number(pack.usd || 0) * 100)).toLocaleString()}</>}
+                          ? <SalePrice original={salePack.friday13SalePercent && nearUsd>0?(Number(pack.usd||0)/nearUsd).toFixed(2):undefined} current={nearUsd>0?(Math.ceil((Number(salePack.usd||0)/nearUsd)*1e6)/1e6).toLocaleString('en-US',{maximumFractionDigits:2}):'—'} icon={nearIcon} suffix=" NEAR"/>
+                          : <SalePrice original={salePack.friday13SalePercent?Number(pack.stars||0).toLocaleString():undefined} current={Number(salePack.stars||Math.ceil(Number(salePack.usd||0)*100)).toLocaleString()} icon={starsCurrencyIcon}/>}
                         onClick={() => openGemPackChooser(pack)}
                       />
                     );
                   })
                 : section.id === 'paidConsumables'
-                  ? section.items.map((pack) => <GemPackCard key={pack.id} pack={pack} titleText={pack.title} buyLabel={isWebPlatform ? <><img src={nearIcon} alt="" aria-hidden="true" className="h-4 w-4 object-contain" />{nearUsd > 0 ? (Number(pack.usd || 0) / nearUsd).toLocaleString('en-US', { maximumFractionDigits: 4 }) : '—'} NEAR</> : <><img src={starsCurrencyIcon} alt="" aria-hidden="true" className="h-4 w-4 object-contain" />{pack.stars} Stars</>} onClick={() => openPoisonQuantity(pack)} />)
+                  ? section.items.map((pack) => {const salePack=applyFriday13SaleToProduct(pack,saleClock);return <GemPackCard key={pack.id} pack={salePack} titleText={pack.title} buyLabel={isWebPlatform?<SalePrice original={salePack.friday13SalePercent&&nearUsd>0?(Number(pack.usd||0)/nearUsd).toFixed(3):undefined} current={nearUsd>0?(Number(salePack.usd||0)/nearUsd).toFixed(3):'—'} icon={nearIcon} suffix=" NEAR"/>:<SalePrice original={salePack.friday13SalePercent?pack.stars:undefined} current={salePack.stars} icon={starsCurrencyIcon} suffix=" Stars"/>} onClick={() => openPoisonQuantity(pack)} />})
                 : section.items.map((item) => {
                     const limitKey = getDailyLimitKey(item.id);
                     const currentCount = Number(dailyCounts[limitKey] || 0);
                     const limitReached = Boolean(item.limitPerDay && currentCount >= item.limitPerDay);
-                    const insufficientFunds = item.costTentacles ? (profile?.tentacles || 0) < item.costTentacles : (profile?.premium || 0) < (item.costStars || 0);
+                    const itemCost = item.costTentacles || item.costStars || 0;
+                    const payableCost = saleActive ? friday13SalePrice(itemCost) : itemCost;
+                    const insufficientFunds = item.costTentacles ? (profile?.tentacles || 0) < payableCost : (profile?.premium || 0) < payableCost;
                     const titleText = item.nameKey ? t(item.nameKey) : item.name;
                     const ownedText = item.limitPerDay ? t('shop.remaining', { left: Math.max(0, item.limitPerDay - currentCount), total: item.limitPerDay }) : '';
                     return (
@@ -802,6 +848,7 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
                         titleText={titleText}
                         ownedText={ownedText}
                         disabled={Boolean(buyingId) || insufficientFunds || limitReached}
+                          saleActive={saleActive}
                         onBuy={() => handleBuyPlaceholder(item, titleText)}
                         onPreview={() => {
                           const boxType = getShopBoxType(item.id);
@@ -851,14 +898,7 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
                 })}
               </div>
             )}
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <button type="button" disabled={totalUnopened === 0} className="h-9 border border-[#28ee90] bg-[#18250f] font-mono text-[10px] font-black text-[#e7f3d9] disabled:opacity-45">
-                {t('shop.openOne')}
-              </button>
-              <button type="button" disabled={totalUnopened === 0} className="h-9 border border-[#28ee90] bg-[#223510] font-mono text-[10px] font-black text-[#efffda] disabled:opacity-45">
-                {t('shop.openAll')}
-              </button>
-            </div>
+
           </div>
         </div>
       </div>
@@ -868,3 +908,7 @@ export default function ShopPanel({ profile, onUpdateProfile, onRefreshProfile =
 
 
 
+
+export function warmFirstFrame() {
+  return warmFirstFrameImages([shopBanner, starterOfferBox, firstBossOfferBox, weeklyOfferBox]);
+}

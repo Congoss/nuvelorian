@@ -159,7 +159,8 @@ export function createPaymentService({
       throw error;
     }
 
-    const rates = await getRates();
+    const fixedStars = method === 'telegram_stars' && Number.isFinite(Number(item.stars)) && Number(item.stars) > 0;
+    const rates = fixedStars ? { source: 'catalog' } : await getRates();
     const locked = buildLockedAmounts({ usdPrice: item.usd, rates, starsAmount: item.stars });
     if (method === 'near') {
       if (BigInt(locked.nearAmountYocto) <= 0n) throw Object.assign(new Error('NEAR exchange rate unavailable'), { code: 'PAYMENT_RATE_UNAVAILABLE' });
@@ -186,7 +187,7 @@ export function createPaymentService({
       tonAmountNano: locked.tonAmountNano,
       nearAmountYocto: locked.nearAmountYocto,
       exchangeRateSnapshot: locked.exchangeRateSnapshot,
-      exchange_rate_snapshot: locked.exchangeRateSnapshot,
+      exchange_rate_snapshot: { ...locked.exchangeRateSnapshot, achievementDonationV1: true },
       amount_paid: null,
       status: 'pending',
       tx_hash: null,
@@ -383,6 +384,9 @@ export function createPaymentService({
     }
 
     if (transaction.status === 'success') {
+      if (/^pvp_refill_[1-5]$/.test(transaction.item_id) && transaction.payment_method === 'telegram_stars') {
+        await grantReward({ userId: transaction.user_id, itemId: transaction.item_id, paymentMethod: transaction.payment_method, transaction });
+      }
       return transaction;
     }
 

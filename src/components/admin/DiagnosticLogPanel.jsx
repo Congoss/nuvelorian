@@ -9,8 +9,10 @@ const LABELS = {
 export default function DiagnosticLogPanel({ events = [], lang = 'uk', onRefresh }) {
   const t = LABELS[lang] || LABELS.uk;
   const [source, setSource] = useState('all');
+  const [suspicious,setSuspicious]=useState(false);
+  const [query,setQuery]=useState('');
   const [copyStatus, setCopyStatus] = useState('');
-  const visible = useMemo(() => events.filter((event) => source === 'all' || event.source === source), [events, source]);
+  const visible = useMemo(() => events.filter(event=>(source==='all'||event.source===source)&&(!suspicious||['PLAYER_PATCH_IGNORED','REQUEST_ID_REUSED','NO_PERMISSION','BOSS_FIGHT_NOT_OWNED','RATE_LIMITED','TOO_MANY_REQUESTS','CARD_SELECTION_LOCKED','INVALID_MULTIPLIER'].includes(event.code)||event.status===429)&&`${event.code} ${event.message} ${event.player_id||''} ${event.path}`.toLowerCase().includes(query.toLowerCase())), [events, source,suspicious,query]);
 
   const copy = async () => {
     try {
@@ -28,6 +30,7 @@ export default function DiagnosticLogPanel({ events = [], lang = 'uk', onRefresh
           <h2 className="font-black">{t.title} <span className="text-sm text-slate-400">({visible.length})</span></h2>
           <p className="mt-1 text-xs text-slate-400">{t.note}</p>
         </div>
+        <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={suspicious} onChange={e=>setSuspicious(e.target.checked)}/>{{uk:'Підозріла активність · для перевірки',ru:'Подозрительная активность · для проверки',en:'Suspicious activity · review only'}[lang]}</label><input aria-label="Search" placeholder="ID / code / URL" value={query} onChange={e=>setQuery(e.target.value)} className="rounded border border-white/10 bg-black/20 p-2 text-xs"/>
         <select aria-label={t.all} className="rounded-lg border border-white/10 bg-[#100f1a] px-3 py-2 text-sm" value={source} onChange={(event) => setSource(event.target.value)}>
           <option value="all">{t.all}</option>
           <option value="api">{t.api}</option>

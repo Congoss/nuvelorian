@@ -1,0 +1,61 @@
+.soldier-arena{position:absolute;inset:0;overflow:hidden;isolation:isolate;background:#252725;pointer-events:none}
+.soldier-background{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.66) saturate(.65)}
+.soldier-rig{position:absolute;bottom:23%;left:calc(50% - min(29%,18dvh));width:min(58%,36dvh);aspect-ratio:1/2;filter:brightness(1.18) saturate(1.12) drop-shadow(0 2px 3px #0008) drop-shadow(0 0 1px #d2dcaa80)}
+.soldier-hit,.soldier-upper,.soldier-head-rig{position:absolute;inset:0}
+.soldier-layer{position:absolute;display:block;object-fit:fill}
+.soldier-legs{left:15%;top:43%;width:82%;height:57%}
+.soldier-torso{left:19%;top:23%;width:48%;height:30%}
+.soldier-head{left:41%;top:1%;width:39%;height:29%}
+.soldier-gun-arm{left:20%;top:25%;width:43%;height:63%}
+.soldier-free-arm{left:62%;top:28%;width:25%;height:45%}
+.soldier-fungus{left:55%;top:3%;width:12%;height:5%}
+.soldier-upper{transform-origin:50% 49%}.soldier-head-rig{transform-origin:56% 26%}.soldier-gun-arm{transform-origin:35% 4%}.soldier-free-arm{transform-origin:40% 4%}.soldier-fungus{transform-origin:50% 95%}
+.soldier-eye{position:absolute;overflow:hidden;border-radius:50%;z-index:2}.soldier-eye-left{left:58.7%;top:12.6%;width:8%;height:3.5%}.soldier-eye-right{left:69.5%;top:14.5%;width:5%;height:2.7%}.soldier-pupil{position:absolute;left:42%;top:42%;width:17%;height:17%;background:#211b11;border-radius:50%}
+.soldier-drool{position:absolute;width:1%;height:1.8%;border-radius:40% 40% 55% 55%;background:#b9c54d;opacity:0}
+.soldier-drool-jaw{left:69%;top:24%}
+.soldier-spores{position:absolute;inset:0;pointer-events:none}.soldier-spores>i{position:absolute;left:calc(28% + var(--spore)*5%);top:calc(15% + var(--spore)*5%);width:3px;height:3px;border-radius:50%;background:#c9a3c4;opacity:0;box-shadow:0 0 3px #d3a0b46b}
+.soldier-emergency-light{position:absolute;right:0;top:0;width:45%;height:25%;background:radial-gradient(ellipse at top right,#d9513530,transparent 70%);opacity:.5}
+.soldier-vignette{position:absolute;inset:0;box-shadow:inset 0 0 40px #10160c50}
+.soldier-arena.is-animated .soldier-upper{animation:soldier-breathe 5.3s ease-in-out infinite}
+.soldier-arena.is-animated .soldier-head-rig{animation:soldier-head-twitch 7.2s ease-in-out infinite}
+.soldier-arena.is-animated .soldier-gun-arm{animation:soldier-gun-drift 4.8s ease-in-out infinite}
+.soldier-arena.is-animated .soldier-free-arm{animation:soldier-hand-sway 3.6s ease-in-out infinite}
+.soldier-arena.is-animated .soldier-fungus{animation:soldier-fungus-pulse 4.1s ease-in-out infinite}
+.soldier-arena.is-animated .soldier-pupil{animation:soldier-look 5s ease-in-out infinite}.soldier-arena.is-animated .soldier-eye-right .soldier-pupil{animation-delay:-2s}
+.soldier-arena.is-animated .soldier-drool{animation:soldier-drip 3.8s ease-in infinite}
+.soldier-arena.is-animated .soldier-spores>i{animation:soldier-spore calc(4.8s + var(--spore)*.17s) ease-out infinite;animation-delay:calc(var(--spore)*-.61s)}
+.soldier-arena.is-animated .soldier-emergency-light{animation:soldier-light 4s ease-in-out infinite}
+.soldier-arena.is-animated .soldier-hit{animation:soldier-hit .3s ease-out}
+.soldier-arena.is-defeated .soldier-rig{filter:saturate(.3);opacity:.65;transition:opacity .8s}
+@keyframes soldier-breathe{0%,100%{transform:rotate(-.5deg) translateY(0)}50%{transform:rotate(.5deg) translateY(-.5%)}}
+@keyframes soldier-head-twitch{0%,65%,75%,100%{transform:rotate(0)}67%,71%{transform:rotate(-3deg)}69%,73%{transform:rotate(2deg)}}
+@keyframes soldier-gun-drift{0%,100%{transform:rotate(0)}65%{transform:rotate(1.3deg)}73%{transform:rotate(-.7deg)}}
+@keyframes soldier-hand-sway{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(2deg)}}
+@keyframes soldier-fungus-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+@keyframes soldier-look{0%,100%{transform:translate(0)}25%,40%{transform:translate(100%,50%)}65%,80%{transform:translate(-90%,-40%)}}
+@keyframes soldier-drip{0%,60%{opacity:0;transform:translateY(0) scaleY(.4)}65%{opacity:.8}95%{opacity:.7;transform:translateY(1600%) scaleY(1.3)}100%{opacity:0;transform:translateY(1800%)}}
+@keyframes soldier-spore{0%,20%{opacity:0;transform:translate(0) scale(.5)}35%{opacity:.6}100%{opacity:0;transform:translate(22px,-65px) scale(1.2)}}
+@keyframes soldier-light{0%,100%{opacity:.2}40%,65%{opacity:.8}}
+@keyframes soldier-hit{0%{transform:translateX(0)}25%{transform:translateX(-2%) rotate(-1deg)}65%{transform:translateX(1%)}100%{transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.soldier-arena *{animation:none!important;transition:none!important}}
+
+.soldier-intact{display:block;width:100%;height:100%;object-fit:contain}
+.soldier-growth-background{object-fit:fill;filter:brightness(.85) saturate(.85)}
+.soldier-room-props{position:absolute;inset:0;pointer-events:none}
+.soldier-room-props>img{position:absolute;object-fit:contain}
+.soldier-room-fan{left:7.5%;top:7%;width:31%;aspect-ratio:1;transform-origin:center}
+.soldier-room-helmet{left:73%;top:25%;width:19%;aspect-ratio:1;transform-origin:50% 5%}
+.soldier-room-mushrooms{left:-3%;bottom:24%;width:25%;aspect-ratio:1;transform-origin:50% 90%}
+.soldier-room-vine{right:2%;top:6%;width:13%;height:32%;transform-origin:50% 5%}
+.soldier-room-leak{position:absolute;left:12%;bottom:18%;width:1.2%;height:2.2%;border-radius:50%;background:#b5ce49;opacity:0}
+.soldier-arena.is-animated .soldier-room-fan{animation:soldier-room-fan 4s linear infinite}
+.soldier-arena.is-animated .soldier-room-helmet{animation:soldier-room-helmet 4.4s ease-in-out infinite}
+.soldier-arena.is-animated .soldier-room-mushrooms{animation:soldier-room-mushrooms 3.1s ease-in-out infinite}
+.soldier-arena.is-animated .soldier-room-vine{animation:soldier-room-vine 5s ease-in-out infinite}
+.soldier-arena.is-animated .soldier-room-leak{animation:soldier-room-leak 3.5s ease-in infinite}
+@keyframes soldier-room-fan{to{transform:rotate(360deg)}}
+@keyframes soldier-room-helmet{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(8deg)}}
+@keyframes soldier-room-mushrooms{0%,100%{transform:scaleY(1) rotate(-2deg)}50%{transform:scaleY(1.07) rotate(2deg)}}
+@keyframes soldier-room-vine{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(6deg)}}
+@keyframes soldier-room-leak{0%,50%{opacity:0;transform:translateY(0) scaleY(.3)}60%{opacity:.8}95%{opacity:.6;transform:translateY(600%) scaleY(1.6)}100%{opacity:0;transform:translateY(700%)}}
+@media(prefers-reduced-motion:reduce){.soldier-room-props *{animation:none!important}}

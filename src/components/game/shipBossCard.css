@@ -1,0 +1,58 @@
+.ship-roster-card{position:relative;isolation:isolate;overflow:hidden;color:#e1edcd}
+.ship-roster-card-background{position:absolute;inset:0;z-index:-1;background-position:center;background-size:cover;background-color:#233328}
+.ship-roster-card-portrait{overflow:hidden;border:1px solid #86a93b88;border-radius:8px;background:#120f0c}.ship-roster-card-portrait img{width:100%;height:100%;object-fit:cover}
+.ship-roster-card-info>p:first-child{font-weight:900;line-height:1.2;color:#f1ffe1}.ship-roster-card-info>p:nth-child(2){margin-top:5px;color:#d6e7bf}
+.ship-roster-card-medals{display:flex;align-items:center;gap:5px;margin-top:8px}.ship-roster-card-medals img{object-fit:contain}.ship-roster-card-medals .is-locked{filter:grayscale(1);opacity:.45}
+.ship-roster-card-info>small{display:block;font-size:8px;color:#9ead87;margin-top:7px;line-height:1.4}
+.ship-roster-card-buff{display:flex;flex-direction:column;align-items:flex-start;gap:4px}.ship-roster-card-buff>p{color:#86a93b;text-transform:uppercase}.ship-roster-card-buff>.ship-roster-card-buff-icon{width:38px!important;height:38px!important;object-fit:contain}.ship-roster-card-buff strong{font-size:11px;color:#d2ed92}.ship-roster-card-buff>small{font-size:9px;line-height:1.3;color:#b6c79b}
+.ship-game-screen .ship-roster-card-buff>button{background:transparent;border:0;border-radius:0;box-shadow:none;padding:3px 0;min-height:0;font-size:8px;font-weight:800;color:#c9db7f;text-decoration:underline}
+.ship-roster-card-winner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;text-align:center}.ship-roster-card-winner>p{text-transform:uppercase;font-weight:900;color:#c8d9b6;line-height:1.2}.ship-roster-card-winner .boss-last-winner-avatar{object-fit:cover;border:1px solid #e7c34b;border-radius:8px}.ship-roster-card-winner .boss-last-winner-unknown{display:grid;place-items:center;font-size:28px;font-weight:900;border:1px solid #526c42;border-radius:8px;color:#b6ce89;background:#0c120b}.ship-roster-card-winner>small{font-size:7px;color:#fff0db;overflow-wrap:anywhere}
+@container(max-width:360px){.ship-roster-card-buff strong{font-size:9px}.ship-roster-card-buff>small{font-size:8px}.ship-roster-card-buff>.ship-roster-card-buff-icon{width:30px!important;height:30px!important}}
+
+.ship-roster-card-info>p,.ship-roster-card-info>small,.ship-roster-card-buff>small,.ship-roster-card-winner>p{text-shadow:0 1px 3px #000}
+
+/* Center the label independently of the decorative texture span. */
+.ship-game-screen .ship-roster-card .boss-picker-portrait-column>button{display:grid;place-items:center;padding:1px;border:1px solid #090b04;border-radius:8px;outline:none;box-shadow:0 2px 3px #0007;background-image:none}
+.ship-roster-card .boss-picker-portrait-column>button>.ship-control-content{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;inset:auto;width:100%;height:100%;padding:0 3px;line-height:1;text-align:center;font-weight:900;font-size:12px;border:0;background:none;box-shadow:none}
+.ship-roster-card .boss-picker-portrait-column>button>span[aria-hidden=true]{padding:0}
+.ship-roster-card .boss-picker-portrait-column>button:focus-visible{outline:2px solid #c7df87;outline-offset:2px}
+.ship-roster-loot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px;width:100%;margin:7px 0}
+.ship-roster-loot-grid>span{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;padding:3px 1px;background:radial-gradient(ellipse at center,#09110ccc,transparent 75%)}
+.ship-game-screen .ship-roster-card .ship-roster-loot-grid>span>img{width:32px!important;height:32px!important;max-width:none;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 2px #000)}
+.ship-roster-loot-grid b{font-size:11px;color:#ecf3cf;white-space:nowrap;text-shadow:0 1px 3px #000}
+.ship-roster-gum-drops{display:flex;justify-content:space-around;gap:12px;width:100%;margin:5px 0;padding-top:5px;border-top:1px solid #bbc99a33}
+.ship-roster-gum-drops>span{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:#e5edbb;text-shadow:0 1px 3px #000}
+.ship-roster-gum-drops i{display:block;width:38px;height:38px;flex-shrink:0;background-image:url('/local-enhancement/gums.webp');background-size:300% 100%;background-repeat:no-repeat;filter:drop-shadow(0 2px 2px #000)}
+.ship-roster-card-buff>.ship-gum-threshold{font-size:8px;color:#b9c7a1}
+
+/* Six drops occupy three compact rows inside the original card height. */
+.ship-roster-card .ship-roster-card-buff{gap:2px;align-self:start}
+.ship-roster-card .ship-roster-loot-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px 6px;margin:2px 0 0}
+.ship-roster-card .ship-roster-loot-grid>span{padding:0;gap:1px}
+.ship-game-screen .ship-roster-card .ship-roster-loot-grid>span>img{width:28px!important;height:28px!important}
+.ship-roster-card .ship-roster-loot-grid b{font-size:10px;line-height:12px}
+.ship-roster-card .ship-roster-gum-drops{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:3px 0 0;padding-top:3px}
+.ship-roster-card .ship-roster-gum-drops>span{gap:1px;font-size:10px;line-height:12px}
+.ship-roster-card .ship-roster-gum-drops i{width:29px;height:29px}
+.ship-roster-locked .ship-roster-card-portrait img{filter:grayscale(.7) brightness(.7)}
+.ship-roster-locked .ship-roster-card-info>p:nth-child(2){color:#e2ce91}
+.ship-roster-locked .ship-roster-card-background{filter:saturate(.4)}
+.ship-roster-card-info>.ship-roster-gum-drops{display:flex;justify-content:flex-start;gap:14px;width:auto;margin:6px 0 0;padding:0;border:0}
+.ship-roster-card-info>.ship-roster-gum-drops>span{flex-direction:row;gap:4px}
+@container(max-width:400px){
+ .ship-roster-card .boss-picker-details{grid-template-columns:minmax(0,1.45fr) minmax(0,.85fr) minmax(0,.65fr)}
+ .ship-roster-card-info>.ship-roster-gum-drops{gap:4px;flex-wrap:wrap}
+ .ship-roster-card-info>.ship-roster-gum-drops>span{gap:2px;white-space:nowrap}
+ .ship-roster-card-info>.ship-roster-gum-drops i{width:18px;height:18px}
+}
+.ship-roster-card .ship-roster-card-buff{align-self:center;justify-content:center;min-height:65px;padding:0 5px;border:0;border-radius:0;background:none;box-shadow:none}
+.ship-roster-card .ship-roster-loot-grid{grid-template-columns:1fr;margin:0;gap:6px}
+.ship-roster-card .ship-roster-loot-grid>span{flex-direction:row;justify-content:flex-start;gap:7px;padding:0;background:none}
+.ship-roster-card .ship-roster-loot-grid b{font-size:11px;line-height:1.2}
+.ship-reward-title{font-size:9px;margin-bottom:5px;color:#9aba58}
+.ship-gum-help{align-self:center}
+.ship-gum-help>summary{display:grid;place-items:center;list-style:none;cursor:pointer;width:22px;height:22px;border:1px solid #799163;border-radius:50%;font-size:12px;color:#dcebb8;background:#132017}
+.ship-gum-help>summary::-webkit-details-marker{display:none}
+.ship-gum-help[open]>.ship-gum-help-popup{position:absolute;left:8px;right:8px;bottom:8px;z-index:25;padding:12px 32px 12px 12px;border:1px solid #799163;border-radius:6px;background:#0d1910;color:#e2ebd2;font-size:11px;line-height:1.5;box-shadow:0 3px 12px #000a}
+.ship-gum-help-popup>p{margin:0}
+.ship-game-screen .ship-gum-help-popup>button{position:absolute;right:3px;top:3px;width:28px;height:28px;padding:0;background:none;border:0;box-shadow:none;color:#dfedbc;font-size:22px;line-height:1}

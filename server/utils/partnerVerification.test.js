@@ -2,10 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { classifyTelegramMembership, normalizePartnerLink, parseVerifiablePartnerLink, verifyXFollow } from './partnerVerification.js';
 
-test('partner links accept only direct Telegram or X profiles', () => {
+test('partner links accept Telegram chats and message links, and direct X profiles', () => {
   assert.equal(normalizePartnerLink('t.me/nuvelorian'), 'https://t.me/nuvelorian');
   assert.equal(normalizePartnerLink('x.com/Nuvelorian'), 'https://x.com/Nuvelorian');
   assert.deepEqual(parseVerifiablePartnerLink('https://t.me/planet4_game'), { type: 'telegram', handle: 'planet4_game' });
+  assert.deepEqual(parseVerifiablePartnerLink('https://t.me/nuvelor_chat/16931'), { type: 'telegram', handle: 'nuvelor_chat' });
+  assert.deepEqual(parseVerifiablePartnerLink('https://t.me/nuvelor_chat/100/16931'), { type: 'telegram', handle: 'nuvelor_chat' });
+  for (const link of ['https://t.me/nuvelor_chat/not-a-message', 'https://t.me/c/123/456', 'https://t.me/nuvelor_chat/1/2/3']) assert.equal(parseVerifiablePartnerLink(link), null);
   assert.deepEqual(parseVerifiablePartnerLink('https://x.com/planet4_game'), { type: 'x', handle: 'planet4_game' });
   for (const link of ['http://t.me/planet4_game', 'https://t.me/+invite', 'https://x.com/planet4_game/status/1', 'https://x.com.evil.test/planet4_game', 'https://x.com/planet4_game?x=1']) {
     assert.equal(parseVerifiablePartnerLink(link), null);

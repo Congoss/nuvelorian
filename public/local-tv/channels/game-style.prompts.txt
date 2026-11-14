@@ -1,0 +1,6 @@
+Built-in image_gen, style-transfer, three individual opaque 4:3 full-bleed edits. Each original channel used as CONTENT reference; local-rabbit/armor.png and pet-haunted-toaster.png used as GAME STYLE references.
+Shared prompt: rough thick uneven black ink outlines, scratched dry brush coloring, muted grimy rusty surfaces, angular hand-drawn shapes, flat cel shading, darkly comic postapocalyptic junk-world art. No photographic skin, realism, 3D, lens blur, glossy plastic or smooth vector art. Subjects large and high contrast for 80px TV; no external player/TV frame.
+FORT: eccentric Father Fouras with wild white hair, scraggly beard, patched robe, suspicious squint, huge rusty key and battered scroll, crude candlelit stone fort, dirty ochre/charcoal/grey. Small FORT TV; FORGET THE SEED.
+SHOP: grotesquely cheerful moustached junk merchant with patched faded mint jacket holding chipped DIP jar, skeptical Doge, scrap counter, faded dirty pink boards, scratched $0.99 price tag. Small BUY TV; BUY THE DIP!
+HORROR: lanky long-haired pale ghost girl crawling out of battered cracked CRT, long grubby electricity bill with huge $666, exaggerated fingers, patched nightdress, cobwebs and charcoal/dirty grey/blue room with sickly green glow. Small MIDNIGHT; no long subtitle or gore.
+MONSTER TOONS, REKT WEATHER and NO SIGNAL artwork was intentionally not edited.

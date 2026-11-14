@@ -4,7 +4,7 @@ import { getRaidRankReward, rankRaidParticipants } from '../src/lib/raidRankRewa
 import { awardRaidRankRewards } from '../server/services/raid-rank-rewards.js';
 
 test('all reward tier boundaries match the approved quantities', () => {
-  const tiers = [[1,1,100,80,60,100,500],[2,2,90,70,50,75,400],[3,3,80,60,40,50,300],[4,10,50,40,30,30,200],[11,25,40,30,20,20,150],[26,50,30,20,10,10,100],[51,100,20,10,5,5,50]];
+  const tiers = [[1,1,100,80,60,100,375],[2,2,90,70,50,75,300],[3,3,80,60,40,50,225],[4,10,50,40,30,30,150],[11,25,40,30,20,20,112],[26,50,30,20,10,10,75],[51,100,20,10,5,5,37]];
   for (const [from,to,...amounts] of tiers) for (const rank of new Set([from,to])) {
     const reward = getRaidRankReward(rank);
     assert.deepEqual([reward.small,reward.medium,reward.large,reward.spins,reward.energy],amounts);
@@ -45,4 +45,12 @@ test('kill settles early; retry after opening a box never reissues it and rankin
   assert.equal(players[0].pending_boss_boxes.length,0);
   assert.equal(Object.values(players[0].raid_rank_rewards)[0].rank,1);
   assert.equal(raid.rank_rewards_sent.a.rank,1);
+});
+
+test('missing historical participants are skipped and do not leave settlement open forever', () => {
+  const raid = { id: 'raid', started_at: '2026-10-15', status: 'defeated', participants: { present: { damage: 20 }, removed: { damage: 10 } } };
+  const players = [{ id: 'present' }];
+  awardRaidRankRewards(raid, players, { now: Date.parse('2026-10-21') });
+  assert.equal(raid.rank_rewards_sent.removed.skipped, true);
+  assert.ok(raid.rank_rewards_completed_at);
 });

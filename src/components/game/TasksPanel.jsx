@@ -1,27 +1,37 @@
+import { warmFirstFrameImages } from '@/lib/sceneAssets';
+import FirstFrameImage from './FirstFrameImage';
+import missionBannerFull from '@/assets/quests/ui/mission-banner.png';
+import CombatLoader from './CombatLoader';
+import { useAnimationsEnabled } from '@/lib/animationPreference';
+import { collectionClaimSession } from '@/lib/collectionClaimSession';
+const readyArtifactBoxes=(location,counts)=>location?.collectionItems?.length?Math.max(0,Math.min(...location.collectionItems.map(item=>Math.floor(Number(counts[item.id])||0)))):0;
+import { COLLECTION_REWARDS, getQuestCollectionDrops } from '@/lib/questCollectionRewards';
+import freeSpinIcon from '@/assets/ui/spinx1.png';
+import PumpkinIcon from './PumpkinIcon';
 import GameWindow from './GameWindow';
 import { serverNow } from '@/lib/serverClock.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getQuestMission } from '@/lib/questMissionCatalog.js';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, Loader2, Lock, MapPinned, Sparkles } from 'lucide-react';
+import { ArrowLeft, Lock, MapPinned, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { completeMission } from '@/services/gameApi';
 import { calculateEnergy, GAME_CONFIG, getLocalizedBossName } from '@/lib/gameConfig';
 import { getQuestLocationUnlock, isQuestLocationUnlocked } from '@/lib/questUnlocks';
 import laboratoryBanner from '@/assets/quests/laboratory-banner.png';
 import labIcon from '@/assets/optimized/nav-quests.webp';
-import missionBanner from '@/assets/quests/ui/mission-banner.png';
+import missionBanner from '@/assets/optimized/first-frame/quests-banner.webp?inline';
 import dnkIcon from '@/assets/quests/portal.png';
 import flaconIcon from '@/assets/skills/small-poison.png';
 import nanochipIcon from '@/assets/optimized/cosmohand.webp';
-import plasmBatteryIcon from '@/assets/ui/energy+50.png';
+import plasmBatteryIcon from '@/assets/ui/energy.png';
 import quantcubeIcon from '@/assets/optimized/paper.webp';
 import reactorIcon from '@/assets/boss/boss-ico.png';
 import syringeIcon from '@/assets/skills/medium-poison.png';
 import dnkFramedIcon from '@/assets/quests/portal.png';
 import flaconFramedIcon from '@/assets/skills/small-poison.png';
 import nanochipFramedIcon from '@/assets/optimized/cosmohand.webp';
-import plasmBatteryFramedIcon from '@/assets/ui/energy+50.png';
+import plasmBatteryFramedIcon from '@/assets/ui/energy.png';
 import quantcubeFramedIcon from '@/assets/optimized/paper.webp';
 import reactorFramedIcon from '@/assets/boss/boss-ico.png';
 import syringeFramedIcon from '@/assets/skills/medium-poison.png';
@@ -37,7 +47,7 @@ import BossKeyIcon from './BossKeyIcon';
 import GameTextureButton from './GameTextureButton';
 import expUiIcon from '@/assets/ui/EXP.png';
 import levelUiIcon from '@/assets/optimized/level.webp';
-import energy25Icon from '@/assets/ui/energy+25.png';
+import energy25Icon from '@/assets/ui/energy.png';
 import { getResourceIcon } from '@/lib/resourceIcons';
 import artifactNamelessLabel from '@/assets/quests/P4 QUESTS/P4-U00/Nameless Label.png';
 import artifactBlackBarcode from '@/assets/quests/P4 QUESTS/P4-U00/Black Barcode.png';
@@ -504,16 +514,6 @@ const LOCATION_BLUEPRINTS = [
   },
 ];
 
-const COLLECTION_REWARDS = {
-  'p4-u00': { mediumPoison: 1, tentacles: 2000, energy: 50 },
-  'p4-u01': { mediumPoison: 1, tentacles: 2500, strength: 10, energy: 60 },
-  'p4-u02': { largePoison: 1, tentacles: 3000, strength: 15, premium: 2, energy: 70 },
-  'p4-u03': { largePoison: 1, tentacles: 4500, strength: 20, premium: 3, energy: 100, freeSpins: 1 },
-  'p4-u04': { largePoison: 2, tentacles: 6500, strength: 30, premium: 5, energy: 130 },
-  'p4-u05': { largePoison: 2, tentacles: 8000, strength: 40, premium: 7, energy: 150, freeSpins: 1 },
-  'p4-u06': { largePoison: 3, tentacles: 10000, strength: 60, premium: 10, energy: 190, freeSpins: 2 },
-  'p4-u07': { largePoison: 4, tentacles: 13000, strength: 80, premium: 15, energy: 220, freeSpins: 2 },
-};
 
 const QUEST_LOCATIONS = LOCATION_BLUEPRINTS.map((location, locationIndex) => {
   const nextBoss = GAME_CONFIG.BOSSES[locationIndex + 1];
@@ -525,15 +525,6 @@ const QUEST_LOCATIONS = LOCATION_BLUEPRINTS.map((location, locationIndex) => {
   bannerImage: LOCATION_BIG_BANNERS[location.id] || location.bannerImage || null,
   banner: localizeText(location.bannerI18n || location.banner, 'uk') || 'Закрий 7 місій, збери 7 артефактів і забери зброю локації.',
   bannerI18n: location.bannerI18n || null,
-  rewardPreview: [
-    { uk: '+CA', en: '+CA', ru: '+CA' },
-    { uk: '+EXP', en: '+EXP', ru: '+EXP' },
-    {
-      uk: `+${location.rewardWeapon.count} ${localizeText(location.rewardWeapon.nameI18n || location.rewardWeapon.name, 'uk')}`,
-      en: `+${location.rewardWeapon.count} ${localizeText(location.rewardWeapon.nameI18n || location.rewardWeapon.name, 'en')}`,
-      ru: `+${location.rewardWeapon.count} ${localizeText(location.rewardWeapon.nameI18n || location.rewardWeapon.name, 'ru')}`,
-    },
-  ],
   collectionItems: (location.artifacts || ARTIFACT_ICONS).map((icons, artifactIndex) => ({
     id: `${location.id}-artifact-${artifactIndex + 1}`,
     name: localizeText(icons.nameI18n, 'uk') || `Артефакт ${artifactIndex + 1}`,
@@ -598,16 +589,7 @@ function getCollectionRewardClaims(profile) {
 }
 
 function getCollectionRewardDrops(location) {
-  const reward = location?.collectionReward || {};
-  const drops = [];
-  if (reward.mediumPoison) drops.push({ type: 'weapon', id: 'medium-poison', qty: reward.mediumPoison });
-  if (reward.largePoison) drops.push({ type: 'weapon', id: 'large-poison', qty: reward.largePoison });
-  if (reward.tentacles) drops.push({ type: 'tentacles', qty: reward.tentacles });
-  if (reward.premium) drops.push({ type: 'premium', qty: reward.premium });
-  if (reward.strength) drops.push({ type: 'strength', qty: reward.strength });
-  if (reward.energy) drops.push({ type: 'energy', qty: reward.energy });
-  if (reward.freeSpins) drops.push({ type: 'spin', qty: reward.freeSpins });
-  return drops;
+  return getQuestCollectionDrops(location?.id).map(drop => ({ ...drop, qty: drop.qty * (location?.claimCount || 1) }));
 }
 
 function isLocationCompleted(profile, location) {
@@ -718,6 +700,10 @@ function PanelFrame({ children, className = '', innerClassName = '' }) {
   );
 }
 
+function QuestCardBackground({ image }) {
+  return <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10" style={{ backgroundImage: image ? `linear-gradient(90deg, rgba(5,12,7,.86), rgba(5,12,7,.92) 48%, rgba(5,12,7,.74)), url(${image})` : 'linear-gradient(120deg, #192719, #071009)', backgroundSize: 'cover', backgroundPosition: 'center' }} />;
+}
+
 function StageCard({ location, onSelect, language, locked = false, lockHint = '' }) {
   const locationName = localizeText(location.nameI18n || location.name, language);
   const [displayLockHint, setDisplayLockHint] = useState(lockHint);
@@ -754,6 +740,7 @@ function StageCard({ location, onSelect, language, locked = false, lockHint = ''
         disabled={locked}
         className={`relative w-full overflow-hidden px-3 py-3 text-left transition ${locked ? 'cursor-not-allowed' : 'hover:bg-white/[0.03]'}`}
       >
+        <QuestCardBackground image={location.bannerImage || location.miniBanner} />
         <div className="absolute inset-y-0 left-0 w-[5px]" style={{ background: `linear-gradient(180deg, ${location.accent} 0%, transparent 100%)` }} />
         <div className="grid grid-cols-[72px_minmax(0,1fr)] gap-3">
           <div className="relative flex h-full min-h-[72px] w-[72px] self-stretch items-center justify-center overflow-hidden bg-[#0d120c]">
@@ -775,40 +762,24 @@ function StageCard({ location, onSelect, language, locked = false, lockHint = ''
             </div>
             <p className="mt-2 font-mono text-[11px] text-[#b9caa8]">{localizeText(location.bannerI18n || location.banner, language)}</p>
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {location.rewardPreview.map((reward) => {
-                const rewardLabel = localizeText(reward, language);
-                const isStrengthReward = /CA/i.test(rewardLabel);
-                const isPoisonReward = /отрута|poison|яд/i.test(rewardLabel);
-                const isExpReward = /EXP/i.test(rewardLabel);
-                const poisonIcon = /серед|medium/i.test(rewardLabel)
-                  ? mediumPoisonIcon
-                  : /велик|large|больш/i.test(rewardLabel)
-                    ? largePoisonIcon
-                    : smallPoisonIcon;
-                return (
-                  <span
-                    key={typeof reward === 'string' ? reward : JSON.stringify(reward)}
-                    className={`rounded-full bg-[#10140f] px-2 py-1 font-mono text-[9px] ${isPoisonReward || isExpReward || isStrengthReward ? '' : 'border border-[#28ee90]'}`}
-                    style={{ color: location.accent }}
-                  >
-                    {isStrengthReward ? (
-                      <span className="inline-flex items-center gap-1">
-                        <img src={getResourceIcon('strength')} alt="CA" loading="lazy" decoding="async" className="h-9 w-9 object-contain" />
-                        {rewardLabel.replace(/CA/ig, '').trim() || '+1'}
-                      </span>
-                    ) : isExpReward ? (
-                      <span className="inline-flex items-center gap-1">
-                        <img src={expUiIcon} alt="EXP" loading="lazy" decoding="async" className="h-9 w-9 object-contain" />
-                        {rewardLabel}
-                      </span>
-                    ) : isPoisonReward ? (
-                      <span className="inline-flex items-center gap-1">
-                        <img src={poisonIcon} alt="" aria-hidden="true" loading="lazy" decoding="async" className="h-9 w-9 object-contain" />
-                        {rewardLabel}
-                      </span>
-                    ) : rewardLabel}
-                  </span>
-                );
+              {getCollectionRewardDrops(location).map((reward) => {
+                const poison = {
+                  'small-poison': { icon: smallPoisonIcon, name: SMALL_POISON_I18N },
+                  'medium-poison': { icon: mediumPoisonIcon, name: MEDIUM_POISON_I18N },
+                  'large-poison': { icon: largePoisonIcon, name: LARGE_POISON_I18N },
+                }[reward.id];
+                const names = {
+                  tentacles: {uk:'Щупальця',en:'Tentacles',ru:'Щупальца'},
+                  energy: {uk:'Енергія',en:'Energy',ru:'Энергия'},
+                  strength: {uk:'CA',en:'CA',ru:'CA'},
+                  spin: {uk:'Спіни',en:'Spins',ru:'Спины'},
+                };
+                const label = localizeText(poison?.name || names[reward.type], language);
+                const icon = poison?.icon || (reward.type === 'spin' ? freeSpinIcon : getResourceIcon(reward.type));
+                return <span key={reward.id || reward.type} className="inline-flex items-center gap-1 font-mono text-[10px]" style={{color:location.accent}}>
+                  {icon ? <img src={icon} alt="" aria-hidden="true" loading="lazy" decoding="async" className="h-7 w-7 object-contain" /> : null}
+                  +{reward.qty} {label}
+                </span>;
               })}
             </div>
           </div>
@@ -819,7 +790,7 @@ function StageCard({ location, onSelect, language, locked = false, lockHint = ''
   );
 }
 
-function RewardSlot({ icon, label, count = 0, owned, locked = false, claimable = false, claimed = false, onClick, showCountBadge = true, tutorialTarget = undefined, collectionItemId = undefined }) {
+function RewardSlot({ icon, label, count = 0, owned, locked = false, claimable = false, claimed = false, onClick, showCountBadge = true, tutorialTarget = undefined, collectionItemId = undefined, claimPulse = false }) {
   return (
     <button
       type="button"
@@ -829,7 +800,7 @@ function RewardSlot({ icon, label, count = 0, owned, locked = false, claimable =
       disabled={locked || claimed}
       className={`overflow-hidden rounded-[12px] p-1.5 text-left transition ${
         claimable ? 'bg-[#172010]' : 'bg-[#0b0f0a]'
-      } ${locked ? 'cursor-not-allowed' : 'cursor-pointer'} ${claimed ? 'opacity-60' : ''}`}
+      } ${locked ? 'cursor-not-allowed' : 'cursor-pointer'} ${claimed ? 'opacity-60' : ''} ${claimPulse ? 'tutorial-chest-claim-ready' : ''}`}
     >
       <div className="relative aspect-square w-full overflow-hidden">
         {showCountBadge && count > 0 ? (
@@ -848,9 +819,20 @@ function RewardSlot({ icon, label, count = 0, owned, locked = false, claimable =
   );
 }
 
-function CollectionGrid({ items, owned, counts, rewardUnlocked, rewardClaimsCount, onClaimReward, language, rewardIcon }) {
+function CollectionGrid({ items, owned, counts, rewardUnlocked, rewardClaimsCount, onClaimReward, language, rewardIcon, starterReveal = false }) {
+  const animations = useAnimationsEnabled();
+  const [revealing, setRevealing] = useState(false);
+  const revealed = useRef(false);
+  useEffect(() => {
+    if (!starterReveal || revealed.current) return;
+    revealed.current = true;
+    if (!animations || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    setRevealing(true);
+    const timer = setTimeout(() => setRevealing(false), 1900);
+    return () => clearTimeout(timer);
+  }, [starterReveal, animations]);
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className={`grid grid-cols-4 gap-2 ${revealing ? 'tutorial-artifact-arrival' : ''}`}>
       {items.map((item) => {
         const isOwned = owned.has(item.id);
         return <RewardSlot key={item.id} collectionItemId={item.id} icon={item.framedIcon || item.icon} label={localizeText(item.nameI18n || item.name, language)} count={counts[item.id] || 0} owned={isOwned} onClick={() => {}} />;
@@ -863,12 +845,13 @@ function CollectionGrid({ items, owned, counts, rewardUnlocked, rewardClaimsCoun
             : localizeText({ uk: 'Заблокований слот', en: 'Locked slot', ru: 'Заблокированный слот' }, language)
         }
         count={rewardClaimsCount}
-        locked={!rewardUnlocked}
-        claimable={rewardUnlocked}
+        locked={!rewardUnlocked || revealing}
+        claimable={rewardUnlocked && !revealing}
         claimed={false}
+        claimPulse={starterReveal && !revealing && rewardUnlocked && animations}
         onClick={onClaimReward}
         showCountBadge={false}
-        tutorialTarget={rewardUnlocked ? 'quest-claim-reward' : undefined}
+        tutorialTarget={rewardUnlocked && !revealing ? 'quest-claim-reward' : undefined}
       />
     </div>
   );
@@ -949,7 +932,7 @@ function PassiveClaimCard({ profile, passiveLocations, onClaim, onOpenArtifacts,
   );
 }
 
-function TaskRow({ task, progress, loopCount, onRun, isRunning, canRun, accent, resultDropHint, isLocked, lockHint, goLabel, language, tutorialTarget = undefined, tutorialGoIndex = undefined, tutorialBlock = undefined, tutorialSegmentIndex = undefined }) {
+function TaskRow({ task, backgroundImage, progress, loopCount, onRun, isRunning, canRun, accent, resultDropHint, isLocked, lockHint, goLabel, language, tutorialTarget = undefined, tutorialGoIndex = undefined, tutorialBlock = undefined, tutorialSegmentIndex = undefined }) {
   const isUnavailable = !canRun || isLocked;
   const taskName = localizeText(task.nameI18n || task.name, language);
   const segmentCount = task.target;
@@ -959,6 +942,7 @@ function TaskRow({ task, progress, loopCount, onRun, isRunning, canRun, accent, 
   return (
     <motion.div data-tutorial-block={tutorialBlock} data-tutorial-progress={tutorialBlock !== undefined ? progress : undefined} data-tutorial-total={tutorialBlock !== undefined ? task.target : undefined} data-tutorial-loop={tutorialBlock !== undefined ? loopCount : undefined} data-tutorial-target={tutorialBlock !== undefined ? `quest-block-${tutorialBlock}` : undefined} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <MarkerFrame className={`shadow-[0_8px_18px_rgba(0,0,0,0.24)] ${isLocked ? 'opacity-65 grayscale-[0.22]' : ''}`} innerClassName="relative overflow-hidden px-2.5 py-2.5" variant="transparent">
+        <QuestCardBackground image={backgroundImage} />
         <div className="absolute inset-y-0 left-0 w-[3px]" style={{ background: `linear-gradient(180deg, ${accent} 0%, transparent 100%)` }} />
         <div className="grid grid-cols-[40px_46px_minmax(0,1fr)_40px] items-center gap-2">
         <div className="flex h-[44px] w-[44px] items-center justify-center overflow-hidden bg-[#0d120c]">
@@ -1029,7 +1013,7 @@ function TaskRow({ task, progress, loopCount, onRun, isRunning, canRun, accent, 
           >
             {isRunning ? (
               <span className="absolute inset-0 z-10 flex items-center justify-center">
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <CombatLoader compact/>
               </span>
             ) : (
               <span className={`relative z-10 inline-flex h-full w-full items-center justify-center text-[12px] font-black [text-shadow:0_1px_2px_rgba(0,0,0,0.9)] ${isLocked ? 'opacity-35' : ''}`}>
@@ -1055,8 +1039,37 @@ export default function TasksPanel({ profile, onSpendEnergy, onUpdateProfile, on
   const activeLanguage = profile?.language || i18n.language || 'en';
   const [selectedLocationId, setSelectedLocationId] = useState(null);
   const [runningId, setRunningId] = useState(null);
+  const [batchMode, setBatchMode] = useState(() => {
+    try { return localStorage.getItem('p4-mission-batch') || ''; } catch { return ''; }
+  });
+  function selectBatchMode(mode, checked) {
+    const value = checked ? mode : '';
+    setBatchMode(value);
+    try { localStorage.setItem('p4-mission-batch', value); } catch {}
+  }
+  const getBatchCount = task => {
+    const remaining = task.target - getTaskLoopProgress(profile, task);
+    if (batchMode === 'max') return remaining;
+    if (batchMode === 'ten') return Math.min(10, Math.floor(availableEnergy / task.energy), task.id.endsWith('-final') ? remaining : 10);
+    return 1;
+  };
   const runningRef = useRef(false);
   const [result, setResult] = useState(null);
+  const [pumpkinNotice, setPumpkinNotice] = useState(null);
+  useEffect(() => {
+    if (!(result?.pumpkins > 0)) return;
+    setPumpkinNotice(current => ({ qty: (current?.qty || 0) + Number(result.pumpkins), key: Date.now() }));
+  }, [result]);
+  useEffect(() => {
+    if (!pumpkinNotice) return undefined;
+    const timer = window.setTimeout(() => setPumpkinNotice(null), 6000);
+    return () => window.clearTimeout(timer);
+  }, [pumpkinNotice]);
+  useEffect(() => {
+    if (!result) return undefined;
+    const timer = window.setTimeout(() => setResult(null), 2800);
+    return () => window.clearTimeout(timer);
+  }, [result]);
   const [artifactFlight, setArtifactFlight] = useState(null);
 
   const [passiveClaimingId, setPassiveClaimingId] = useState(null);
@@ -1135,7 +1148,6 @@ export default function TasksPanel({ profile, onSpendEnergy, onUpdateProfile, on
       const saved = await onUpdateProfile({ playerAction: { type: 'claim-afk' } });
       if (saved?.reward) {
         setResult({ task: 'AFK bonus claim', ...saved.reward });
-        setTimeout(() => setResult(null), 2800);
       }
     } catch (error) {
       if (error?.code === 'AFK_NOT_READY') {
@@ -1147,6 +1159,27 @@ export default function TasksPanel({ profile, onSpendEnergy, onUpdateProfile, on
     } finally {
       passiveClaimRef.current = false;
       setPassiveClaimingId(null);
+    }
+  };
+
+  const runBatchTask = async (task) => {
+    if (runningRef.current || runningId || !profile || !selectedLocation || !isQuestLocationUnlocked(profile, selectedLocation.id)) return;
+    const count = getBatchCount(task);
+    if (!count || availableEnergy < count * task.energy) return;
+    runningRef.current = true;
+    setRunningId(task.id);
+    setResult(null);
+    try {
+      const response = await completeMission({ profileId: profile.id, task: { ...task, locationId: selectedLocation.id }, requestId: crypto.randomUUID(), count, batchMode });
+      if (!response?.player) throw new Error('Mission response is missing player data');
+      onSyncProfile?.(response.player);
+      if (response.pumpkins) setResult({ task: localizeText(task.nameI18n || task.name, activeLanguage), pumpkins: response.pumpkins });
+    } catch (error) {
+      setResult({ task: error?.message || 'MAX failed' });
+      try { await onRefreshProfile?.(); } catch { /* Keep the last confirmed result. */ }
+    } finally {
+      runningRef.current = false;
+      setRunningId(null);
     }
   };
 
@@ -1289,6 +1322,7 @@ export default function TasksPanel({ profile, onSpendEnergy, onUpdateProfile, on
         tentacles: task.tentacles,
         xp: task.xp,
         strength: task.strength || 0,
+        pumpkins: Number(missionResult.pumpkins || 0),
         collectionDrop: null,
         bossKeyDrop: droppedBossKey,
         poisonDrop: droppedPoison,
@@ -1311,7 +1345,6 @@ export default function TasksPanel({ profile, onSpendEnergy, onUpdateProfile, on
         });
       }
 
-      setTimeout(() => setResult(null), 2800);
     } catch (error) {
       console.error('[tasks] mission completion failed', {
         taskId: task?.id,
@@ -1327,11 +1360,11 @@ export default function TasksPanel({ profile, onSpendEnergy, onUpdateProfile, on
 
   const claimCollectionReward = async (locationOverride = null) => {
     const rewardLocation = locationOverride || selectedLocation;
-    if (!rewardLocation || !rewardLocation.collectionItems?.every((item) => (collectionCounts[item.id] || 0) >= 1)) {
+    if (!rewardLocation || !rewardLocation.collectionItems?.every((item) => (collectionCounts[item.id] || 0) >= (rewardLocation.claimCount || 1))) {
       throw Object.assign(new Error('Collection is incomplete'), { code: 'COLLECTION_INCOMPLETE' });
     }
     const rewardWeapon = rewardLocation.rewardWeapon;
-    await onUpdateProfile({ playerAction: { type: 'collection-claim', locationId: rewardLocation.id } });
+    await onUpdateProfile({ playerAction: { type: 'collection-claim', locationId: rewardLocation.id, count: rewardLocation.claimCount || 1, requestId:rewardLocation.claimRequestId||crypto.randomUUID() } });
 
     setResult({
       task: `${localizeText(rewardLocation.nameI18n || rewardLocation.name, activeLanguage)} reward`,
@@ -1340,7 +1373,6 @@ export default function TasksPanel({ profile, onSpendEnergy, onUpdateProfile, on
       rewardClaimed: true,
       rewardWeapon,
     });
-    setTimeout(() => setResult(null), 2800);
   };
 
   if (!selectedLocation) {
@@ -1349,7 +1381,7 @@ export default function TasksPanel({ profile, onSpendEnergy, onUpdateProfile, on
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-2 pb-2 pt-2" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         <BossStyleFrame innerClassName="px-3 py-3">
           <div className="relative h-[116px] w-full overflow-hidden">
-            <img src={missionBanner} alt={localizeText(LOCATION_PICKER_TITLE, activeLanguage)} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+            <FirstFrameImage preview={missionBanner} src={missionBannerFull} alt={localizeText(LOCATION_PICKER_TITLE, activeLanguage)} className="h-full w-full object-cover" />
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,245,230,0.12)_0%,rgba(255,245,230,0.04)_40%,rgba(0,0,0,0.2)_100%)]" />
             <div className="absolute inset-x-0 top-[50%] -translate-y-1/2 flex items-center justify-center px-4 text-center font-mono text-[19px] font-bold text-[#ffffff] drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]">
               {localizeText(LOCATION_PICKER_TITLE, activeLanguage)}
@@ -1416,6 +1448,26 @@ export default function TasksPanel({ profile, onSpendEnergy, onUpdateProfile, on
 
 
       <AnimatePresence>
+        {pumpkinNotice ? (
+          <motion.div
+            key={`quest-pumpkin-reward-${pumpkinNotice.key}`}
+            role="status"
+            aria-live="polite"
+            initial={{ opacity: 0, y: -18, scale: 0.7 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.9 }}
+            transition={{ duration: 0.3 }}
+            className="pointer-events-none fixed inset-x-0 top-[88px] z-[225] flex justify-center px-4"
+          >
+            <div className="flex items-center gap-3 rounded-xl border border-orange-400/70 bg-[#171107]/95 px-4 py-3 font-mono text-orange-300 shadow-[0_0_24px_rgba(251,146,60,0.3)]">
+              <PumpkinIcon className="h-20 w-20 object-contain drop-shadow-[0_0_12px_rgba(251,146,60,0.7)]" />
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-orange-200">{activeLanguage === 'en' ? 'Found!' : activeLanguage === 'ru' ? 'Найдено!' : 'Знайдено!'}</p>
+                <p className="mt-1 text-lg font-black">+{pumpkinNotice.qty} {activeLanguage === 'en' ? 'Pumpkin' : activeLanguage === 'ru' ? 'Тыква' : 'Гарбуз'}</p>
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
         {result?.collectionDrop ? (
           <motion.div
             initial={{ opacity: 0, y: -18, scale: 0.98 }}
@@ -1426,6 +1478,7 @@ export default function TasksPanel({ profile, onSpendEnergy, onUpdateProfile, on
             <div className="pointer-events-auto w-[min(calc(100vw-28px),420px)] rounded-[10px] border border-[#28ee90] bg-[linear-gradient(180deg,#121812_0%,#090c08_100%)] px-4 py-4 shadow-[0_18px_38px_rgba(0,0,0,0.5)]">
             <p className="text-center font-mono text-[10px] uppercase tracking-[0.14em] text-[#8bff58]">reward</p>
             <p className="mt-1 text-center font-mono text-[14px] font-bold text-[#edf8d9]">{result.task}</p>
+            {result.pumpkins > 0 && <p className="mt-2 text-center font-black text-orange-300"><PumpkinIcon /> +{result.pumpkins}</p>}
             {(result.tentacles || result.xp || result.strength) ? (
               <div className="mt-1 flex flex-wrap items-center justify-center gap-2 font-mono text-[11px] text-[#9ddf74]">
                 <span className="inline-flex items-center gap-1">
@@ -1497,16 +1550,22 @@ export default function TasksPanel({ profile, onSpendEnergy, onUpdateProfile, on
         </div>
       ) : null}
 
+      <div className="mb-3 rounded-lg border border-[#28ee90]/50 bg-[#10190f] p-3">
+        <label className="flex cursor-pointer items-center gap-2 font-mono text-sm font-black text-[#caff74]"><input type="checkbox" checked={batchMode === 'max'} disabled={Boolean(runningId)} onChange={event => selectBatchMode('max', event.target.checked)} />MAX</label>
+        <label className="flex cursor-pointer items-center gap-2 font-mono text-sm font-black text-[#caff74]"><input type="checkbox" checked={batchMode === 'ten'} disabled={Boolean(runningId)} onChange={event => selectBatchMode('ten', event.target.checked)} />×10</label>
+        <p className="mt-1 font-mono text-[10px] text-[#c7dcb8]">{activeLanguage === 'ru' ? 'MAX: одно нажатие выполняет все оставшиеся деления текущей шкалы. Нужна энергия на все деления; стоимость указана под кнопкой. Награды и шансы выпадения сохраняются за каждый шаг.' : activeLanguage === 'en' ? 'MAX: one click completes all remaining segments of the current bar. Requires energy for every segment; the total cost is shown below the button. Rewards and drop rolls apply to each step.' : 'MAX: одне натискання виконує всі поділки до кінця поточної шкали. Потрібна енергія на всі поділки; загальна вартість під кнопкою. Нагороди та шанси випадіння зберігаються за кожен крок.'}</p>
+      </div>
       <div className="space-y-3">
         {selectedLocation.tasks.map((task, index) => (
           <TaskRow
             key={task.id}
-            task={task}
+            backgroundImage={selectedLocation.bannerImage || selectedLocation.miniBanner}
+            task={batchMode ? { ...task, energy: task.energy * Math.max(1, getBatchCount(task)) } : task}
             progress={getTaskLoopProgress(profile, task)}
             loopCount={getTaskLoopCount(profile, task)}
-            onRun={() => runTask(task)}
+            onRun={() => batchMode ? runBatchTask(task) : runTask(task)}
             isRunning={runningId === task.id}
-            canRun={availableEnergy >= task.energy && !runningId}
+            canRun={getBatchCount(task) > 0 && availableEnergy >= task.energy * getBatchCount(task) && !runningId}
             accent={selectedLocation.accent}
             resultDropHint={
               activeLanguage === 'en'
@@ -1517,7 +1576,7 @@ export default function TasksPanel({ profile, onSpendEnergy, onUpdateProfile, on
             }
             isLocked={task.id.endsWith('-final') && !finalTaskUnlocked}
             lockHint={t('tasks_panel.final_task_unlock_hint')}
-            goLabel={goLabel}
+            goLabel={batchMode === 'max' ? 'MAX' : batchMode === 'ten' ? `×${Math.max(1, getBatchCount(task))}` : goLabel}
             language={activeLanguage}
             tutorialTarget={undefined}
             tutorialGoIndex={index < 7 ? index : undefined}
@@ -1550,10 +1609,12 @@ export default function TasksPanel({ profile, onSpendEnergy, onUpdateProfile, on
               counts={collectionCounts}
               rewardUnlocked={collectionRewardUnlocked}
               rewardClaimsCount={collectionRewardClaimsCount}
-              onClaimReward={() => setOpeningCollectionReward(selectedLocation)}
+              onClaimReward={() => setOpeningCollectionReward(collectionClaimSession(selectedLocation))}
               language={activeLanguage}
               rewardIcon={treasure1}
+              starterReveal={selectedLocation.id === 'p4-u00' && Boolean(profile?.tutorial_artifact_starter_granted) && !collectionRewardClaimsCount && ['artifacts','claim-reward'].includes(profile?.tutorial_step)}
             />
+            {readyArtifactBoxes(selectedLocation,collectionCounts)>0 ? <GameTextureButton type="button" tone="green" className="mt-2 h-11 w-full" onClick={() => setOpeningCollectionReward(collectionClaimSession(selectedLocation, readyArtifactBoxes(selectedLocation,collectionCounts)))}><span className="relative z-10 font-mono text-[11px] font-black uppercase text-[#172016]">{localizeText({uk:'Забрати всі',en:'Claim all',ru:'Забрать все'},activeLanguage)} ×{readyArtifactBoxes(selectedLocation,collectionCounts)}</span></GameTextureButton> : null}
           </div>
           </PanelFrame>
         </div>
@@ -1588,7 +1649,8 @@ function ArtifactsOverview({ profile, language, counts, rewardClaims, onClose, o
         return <div key={location.id} className={`border bg-[#10170d] p-2 ${complete ? 'border-[#8bff58]' : 'border-[#405737]'}`}>
           <div className="relative h-16 overflow-hidden border border-[#355032] bg-[#182314]">{location.bannerImage ? <img src={location.bannerImage} alt="" className="h-full w-full object-cover opacity-60" /> : null}<p className="absolute inset-0 flex items-center px-3 font-mono text-[14px] font-black text-white drop-shadow-[0_2px_3px_#000]">{localizeText(location.nameI18n || location.name, language)}</p></div>
           <div className="mt-2 grid grid-cols-8 gap-1">{location.collectionItems.map((item) => { const count = counts[item.id] || 0; return <div key={item.id} className="relative aspect-square min-w-0 overflow-hidden rounded border border-[#385132] bg-[#0b100b] p-0.5"><img src={item.framedIcon || item.icon} alt="" className={`h-full w-full object-contain ${count ? '' : 'grayscale opacity-40'}`} /><span className="absolute bottom-0 right-0 rounded border border-[#9bb18a] bg-[#111811] px-0.5 font-mono text-[8px] font-black text-white">{count}</span></div>; })}<div className={`relative aspect-square min-w-0 overflow-hidden rounded border p-0.5 ${complete ? 'border-[#ffd84d] shadow-[0_0_10px_rgba(255,216,77,.65)]' : 'border-[#385132] opacity-60'}`}><img src={treasure1} alt="" className="h-full w-full object-contain" />{claimed ? <span className="absolute bottom-0 right-0 rounded border border-[#9bb18a] bg-[#111811] px-0.5 font-mono text-[8px] font-black text-white">{claimed}</span> : null}</div></div>
-          <div className="mt-2 flex gap-2"><GameTextureButton type="button" disabled={!unlocked} onClick={() => onGo(location.id)} tone={unlocked ? 'green' : 'gray'} className="h-11 flex-1"><span className={`relative z-10 font-mono text-[10px] font-black uppercase ${unlocked ? 'text-[#172016]' : 'text-[#f4f7ed]'}`}>{language === 'en' ? 'GO' : 'ПЕРЕЙТИ'}</span></GameTextureButton><GameTextureButton type="button" disabled={!complete} onClick={() => setOpeningLocation(location)} tone={complete ? 'green' : 'gray'} className="h-11 flex-1"><span className={`relative z-10 font-mono text-[10px] font-black uppercase ${complete ? 'text-[#172016]' : 'text-[#f4f7ed]'}`}>{language === 'en' ? 'CLAIM' : language === 'ru' ? 'ПОЛУЧИТЬ' : 'ОТРИМАТИ'}</span></GameTextureButton></div>
+          <div className="mt-2 flex gap-2"><GameTextureButton type="button" disabled={!unlocked} onClick={() => onGo(location.id)} tone={unlocked ? 'green' : 'gray'} className="h-11 flex-1"><span className={`relative z-10 font-mono text-[10px] font-black uppercase ${unlocked ? 'text-[#172016]' : 'text-[#f4f7ed]'}`}>{language === 'en' ? 'GO' : 'ПЕРЕЙТИ'}</span></GameTextureButton><GameTextureButton type="button" disabled={!complete} onClick={() => setOpeningLocation(collectionClaimSession(location))} tone={complete ? 'green' : 'gray'} className="h-11 flex-1"><span className={`relative z-10 font-mono text-[10px] font-black uppercase ${complete ? 'text-[#172016]' : 'text-[#f4f7ed]'}`}>{language === 'en' ? 'CLAIM' : language === 'ru' ? 'ПОЛУЧИТЬ' : 'ОТРИМАТИ'}</span></GameTextureButton></div>
+          {readyArtifactBoxes(location,counts)>0 ? <GameTextureButton type="button" tone="green" className="mt-2 h-11 w-full" onClick={() => setOpeningLocation(collectionClaimSession(location, readyArtifactBoxes(location,counts)))}><span className="relative z-10 font-mono text-[11px] font-black uppercase text-[#172016]">{localizeText({uk:'Забрати всі',en:'Claim all',ru:'Забрать все'},language)} ×{readyArtifactBoxes(location,counts)}</span></GameTextureButton> : null}
         </div>;
       })}</div>
     </div>
@@ -1601,4 +1663,8 @@ function ArtifactsOverview({ profile, language, counts, rewardClaims, onClose, o
     onApplyDrops={async () => { await onClaim(openingLocation); }}
   /> : null}
   </>;
+}
+
+export function warmFirstFrame() {
+  return warmFirstFrameImages([missionBannerFull, laboratoryBanner, smallPoisonIcon, syringeIcon]);
 }

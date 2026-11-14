@@ -3,6 +3,10 @@ import { getNewbieProgress } from './newbieQuest.js';
 export const DAY_COUNT = 7;
 export const DAILY_UNLOCK_LEVEL = 3;
 
+export function getDailyCompletionReward(day) {
+  return { energy: 140, tentacles: 1000 * Math.max(1, Math.min(DAY_COUNT, Number(day) || 1)) };
+}
+
 function localizeCopy(copy, lang = 'en') {
   if (!copy || typeof copy !== 'object') return copy || '';
   return copy[lang] || copy.uk || copy.en || copy.ru || '';
@@ -43,6 +47,7 @@ const TASK_METRICS = {
   // existing players while new players can always complete it through boss hits.
   bossHitsOrStarterFragments: (profile) => Math.max(profile?.boss_hits_today || 0, getStarterFragmentsProgress(profile)),
   raidBoss: (profile) => profile?.raid_boss_hits_today || 0,
+  catchFish: (profile) => profile?.cosmo_fishing_caught_total || 0,
 };
 
 const DAY_TASKS_BY_DAY = {
@@ -96,7 +101,7 @@ const DAY_TASKS_BY_DAY = {
     { key: 'missions', goal: 30, title: { uk: 'Заверши 30 місій', en: 'Complete 30 missions', ru: 'Заверши 30 миссий' } },
     { key: 'artifacts', goal: 6, title: { uk: 'Збери 6 артефактів', en: 'Collect 6 artifacts', ru: 'Собери 6 артефактов' } },
     { key: 'bossDamage', goal: 3000, title: { uk: 'Нанеси 3000 шкоди босам', en: 'Deal 3000 damage to bosses', ru: 'Нанеси 3000 урона боссам' } },
-    { key: 'raidBoss', goal: 1, title: { uk: 'Візьми участь у серверному рейдбосі', en: 'Join the server raid boss', ru: 'Прими участие в серверном рейдбоссе' } },
+    { id: 'raidBoss', key: 'catchFish', goal: 1, title: { uk: 'Злови будь-яку рибу', en: 'Catch any fish', ru: 'Поймай любую рыбу' } },
     { key: 'boxes', goal: 4, title: { uk: 'Відкрий 4 бокси', en: 'Open 4 boxes', ru: 'Открой 4 бокса' } },
   ],
   7: [
@@ -105,7 +110,7 @@ const DAY_TASKS_BY_DAY = {
     { key: 'missions', goal: 35, title: { uk: 'Заверши 35 місій', en: 'Complete 35 missions', ru: 'Заверши 35 миссий' } },
     { key: 'artifacts', goal: 7, title: { uk: 'Збери 7 артефактів', en: 'Collect 7 artifacts', ru: 'Собери 7 артефактов' } },
     { key: 'bossDamage', goal: 5000, title: { uk: 'Нанеси 5000 шкоди босам', en: 'Deal 5000 damage to bosses', ru: 'Нанеси 5000 урона боссам' } },
-    { key: 'raidBoss', goal: 1, title: { uk: 'Візьми участь у рейдбосі', en: 'Join the raid boss', ru: 'Прими участие в рейдбоссе' } },
+    { id: 'raidBoss', key: 'catchFish', goal: 1, title: { uk: 'Злови будь-яку рибу', en: 'Catch any fish', ru: 'Поймай любую рыбу' } },
     { key: 'boxes', goal: 5, title: { uk: 'Відкрий 5 боксів', en: 'Open 5 boxes', ru: 'Открой 5 боксов' } },
   ],
 };
@@ -124,7 +129,7 @@ export function getDayTasks(day, language = 'uk') {
     title: localizeCopy(item.title, language),
     goal: item.goal,
     xp: 5,
-    tentacles: 10,
+    tentacles: 500 * Math.max(1, Math.min(DAY_COUNT, Number(day) || 1)),
     energyBonus: 20,
     dayLocked: item.key === 'checkin',
     progress: (profile) => (TASK_METRICS[item.key] ? TASK_METRICS[item.key](profile) : 0),
@@ -151,22 +156,22 @@ export function getTaskState(profile, task, day, currentDay, claimedTasks) {
   const historyObject = history && typeof history === 'object' ? history : null;
   const historyDays = historyObject?.days && typeof historyObject.days === 'object' && !Array.isArray(historyObject.days) ? historyObject.days : {};
   const hasCurrentWeekHistory = Boolean(historyObject && historyObject.week && safeProfile.currentWeekKey && historyObject.week === safeProfile.currentWeekKey);
-  const stored = hasCurrentWeekHistory ? historyDays[day] : null;
-  const hasStoredProgress = stored && Object.prototype.hasOwnProperty.call(stored, task.baseId);
-  const weekEnergySpent = task.baseId === 'spendEnergy' && hasCurrentWeekHistory
-    ? Object.entries(historyDays).reduce((sum, [progressDay, metrics]) => Number(progressDay) <= currentDay ? sum + Math.max(0, Number(metrics?.spendEnergy) || 0) : sum, 0)
+  // Later activity can finish past days; earlier activity cannot unlock future days.
+  const catchupProgress = hasCurrentWeekHistory
+    ? Object.entries(historyDays).reduce((sum, [progressDay, metrics]) => {
+      const index = Number(progressDay);
+      return index <= currentDay && (task.baseId === 'spendEnergy' || index >= day)
+        ? sum + Math.max(0, Number(metrics?.[task.baseId]) || 0) : sum;
+    }, 0)
     : 0;
-  const raw = task.baseId === 'checkin'
-    ? (day === currentDay ? task.progress(safeProfile) : 0)
-    : task.baseId === 'spendEnergy' && day <= currentDay && hasCurrentWeekHistory
-      ? weekEnergySpent
-    : hasStoredProgress
-      ? stored[task.baseId]
-        : day <= currentDay ? task.progress(safeProfile) : 0;
+  const raw = day > currentDay ? 0
+    : task.baseId === 'checkin'
+      ? (day === currentDay ? task.progress(safeProfile) : 0)
+      : hasCurrentWeekHistory ? catchupProgress : task.progress(safeProfile);
   const current = Math.min(Math.max(raw || 0, 0), task.goal);
   const complete = current >= task.goal;
   const claimed = claimedTasks.includes(task.id);
-  const canClaimCheckin = task.baseId === 'checkin' && (day >= 1 && day <= currentDay) && !claimed;
+  const canClaimCheckin = task.baseId === 'checkin' && day === currentDay && !claimed;
   return {
     ...task,
     current,

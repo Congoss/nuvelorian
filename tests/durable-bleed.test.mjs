@@ -1,0 +1,24 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+process.env.NODE_ENV='test';
+for (const key of ['DATABASE_URL','POSTGRES_URL','POSTGRES_PRISMA_URL','POSTGRES_URL_NON_POOLING']) process.env[key]='';
+const [{processDurableTalentBleedTicks},{store},{playerDb}]=await Promise.all([import('../server/app.js'),import('../server/data/store.js'),import('../server/data/player-db.js')]);
+test('passive bleeding publishes HP and damage only after commit and retries a failed tick once', async t => {
+ await store.init();await playerDb.init(store);
+ const now=Date.now();
+ const [player]=playerDb.attachPlayers([{id:'durable-bleed',created_by:'durable@game',talent_combat_state:{f:{bleed:{lastTickAt:now,expiresAt:now+10000,damage:5,critChance:0}}}}]);
+ store.players=[player];store.bossFights=[{id:'f',boss_id:'heli',opened_by_email:player.created_by,status:'active',max_hp:1000,current_hp:1000}];store.bossDamageLogs=[];store.clans=[];
+ let release,started;
+ const ready=new Promise(resolve=>{started=resolve});const wait=new Promise(resolve=>{release=resolve});
+ const original=store.queueCombatCommit;
+ t.mock.method(store,'queueCombatCommit',work=>original.call(store,async()=>work(async()=>{started();await wait;throw Error('disk full')})));
+ const failed=processDurableTalentBleedTicks(now+1000);await ready;
+ assert.equal(store.bossFights[0].current_hp,1000);assert.equal(player.talent_combat_state.f.bleed.lastTickAt,now);
+ release();await assert.rejects(failed,/disk full/);
+ assert.equal(store.bossFights[0].current_hp,1000);assert.equal(store.bossDamageLogs.length,0);
+ t.mock.restoreAll();
+ assert.equal(await processDurableTalentBleedTicks(now+1000),1);
+ assert.equal(store.bossFights[0].current_hp,995);assert.equal(store.bossDamageLogs[0].damage,5);
+ assert.equal(await processDurableTalentBleedTicks(now+1000),0);
+ assert.equal(store.bossFights[0].current_hp,995);
+});

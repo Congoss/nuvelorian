@@ -1,7 +1,17 @@
+import ToasterPet from './ToasterPet';
+import {getEquipmentEnhancementLevels} from '@/lib/equipmentEnhancementPresentation';
+import JunkSkunkPet from './JunkSkunkPet';
+import PurrgulpPet from './PurrgulpPet';
+import GameTextureButton from './GameTextureButton';
 import EquipmentCatalogCard from './EquipmentCatalogCard';
+import EquipmentRarityBadge from './EquipmentRarityBadge';
+import {equipmentRarity} from '@/lib/equipmentRarity';
 import EquipmentSourceInfo from './EquipmentSourceInfo';
 import RaidScarecrowPet from './RaidScarecrowPet';
 import HereEarlyPet from './HereEarlyPet';
+import HalloweenPumpkinPet from './HalloweenPumpkinPet';
+import VoidlingPet from './VoidlingPet';
+import LegionPet from './LegionPet';
 import NftPetClaimButton from './NftPetClaimButton';
 import { translateUiText } from '@/lib/uiTextTranslations';
 import { memo, useMemo, useState } from 'react';
@@ -38,6 +48,7 @@ import {
   SET5_SET_BONUS_NAME_I18N,
 } from './equipmentData';
 
+
 function SlotButton({ slot, item, itemName, active, onClick, language }) {
   return (
     <button
@@ -49,7 +60,7 @@ function SlotButton({ slot, item, itemName, active, onClick, language }) {
     >
       <div className={`relative flex h-[66px] w-[66px] items-center justify-center border bg-[#081108] ${
         active ? 'border-[#28ee90] shadow-[0_0_10px_rgba(45,255,159,0.2)]' : 'border-[#28ee90]'
-      }`}>
+      }`} style={item?{borderColor:equipmentRarity(item).color}:undefined}>
         {item ? (
           <img
             src={item.icon}
@@ -59,6 +70,7 @@ function SlotButton({ slot, item, itemName, active, onClick, language }) {
         ) : (
           <span className={`font-mono text-lg font-black text-[#527143] ${active ? 'brightness-110' : ''}`}>{slot.id === 'pet' ? '×' : ''}</span>
         )}
+        {Number(item?.enhancementLevel)>0 && <span className="pointer-events-none absolute left-0 top-0 z-10 border border-[#d4f08a]/50 bg-[#17230b]/95 px-1 font-mono text-[11px] font-black leading-4 text-[#d4f08a]">+{Math.min(15,Math.floor(Number(item.enhancementLevel)))}</span>}
       </div>
       <span className="mt-1 line-clamp-1 font-mono text-[9px] font-bold text-[#eff7da]">
         {item ? itemName : translateUiText(slot.label, language)}
@@ -70,8 +82,9 @@ function SlotButton({ slot, item, itemName, active, onClick, language }) {
 function EquipmentPanel({ profile, onClose, onUpdateProfile, onRefreshProfile }) {
   const lang = ['uk', 'ua', 'ru', 'en'].includes(profile?.language) ? profile.language : 'en';
   const equipmentInventory = useMemo(() => {
-    const owned = normalizeEquipmentInventory(profile);
-    const merged = new Map(DEFAULT_EQUIPMENT_ITEMS.map((item) => [item.id, item]));
+    const enhancementLevels=getEquipmentEnhancementLevels(profile);
+    const owned = normalizeEquipmentInventory(profile).map(item=>({...item,enhancementLevel:enhancementLevels[item.id] || 0}));
+    const merged = new Map(DEFAULT_EQUIPMENT_ITEMS.filter(item => !item.hiddenFromCatalog).map((item) => [item.id, item]));
     owned.forEach((item) => {
       const catalogItem = merged.get(item.id);
       if (catalogItem) {
@@ -89,7 +102,7 @@ function EquipmentPanel({ profile, onClose, onUpdateProfile, onRefreshProfile })
           purchasable: Boolean(catalogItem.purchasable),
           bossDrop: Boolean(catalogItem.bossDrop),
           bonuses: Array.isArray(catalogItem.bonuses) ? catalogItem.bonuses : [],
-          layerSrc: item.layerSrc || catalogItem.layerSrc || null,
+          layerSrc: (item.id?.startsWith('bp_skeleton_2026_') && catalogItem.layerSrc) || item.layerSrc || catalogItem.layerSrc || null,
           renderArt: item.renderArt || catalogItem.renderArt || null,
           locked: false,
         });
@@ -151,6 +164,8 @@ function EquipmentPanel({ profile, onClose, onUpdateProfile, onRefreshProfile })
 
   const equippedLayerMap = useMemo(() => {
     const map = {};
+    map.weaponEnhancementVariant='charged';
+    map.weaponEnhancementLevel=Number(getEquipmentEnhancementLevels(profile)[equippedItems.weapon]||0);
     map.equippedWeaponId = equippedItems.weapon || null;
     map.equippedHandsId = equippedItems.hands || null;
     map.equippedWeaponId = equippedItems.weapon || null;
@@ -158,6 +173,7 @@ function EquipmentPanel({ profile, onClose, onUpdateProfile, onRefreshProfile })
       const item = itemMap.get(equippedItems[slot]);
       if (item?.layerSrc) map[slot] = item.layerSrc;
     });
+    applyAnubisLayerOverrides(map, equippedItems, itemMap);
     map.nightDisinfector = {
       weapon: itemMap.get(equippedItems.weapon)?.setId === NIGHT_DISINFECTOR_SET_ID,
       hands: itemMap.get(equippedItems.hands)?.setId === NIGHT_DISINFECTOR_SET_ID,
@@ -176,19 +192,20 @@ function EquipmentPanel({ profile, onClose, onUpdateProfile, onRefreshProfile })
     };
     map.set5 = Object.fromEntries(['weapon', 'head', 'hands', 'armor', 'legs', 'boots'].map((slot) => [slot, itemMap.get(equippedItems[slot])?.setId === SET5_SET_ID]));
     map.set4 = Object.fromEntries(['weapon', 'head', 'hands', 'armor', 'legs', 'boots'].map((slot) => [slot, itemMap.get(equippedItems[slot])?.setId === SET4_SET_ID]));
+    map.halloween = Object.fromEntries(['weapon', 'head', 'hands', 'armor', 'legs', 'boots'].map((slot) => [slot, itemMap.get(equippedItems[slot])?.setId === 'halloween_2026']));
     map.bpEpicPet = equippedItems.pet === 'bp_epic_pet';
     map.bpEpicAura = equippedItems.animation === 'bp_epic_animation';
     map.bpLegendaryAura = equippedItems.animation === 'bp_legendary_animation';
     map.bpEpic = Object.fromEntries(['weapon', 'head', 'hands', 'armor', 'legs', 'boots'].map((slot) => [slot, itemMap.get(equippedItems[slot])?.setId === 'bp_epic']));
     map.newbiePackII = Object.fromEntries(['weapon', 'head', 'hands', 'armor', 'legs', 'boots'].map((slot) => [slot, itemMap.get(equippedItems[slot])?.setId === NEWBIE_PACK_II_SET_ID]));
     return map;
-  }, [itemMap, equippedItems]);
+  }, [itemMap, equippedItems, profile]);
 
   const activeSetId = selectedItem?.setId || null;
   const setPieces = Number(equipmentEffects.setCounts[activeSetId] || 0);
   const setBonuses = equipmentEffects.setBonusesBySet?.[activeSetId] || [];
   const setNameI18n = activeSetId === CARDBOARD_SURVIVOR_SET_ID ? CARDBOARD_SET_NAME_I18N : activeSetId === NIGHT_DISINFECTOR_SET_ID ? NIGHT_DISINFECTOR_SET_NAME_I18N : activeSetId === NUVELOR_SET_ID ? NUVELOR_SET_NAME_I18N : activeSetId === SET5_SET_ID ? SET5_SET_NAME_I18N : activeSetId === SET4_SET_ID ? SET4_SET_NAME_I18N : selectedItem?.setNameI18n || null;
-  const setBonusNameI18n = activeSetId === CARDBOARD_SURVIVOR_SET_ID ? CARDBOARD_SET_BONUS_NAME_I18N : activeSetId === NIGHT_DISINFECTOR_SET_ID ? NIGHT_DISINFECTOR_SET_BONUS_NAME_I18N : activeSetId === NUVELOR_SET_ID ? NUVELOR_SET_BONUS_NAME_I18N : activeSetId === SET5_SET_ID ? SET5_SET_BONUS_NAME_I18N : activeSetId === SET4_SET_ID ? SET4_SET_BONUS_NAME_I18N : null;
+  const setBonusNameI18n = activeSetId === CARDBOARD_SURVIVOR_SET_ID ? CARDBOARD_SET_BONUS_NAME_I18N : activeSetId === NIGHT_DISINFECTOR_SET_ID ? NIGHT_DISINFECTOR_SET_BONUS_NAME_I18N : activeSetId === NUVELOR_SET_ID ? NUVELOR_SET_BONUS_NAME_I18N : activeSetId === SET5_SET_ID ? SET5_SET_BONUS_NAME_I18N : activeSetId === SET4_SET_ID ? SET4_SET_BONUS_NAME_I18N : selectedItem?.setBonusNameI18n || null;
 
   const handleEquip = async (item) => {
     setSelectedItemId(item.id);
@@ -283,7 +300,7 @@ function EquipmentPanel({ profile, onClose, onUpdateProfile, onRefreshProfile })
         <div className="flex flex-col items-center">
           <div className="relative flex h-[clamp(320px,58dvh,462px)] w-full items-end justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_8%,rgba(183,255,92,0.14)_0%,rgba(0,0,0,0)_44%),linear-gradient(180deg,rgba(24,33,17,0.9)_0%,rgba(11,14,9,0.96)_100%)]">
             <div className="absolute bottom-3 h-[62px] w-[78%] rounded-full bg-[radial-gradient(circle,rgba(186,244,111,0.24)_0%,rgba(108,167,43,0.12)_42%,transparent_74%)] blur-[6px]" />
-            {equippedPet?.id === 'hereearlypet' ? <HereEarlyPet className="absolute bottom-0 left-1/2 z-[4] h-[158%] w-auto max-w-none -translate-x-1/2 origin-bottom scale-[1.08] translate-y-[8%] aspect-[500/896]" /> : equippedPet?.id === 'raidboss2_pet' ? <RaidScarecrowPet className="absolute bottom-0 left-1/2 z-[4] h-[158%] w-auto max-w-none -translate-x-1/2 origin-bottom scale-[1.08] translate-y-[8%] aspect-[500/896]" /> : equippedPet?.id === 'pet-cthulhu' ? <NewbieSoulPet fullCanvas className="absolute bottom-0 left-1/2 z-[1] h-[158%] w-auto max-w-none -translate-x-1/2 origin-bottom scale-[1.08] translate-y-[8%]" label={equippedPet.name} /> : equippedPet?.renderArt ? (
+            {equippedPet?.id === 'pet-toaster' ? <ToasterPet className="absolute bottom-[5%] right-[8%] z-[4] h-[31%] w-[32%]" /> : equippedPet?.id === 'pet-skunk' ? <JunkSkunkPet className="absolute inset-0 z-[2] h-full w-full" /> : equippedPet?.id === 'bp_legendary_pet' ? <VoidlingPet className="bottom-[3%] left-[4%] z-[4] h-[37%] w-[37%]" /> : equippedPet?.id === 'pet-purrgulp' ? <PurrgulpPet className="absolute bottom-[5%] left-[4%] z-[4] w-[43%] aspect-square" /> : equippedPet?.id === 'legion_pet' ? <LegionPet className="absolute inset-0 z-[12] h-full w-full" /> : equippedPet?.id === 'halloween_2026_pet' ? <HalloweenPumpkinPet className="absolute inset-0 z-[12] h-full w-full" /> : equippedPet?.id === 'hereearlypet' ? <HereEarlyPet className="absolute bottom-0 left-1/2 z-[4] h-[158%] w-auto max-w-none -translate-x-1/2 origin-bottom scale-[1.08] translate-y-[8%] aspect-[500/896]" /> : equippedPet?.id === 'raidboss2_pet' ? <RaidScarecrowPet className="absolute bottom-0 left-1/2 z-[4] h-[158%] w-auto max-w-none -translate-x-1/2 origin-bottom scale-[1.08] translate-y-[8%] aspect-[500/896]" /> : equippedPet?.id === 'pet-cthulhu' ? <NewbieSoulPet fullCanvas className="absolute bottom-0 left-1/2 z-[1] h-[158%] w-auto max-w-none -translate-x-1/2 origin-bottom scale-[1.08] translate-y-[8%]" label={equippedPet.name} /> : equippedPet?.renderArt ? (
               <img src={equippedPet.renderArt} alt={equippedPet.name} className="absolute bottom-[5%] left-[7%] z-[2] h-[44%] w-auto object-contain drop-shadow-[0_18px_26px_rgba(0,0,0,0.34)]" />
             ) : null}
             <div className="relative flex h-full w-full items-end justify-center">
@@ -339,7 +356,7 @@ function EquipmentPanel({ profile, onClose, onUpdateProfile, onRefreshProfile })
               </p>
               <p className="mt-1 font-mono text-[8px] text-[#8ca273]">{setPieces}/6</p>
               {setBonuses.map((bonus) => (
-                <p key={bonus.pieces} className="font-mono text-[8px] text-[#8ca273]">{bonus.active ? '✅' : '◻'} {bonus.pieces}/6 {lang === 'en' ? bonus.text : lang === 'ru' ? bonus.text.replace('Finger damage', 'Урон пальца').replace('Pencil damage', 'Урон карандаша').replace('Boss damage', 'Урон по боссам') : bonus.text.replace('Finger damage', 'Шкода пальця').replace('Pencil damage', 'Шкода олівця').replace('Boss damage', 'Шкода босам')}</p>
+                <p key={bonus.pieces} className="font-mono text-[8px] text-[#8ca273]">{bonus.active ? '✅' : '◻'} {bonus.pieces}/6 {lang === 'en' ? bonus.text.replace('Boss damage', 'All attacks: damage') : lang === 'ru' ? bonus.text.replace('Finger damage', 'Урон пальца').replace('Pencil damage', 'Урон карандаша').replace('Boss damage', 'Все атаки: урон') : bonus.text.replace('Finger damage', 'Шкода пальця').replace('Pencil damage', 'Шкода олівця').replace('Boss damage', 'Усі атаки: шкода')}</p>
               ))}
             </>
           ) : null}
@@ -373,7 +390,7 @@ function EquipmentPanel({ profile, onClose, onUpdateProfile, onRefreshProfile })
         </div>
       </MarkerFrame>
       {detailsOpen && selectedItem ? (
-        <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/70 backdrop-blur-[2px]">
+        <div onClick={event=>{if(event.target===event.currentTarget)setDetailsOpen(false);}} className="fixed inset-0 z-[120] flex items-end justify-center bg-black/70 backdrop-blur-[2px]">
           <div className="w-full max-w-[520px] rounded-t-[24px] border-t-2 border-[#28ee90] bg-[#0b1210] p-4 shadow-[0_-8px_24px_rgba(0,0,0,.55)]">
           <div className="mx-auto mb-3 h-1 w-14 rounded-full bg-[#27342d]" />
           <div className="mb-3 flex items-start justify-between">
@@ -384,7 +401,7 @@ function EquipmentPanel({ profile, onClose, onUpdateProfile, onRefreshProfile })
             <div className="flex h-[144px] w-[136px] shrink-0 items-center justify-center rounded-[12px] border border-[#28ee90] bg-[#081108]"><img src={selectedItem.icon} alt="" className="h-full w-full object-contain p-2" /></div>
             <div className="min-w-0 flex-1">
               <h3 className="font-sans text-[19px] font-black uppercase leading-tight text-[#f0ffe2]">{selectedItemName}</h3>
-              <p className="mt-1 font-mono text-[11px] font-black uppercase text-[#8bff58]">{selectedItem.rarity || 'COMMON'}</p>
+              <div className="mt-2"><EquipmentRarityBadge item={selectedItem} language={lang}/></div>
               <p className="mt-2 font-mono text-[9px] font-bold text-[#8bff58]">{getEquipmentSourceLabel(selectedItem, lang)}</p>
               <div className="mt-2 space-y-1">{(selectedBonusLines.length ? selectedBonusLines : [getNoBonusLabel(lang)]).map((bonus) => <p key={bonus} className="rounded-[8px] border border-[#263731] px-2 py-2 font-mono text-[10px] text-[#d8f5e4]">✦ {bonus}</p>)}</div>
             </div>
@@ -399,3 +416,5 @@ function EquipmentPanel({ profile, onClose, onUpdateProfile, onRefreshProfile })
 }
 
 export default memo(EquipmentPanel);
+
+import { applyAnubisLayerOverrides } from '@/lib/anubisEquipment';

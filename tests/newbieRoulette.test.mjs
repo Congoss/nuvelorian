@@ -1,3 +1,4 @@
+import {ROULETTE_PAPER_SPIN_COST} from '../src/lib/rouletteRewards.js';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { getNewbieProgress, isNewbieQuestComplete } from '../src/lib/newbieQuest.js';
@@ -43,7 +44,7 @@ test('free, bonus and paid spins count once; rejected spins and reward claims do
     created_by: 'telegram_90001@miniapp.local',
     telegram_id: '90001',
     level: 5,
-    premium: 5,
+    premium: ROULETTE_PAPER_SPIN_COST,
     roulette_bonus_spins: 1,
     newbie_stats: { hero_views: 7 },
   }]);
@@ -82,7 +83,7 @@ test('free, bonus and paid spins count once; rejected spins and reward claims do
 
 
 test('ten draws consume exact cost, preserve pending results and claim every reward exactly once', async () => {
-  const player = { id: 'batch-player', telegram_id: '90002', created_by: 'telegram_90002@miniapp.local', level: 29, premium: 50, roulette_bonus_spins: 10, energy: 1000 };
+  const player = { id: 'batch-player', telegram_id: '90002', created_by: 'telegram_90002@miniapp.local', level: 29, premium: ROULETTE_PAPER_SPIN_COST*10, roulette_bonus_spins: 10, energy: 1000 };
   store.players = playerDb.attachPlayers([player]);
   const current = store.players[0];
   const server = createApp();
@@ -93,13 +94,13 @@ test('ten draws consume exact cost, preserve pending results and claim every rew
   };
   try {
     for (const count of [0, 2, 11, '10']) assert.equal((await patch({ spinRoulette: { spinType: 'paid', count } })).ok, false);
-    assert.equal(current.premium, 50);
+    assert.equal(current.premium, ROULETTE_PAPER_SPIN_COST*10);
     for (const spinType of ['free', 'bonus', 'paid']) {
       const denied = await patch({ spinRoulette: { spinType, count: 10 } });
       assert.equal(denied.ok, false);
       assert.equal(denied.code, 'ROULETTE_LEVEL_REQUIRED');
     }
-    assert.equal(current.premium, 50);
+    assert.equal(current.premium, ROULETTE_PAPER_SPIN_COST*10);
     assert.equal(current.roulette_bonus_spins, 10);
     assert.equal(current.roulette_pending_reward, undefined);
     current.level = 30;

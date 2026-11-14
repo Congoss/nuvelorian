@@ -1,0 +1,140 @@
+.voidling-pet {
+  pointer-events: none;
+  position: absolute;
+  isolation: isolate;
+  overflow: visible;
+}
+.voidling-pet img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.voidling-pet__breath {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  transform-origin: 50% 88%;
+  animation: voidling-breathe 3.8s ease-in-out infinite;
+}
+.voidling-pet__body {
+  filter: drop-shadow(0 0 10px rgba(153, 62, 255, 0.3));
+}
+.voidling-pet__eye {
+  position: absolute;
+  z-index: 2;
+  top: 41.5%;
+  width: 12.5%;
+  height: 12.5%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(250, 255, 190, 0.98) 0%,
+    rgba(184, 255, 28, 0.75) 30%,
+    rgba(104, 255, 0, 0.25) 58%,
+    rgba(104, 255, 0, 0) 76%
+  );
+  filter: blur(0.4px) drop-shadow(0 0 8px #9dff16);
+  mix-blend-mode: screen;
+  animation: voidling-eyes 3.8s ease-in-out infinite;
+}
+.voidling-pet__eye--left {
+  left: 35.5%;
+}
+.voidling-pet__eye--right {
+  left: 61.2%;
+  animation-delay: -0.35s;
+}
+.voidling-pet__bandage {
+  z-index: 3;
+}
+.voidling-pet__bandage--top {
+  clip-path: polygon(61% 0, 86% 0, 86% 23%, 61% 23%);
+  transform-origin: 69% 16%;
+  animation: voidling-bandage-top 2.9s ease-in-out infinite;
+}
+.voidling-pet__bandage--left {
+  clip-path: polygon(6% 17%, 29% 17%, 29% 48%, 6% 48%);
+  transform-origin: 23% 31%;
+  animation: voidling-bandage-left 3.4s ease-in-out infinite;
+}
+.voidling-pet__bandage--lower {
+  clip-path: polygon(2% 62%, 24% 62%, 24% 91%, 2% 91%);
+  transform-origin: 19% 74%;
+  animation: voidling-bandage-lower 3.1s ease-in-out infinite;
+}
+.voidling-pet__orbit {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.voidling-pet__orb image {
+  filter: drop-shadow(0 0 9px rgba(165, 58, 255, 0.8));
+}
+.voidling-pet__orb--green image {
+  filter: hue-rotate(200deg) saturate(1.35) drop-shadow(0 0 10px #62ff4f);
+}
+.voidling-pet__orb--orange image {
+  filter: hue-rotate(110deg) saturate(1.6) drop-shadow(0 0 10px #ff9f32);
+}
+.animations-off .voidling-pet * {
+  animation-play-state: paused !important;
+}
+@keyframes voidling-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.008, 0.994);
+  }
+}
+@keyframes voidling-eyes {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: scale(0.98);
+    filter: blur(0.6px) drop-shadow(0 0 5px #9dff16);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.06);
+    filter: blur(0.3px) drop-shadow(0 0 13px #b4ff20);
+  }
+}
+@keyframes voidling-bandage-top {
+  0%,
+  100% {
+    transform: rotate(-0.5deg);
+  }
+  50% {
+    transform: rotate(1.8deg);
+  }
+}
+@keyframes voidling-bandage-left {
+  0%,
+  100% {
+    transform: rotate(0.4deg);
+  }
+  50% {
+    transform: rotate(-2deg) translateX(-0.5%);
+  }
+}
+@keyframes voidling-bandage-lower {
+  0%,
+  100% {
+    transform: rotate(-0.3deg);
+  }
+  50% {
+    transform: rotate(1.7deg) translateY(0.4%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .voidling-pet * {
+    animation: none !important;
+  }
+}

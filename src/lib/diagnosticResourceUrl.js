@@ -1,0 +1,1 @@
+export function diagnosticResourceUrl(target){for(const raw of [target?.currentSrc,target?.src,target?.href]){const value=typeof raw==='string'?raw:typeof raw?.baseVal==='string'?raw.baseVal:'';if(value)return value;}return ''; }

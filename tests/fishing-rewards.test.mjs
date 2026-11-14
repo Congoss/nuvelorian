@@ -2,6 +2,22 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { applyPlayerAction } from '../server/utils/playerActions.js';
 const kinds=['common','uncommon','rare','epic','mythic','legendary','black_hole'];
+test('only successful catches increment the permanent quest counter, once per cast',()=>{
+  const originalRandom=Math.random;
+  try {
+    for (const caught of [true,false]) {
+      Math.random=()=>caught ? 0 : 0.999;
+      const p={cosmo_fishing_caught_total:2,cosmo_fishing_cycle:{startAt:1,finishAt:2,hookStartAt:1,hookEndAt:2}};
+      applyPlayerAction(p,{type:'fishing-resolve'});
+      assert.equal(p.cosmo_fishing_caught_total,caught ? 3 : 2);
+      assert.throws(()=>applyPlayerAction(p,{type:'fishing-resolve'}));
+      if(caught) {
+        applyPlayerAction(p,{type:'fishing-exchange',rarity:p.cosmo_fishing_last_result.rarity});
+        assert.equal(p.cosmo_fishing_caught_total,3);
+      }
+    }
+  } finally { Math.random=originalRandom; }
+});
 test('fish exchanges grant new poison and energy rewards and consume fish once',()=>{
   for (const [rarity,expected] of [['uncommon',{energy:20}],['rare',{smallPoison:3}],['epic',{mediumPoison:2}],['legendary',{largePoison:3}],['black_hole',{smallPoison:8,mediumPoison:4,largePoison:2}]]) {
     const p={energy:1500,max_energy:100,cosmofish_inventory:{[rarity]:1}};

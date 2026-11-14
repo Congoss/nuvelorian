@@ -35,6 +35,6 @@ test('expired season grants nothing', () => {
   const player = {};
   recordBattlePassEvent(player, {type:'login'}, now);
   player.battle_pass.xp = 50 * BP_LEVEL_XP;
-  assert.throws(() => claimAllBattlePassRewards(player, Date.parse('2026-12-01')), /not active/);
+  assert.throws(() => claimAllBattlePassRewards(player, Date.parse('2026-12-02T00:00:00Z')), /not active/);
   assert.equal(player.premium, undefined);
 });

@@ -1,3 +1,6 @@
+import BugReportButton from './BugReportButton';
+import ProfileFramePicker from './ProfileFramePicker';
+import PlayerAchievements from './PlayerAchievements';
 import { translateUiText } from '@/lib/uiTextTranslations';
 import { useAnimationsEnabled, setAnimationsEnabled } from '@/lib/animationPreference';
 ﻿import { useState } from 'react';
@@ -5,7 +8,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { TonConnectButton, useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
-import { Bell, Copy, ExternalLink, Pencil, Trophy, X } from 'lucide-react';
+import { Bell, Copy, ExternalLink, Pencil, X } from 'lucide-react';
 import GameTextureButton from './GameTextureButton';
 import LootBoxModal from './LootBoxModal';
 import { getCARank, getCARankIcon, getPlayerCA } from '@/lib/caRanks';
@@ -15,6 +18,8 @@ import { clearLocalTesterTutorialState, getLocalTesterResetUpdates, isLocalTeste
 import { disconnectNearSession, getNearWalletConnector, signNearWalletProof, waitForNearWallet, setActiveNearAccount } from '@/lib/platform/nearWallet';
 import { createNearWalletProofChallenge, verifyNearWalletProof, disconnectNearWallet as unlinkNearWallet, disconnectTonWallet as unlinkTonWallet } from '@/services/gameApi';
 import { getTelegramSession } from '@/lib/platform/telegram';
+import {isWebPlatform} from '@/lib/platform/config';
+import {switchWebAccount} from '@/lib/platform/switchWebAccount';
 
 const LANGUAGES = [
   { id: 'en', label: 'EN' },
@@ -22,7 +27,7 @@ const LANGUAGES = [
   { id: 'uk', label: 'UA' },
 ];
 
-const ACHIEVEMENTS = Array.from({ length: 36 }, (_, index) => index);
+
 
 function TextureButton({ children, onClick, disabled = false, className = '', textClassName = 'text-[#17310d]' }) {
   return (
@@ -127,13 +132,7 @@ function LanguageFlag({ id }) {
   );
 }
 
-function AchievementCard() {
-  return (
-    <div className="flex aspect-square min-w-0 items-center justify-center rounded-[4px] border border-[#505050] bg-[linear-gradient(180deg,#303030_0%,#1b1b1b_100%)]">
-      <span className="select-none font-mono text-[26px] font-black leading-none text-[#929292]">?</span>
-    </div>
-  );
-}
+
 
 export default function ProfilePanel({ profile, user, onClose, onUpdateProfile, onSyncProfile }) {
   const animationsEnabled = useAnimationsEnabled();
@@ -305,6 +304,12 @@ export default function ProfilePanel({ profile, user, onClose, onUpdateProfile, 
       setNearConnecting(false);
       setNearDisconnecting(false);
     }
+  };
+  const changeWebAccount = async () => {
+    if(nearDisconnecting)return;
+    nearProofBusy.current?.abort?.();
+    setNearDisconnecting(true);setNearWalletError('');
+    try{await switchWebAccount();}catch(error){setNearWalletError(error.message);setNearDisconnecting(false);}
   };
 
   const disconnectTonWallet = async () => {
@@ -494,15 +499,14 @@ export default function ProfilePanel({ profile, user, onClose, onUpdateProfile, 
               <InfoRow label={t('profile.guild')} value={clanName} />
             </div>
           </div>
+          <ProfileFramePicker profile={profile} onUpdateProfile={onUpdateProfile} />
           <TextureButton onClick={openWebGame} disabled={webOpening} className="mt-3 w-full">
             <ExternalLink className="h-4 w-4" />
             {webOpening ? (profile?.language === 'ru' ? 'Открываем…' : profile?.language === 'en' ? 'Opening…' : 'Відкриваємо…') : t('profile.openWebGame')}
           </TextureButton>
           {webError ? <p role="alert" className="mt-1 font-mono text-[9px] font-black text-[#ff8978]">{webError}</p> : null}
           {nicknameError ? <p className="mt-1 font-mono text-[9px] font-black text-[#ff8978]">{nicknameError}</p> : null}
-          <TextureButton onClick={() => setAnimationsEnabled(!animationsEnabled)} className="mt-3 w-full" aria-pressed={animationsEnabled}>
-            {profile?.language === 'ru' ? 'АНИМАЦИИ' : profile?.language === 'en' ? 'ANIMATIONS' : 'АНІМАЦІЇ'}: {animationsEnabled ? 'ON' : 'OFF'}
-          </TextureButton>
+          <div className="mt-3 flex items-center gap-2"><BugReportButton language={profile?.language}/><button type="button" onClick={()=>setAnimationsEnabled(!animationsEnabled)} aria-pressed={animationsEnabled} title={profile?.language==='ru'?'Анимации':profile?.language==='en'?'Animations':'Анімації'} aria-label={profile?.language==='ru'?'Анимации':profile?.language==='en'?'Animations':'Анімації'} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border-2 border-black/60 text-lg font-black shadow-inner ${animationsEnabled?'bg-[#91bd2c] text-[#183107]':'bg-[#a23a31] text-[#ffe4ca]'}`}>{animationsEnabled?'▶':'Ⅱ'}</button></div>
           <div className="mt-3 rounded-[4px] border border-[#28ee90] bg-[#0b1009]/95 p-2">
             <div className="flex gap-2">
               <input
@@ -580,11 +584,12 @@ export default function ProfilePanel({ profile, user, onClose, onUpdateProfile, 
                   <NearLogo />
                   <span title={nearWalletId || undefined} className="min-w-0 truncate">{nearConnecting ? 'VERIFYING…' : nearProofRetry ? (profile?.language === 'ru' ? 'Повторить проверку' : profile?.language === 'en' ? 'Retry verification' : 'Повторити перевірку') : nearWalletId || 'CONNECT NEAR'}</span>
                 </TextureButton>
-                <button type="button" onClick={disconnectNearWallet} disabled={nearDisconnecting} className="mt-1 block w-full text-center font-mono text-[9px] text-[#8bb569] underline underline-offset-2 disabled:opacity-50">{nearDisconnecting ? '…' : 'Disconnect'}</button>
+                <button type="button" onClick={isWebPlatform&&!profile?.telegram_id?changeWebAccount:disconnectNearWallet} disabled={nearDisconnecting} className="mt-1 block w-full text-center font-mono text-[11px] text-[#8bb569] underline underline-offset-2 disabled:opacity-50">{nearDisconnecting ? '…' : isWebPlatform&&!profile?.telegram_id?(profile?.language==='ru'?'Сменить аккаунт':profile?.language==='en'?'Switch account':'Змінити акаунт'):'Disconnect'}</button>
                 </div>
               </div>
               {nearWalletError ? <p className="col-span-2 mt-1 font-mono text-[10px] text-[#ff9b88]">{nearWalletError}</p> : null}
               {tonWalletError ? <p className="col-span-2 mt-1 font-mono text-[10px] text-[#ff9b88]">{tonWalletError}</p> : null}
+              {isWebPlatform&&profile?.telegram_id&&<button type="button" onClick={changeWebAccount} disabled={nearDisconnecting} className="mt-2 w-full text-center font-mono text-[11px] text-[#b9dc81] underline disabled:opacity-50">{profile?.language==='ru'?'Выйти и сменить игровой аккаунт':profile?.language==='en'?'Sign out and switch game account':'Вийти та змінити ігровий акаунт'}</button>}
             </div>
           </div>
 
@@ -603,20 +608,7 @@ export default function ProfilePanel({ profile, user, onClose, onUpdateProfile, 
             {xError ? <p className="mt-2 font-mono text-[9px] font-bold text-[#ff8978]">{xError}</p> : null}
           </div>
 
-          <div className="mt-3">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="font-mono text-[9px] font-black uppercase tracking-[0.14em] text-[#9bd96b]">{t('profile.achievements')}</p>
-              <span className="flex items-center gap-1 rounded-full border border-[#28ee90] px-2 py-1 font-mono text-[8px] uppercase text-[#8bb569]">
-                <Trophy className="h-3 w-3" />
-                {t('profile.futureBonuses')}
-              </span>
-            </div>
-            <div className="grid grid-cols-6 gap-2">
-              {ACHIEVEMENTS.map((item) => (
-                <AchievementCard key={item} />
-              ))}
-            </div>
-          </div>
+          <PlayerAchievements profile={profile} language={activeLanguage} />
 
           <div className="mt-3 grid grid-cols-2 gap-2 pb-1">
             <DarkButton icon={Bell} label={t('profile.notifications')} sublabel={t('profile.later')} />

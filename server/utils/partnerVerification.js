@@ -8,8 +8,10 @@ export function parseVerifiablePartnerLink(link) {
   try { url = new URL(link); } catch { return null; }
   if (url.protocol !== 'https:' || url.port || url.username || url.password) return null;
   const parts = url.pathname.split('/').filter(Boolean);
-  if (parts.length !== 1 || url.search || url.hash) return null;
-  if (url.hostname === 't.me' && /^[a-zA-Z][a-zA-Z0-9_]{4,31}$/.test(parts[0])) return { type: 'telegram', handle: parts[0] };
+  if (url.search || url.hash) return null;
+  const telegramPath = parts.length === 1 || ((parts.length === 2 || parts.length === 3) && parts.slice(1).every(part => /^[1-9]\d*$/.test(part)));
+  if (url.hostname === 't.me' && telegramPath && /^[a-zA-Z][a-zA-Z0-9_]{4,31}$/.test(parts[0])) return { type: 'telegram', handle: parts[0] };
+  if (parts.length !== 1) return null;
   if (['x.com', 'twitter.com'].includes(url.hostname) && /^[a-zA-Z0-9_]{1,15}$/.test(parts[0])) return { type: 'x', handle: parts[0] };
   return null;
 }

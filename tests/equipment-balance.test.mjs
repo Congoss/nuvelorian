@@ -59,6 +59,14 @@ test('newbie II matches the first set, and unknown gear retains its own bonuses'
   assert.equal(applyEquipmentEffectsToWeapon({ id: 'fist', damage: 100 }, { equipped_items: { pet: 'custom-pet' }, inventory_items: [{ id: 'custom-pet', slot: 'pet', bonuses: [{ type: 'finger_damage_pct', value: .1 }] }] }).damage, 110);
 });
 
+test('equipped enhancement adds poison damage from the base value only', () => {
+  const profile={equipped_items:{weapon:'enhanced'},inventory_items:[{id:'enhanced',slot:'weapon',enhancementLevel:10,bonuses:[]}]};
+  assert.equal(calculateEquipmentEffects(profile).effects.poisonDamagePct,.1);
+  assert.equal(applyEquipmentEffectsToWeapon({id:'satchel',damage:100},profile).damage,110);
+  assert.equal(applyEquipmentEffectsToWeapon({id:'fist',damage:100},profile).damage,100);
+  assert.equal(applyEquipmentEffectsToWeapon({id:'satchel',damage:100},profile).damage,110);
+});
+
 test('Epic BP grants each agreed slot bonus and keeps the raven cosmetic', async () => {
   const { EPIC_BP_ITEMS } = await import('../src/lib/epicBattlePassSet.js');
   const expected = { armor: ['finger_damage_flat',25], weapon: ['pencil_damage_flat',20], hands: ['poison_damage_flat',35], head: ['boss_damage_flat',15], legs: ['finger_cooldown_sec',-20], boots: ['pencil_cooldown_sec',-30] };

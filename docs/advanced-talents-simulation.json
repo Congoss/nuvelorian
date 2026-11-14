@@ -1,0 +1,55 @@
+{
+  "seed": 1897,
+  "iterations": 2000,
+  "note": "Comparison scenario only: low HP Shkraban, bleeding, initial marks 5/15; new build starts with an open breach, old faces armor. Not a release balance certification.",
+  "rows": [
+    {
+      "gear": "none",
+      "version": "old",
+      "count": 1,
+      "meanDirectDamage": 3810
+    },
+    {
+      "gear": "none",
+      "version": "old",
+      "count": 100,
+      "meanDirectDamage": 127379
+    },
+    {
+      "gear": "none",
+      "version": "new",
+      "count": 1,
+      "meanDirectDamage": 8231
+    },
+    {
+      "gear": "none",
+      "version": "new",
+      "count": 100,
+      "meanDirectDamage": 208894
+    },
+    {
+      "gear": "anubis",
+      "version": "old",
+      "count": 1,
+      "meanDirectDamage": 5195
+    },
+    {
+      "gear": "anubis",
+      "version": "old",
+      "count": 100,
+      "meanDirectDamage": 264782
+    },
+    {
+      "gear": "anubis",
+      "version": "new",
+      "count": 1,
+      "meanDirectDamage": 10825
+    },
+    {
+      "gear": "anubis",
+      "version": "new",
+      "count": 100,
+      "meanDirectDamage": 434639
+    }
+  ]
+}

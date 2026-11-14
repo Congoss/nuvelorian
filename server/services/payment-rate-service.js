@@ -24,6 +24,7 @@ function normalizeRates(payload = {}) {
 async function fetchRatesFromCoinGecko(fetchImpl = fetch) {
   const response = await fetchImpl('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network,near&vs_currencies=usd', {
     headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(8000),
   });
   if (!response.ok) {
     throw new Error(`Rate fetch failed with status ${response.status}`);

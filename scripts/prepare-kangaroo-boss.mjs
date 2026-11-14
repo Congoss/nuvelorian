@@ -1,0 +1,50 @@
+import {lightenKangarooScene} from './lib/kangaroo-light-runtime.mjs';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import sharp from 'sharp';
+const root=process.cwd(),source=path.join(root,'output/kangaroo-boss-layers'),target=path.join(root,'public/ship-kangaroo-boss');
+await fs.mkdir(target,{recursive:true});
+const assets=['boss','background','body-underpaint','glove-right-cut','can-underpaint','eye-whites-mask','background-clear','tumbleweed','sun-mask','background-rocks','whole-cloud-1','whole-cloud-2','whole-cloud-3'];
+for(const name of assets)await sharp(path.join(source,name+'.png')).webp({quality:94,alphaQuality:100,effort:5}).toFile(path.join(target,name+'.webp'));
+await fs.copyFile(path.join(source,'clouds.json'),path.join(target,'clouds.json'));
+let scene=await fs.readFile(path.join(source,'rig.js'),'utf8');
+scene=scene.replace(/background-animation\.js\?v=\d+/, 'background-animation.js?v=1').replaceAll('.png','.webp');
+scene=scene.replace("canvas.addEventListener('pointerdown',hit);",'');
+// Combat viewport uses cover-fit scenery; reduce only the character to leave headroom.
+scene=scene.replace('function present(drop,t,amount){',`function present(drop,t,amount){
+ const bossScale=.84,fit=([x,y])=>[W/2+(x-W/2)*bossScale,920+(y-920)*bossScale];`);
+scene=scene.replace('display.drawImage(sprite,0,0,W,1030,shake,drop,W,1030);','const origin=fit([shake,drop]);display.drawImage(sprite,0,0,W,1030,origin[0],origin[1],W*bossScale,1030*bossScale);');
+scene=scene.replace('return [x+shake+Math.sin','return fit([x+shake+Math.sin').replace('tail*amount];};','tail*amount]);};');
+scene=scene.replace('let paused=matchMedia', 'let sceneAlive=true;\nlet paused=matchMedia');
+scene=scene.replace('if(!paused&&!document.hidden)t+=','if(!paused&&sceneAlive&&!document.hidden)t+=');
+const frameStart=scene.indexOf('function frame(now)');
+scene=scene.slice(0,frameStart)+`let lastDraw=-Infinity;
+function frame(now){if(!paused&&sceneAlive&&!document.hidden)time+=Math.min((now-last)/1000,.05);last=now;if(!document.hidden&&now-lastDraw>=1000/30){draw(time);lastDraw=now;}requestAnimationFrame(frame);}requestAnimationFrame(frame);
+window.addEventListener('message',event=>{
+ if(event.source!==window.parent||event.origin!==location.origin||event.data?.type!=='planet4:kangaroo-state')return;
+ sceneAlive=event.data.alive!==false;
+ if(event.data.hit&&sceneAlive)hit();
+});
+draw(time);
+requestAnimationFrame(()=>window.parent.postMessage({type:'planet4:kangaroo-ready'},location.origin));
+`;
+scene=scene.replace(/const load=async src=>\{[^\n]+\};/,"const images=new Map();\nconst load=src=>{if(!images.has(src))images.set(src,(async()=>{const im=new Image();im.src=src;await im.decode();return im;})());return images.get(src);};\n// Start independent requests together instead of waiting through each rig stage.\nfor(const src of ['boss.webp','background.webp','body-underpaint.webp','can-underpaint.webp','glove-right-cut.webp?v=2','eye-whites-mask.webp','background-clear.webp','tumbleweed.webp','sun-mask.webp','background-rocks.webp','whole-cloud-1.webp','whole-cloud-2.webp','whole-cloud-3.webp'])void load(src).catch(()=>{});");
+scene=scene.replace('background-animation.js?v=1','background-animation.js?v=2');
+scene=scene.replace('const drawBackground=await createBackgroundAnimator(load,bg);',"let drawBackground=(ctx)=>ctx.drawImage(bg,0,0,W,H);\ncreateBackgroundAnimator(load,bg).then(draw=>{drawBackground=draw;}).catch(error=>console.warn('Background effects unavailable',error));");
+scene=lightenKangarooScene(scene);
+await fs.writeFile(path.join(target,'scene.js'),scene);
+let background=await fs.readFile(path.join(source,'background-animation.js'),'utf8');
+background=background.replace('../../src/lib/weaponPlasmaField.js','./weapon-plasma-field.js').replaceAll('.png','.webp');
+background=background.replace('const [clear,tumbleweed,sunMask,rocks]=await Promise.all(', 'const assets=Promise.all(').replace("const clouds=await Promise.all(descriptors.map(async c=>({...c,image:await load(c.id+'.webp')})));", "const [[clear,tumbleweed,sunMask,rocks],clouds]=await Promise.all([assets,Promise.all(descriptors.map(async c=>({...c,image:await load(c.id+'.webp')})))]);");
+const signStart=background.indexOf('const sign=new Path2D('),signEnd=background.indexOf(';ctx.clip(sign)',signStart);
+if(signStart>=0&&signEnd>signStart){const sign=background.slice(signStart,signEnd)+';';background=background.slice(0,signStart)+background.slice(signEnd+1);background=background.replace(' const foreground=new Path2D(', ' '+sign+'\n const foreground=new Path2D(');}
+await fs.writeFile(path.join(target,'background-animation.js'),background);
+await fs.copyFile(path.join(root,'src/lib/weaponPlasmaField.js'),path.join(target,'weapon-plasma-field.js'));
+await fs.writeFile(path.join(target,'scene.html'),`<!doctype html><html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#263b32}img,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}#controls{display:none}</style><img src="scene-still.webp" alt=""><canvas id="scene"></canvas><div id="controls"><button id="pause"></button><button id="original"></button><input id="strength" value="1"><span id="status"></span></div><script>addEventListener('error',e=>parent.postMessage({type:'planet4:kangaroo-error',message:e.message||'Scene resource failed'},location.origin));addEventListener('unhandledrejection',e=>parent.postMessage({type:'planet4:kangaroo-error',message:String(e.reason?.message||e.reason)},location.origin));</script><script type="module" src="scene.js?v=9"></script></html>`);
+const backdrop=await sharp(path.join(source,'background-clear.png')).resize(941,1672).png().toBuffer();
+const boss=await sharp(path.join(source,'boss.png')).resize(941,1672).png().toBuffer();
+const still=await sharp(backdrop).composite([{input:boss}]).png().toBuffer();
+const smallerBoss=await sharp(boss).resize(Math.round(941*.84),Math.round(1672*.84)).png().toBuffer();
+await sharp(backdrop).composite([{input:smallerBoss,left:Math.round(941*.08),top:Math.round(920*.16)}]).webp({quality:90}).toFile(path.join(target,'scene-still.webp'));
+await sharp(still).extract({left:90,top:60,width:740,height:960}).resize(160,190,{fit:'cover'}).webp({quality:92}).toFile(path.join(target,'portrait-card.webp'));
+console.log('Prepared kangaroo boss runtime, portrait and production assets.');

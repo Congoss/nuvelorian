@@ -12,6 +12,7 @@ async function telegramBotRequest(method, payload) {
   const token = assertBotToken();
   const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
     method: 'POST',
+    signal: AbortSignal.timeout(8000),
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload || {}),
   });

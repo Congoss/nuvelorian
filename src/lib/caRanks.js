@@ -15,6 +15,11 @@ import rank13 from '@/assets/hero/rangs/ca_rank_13_galaxy_devourer.png';
 import rank14 from '@/assets/hero/rangs/ca_rank_14_multiverse_glitch.png';
 import rank15 from '@/assets/hero/rangs/ca_rank_15_beyond_the_edge.png';
 
+import rank16 from '@/assets/hero/rangs/ca_rank_16_copper_allseer.png';
+import rank17 from '@/assets/hero/rangs/ca_rank_17_short_circuit.png';
+import rank18 from '@/assets/hero/rangs/ca_rank_18_pink_apocalypse.png';
+import rank19 from '@/assets/hero/rangs/ca_rank_19_crimson_raven.png';
+
 const RANK_ICONS = {
   'ca_rank_01_null_sample.png': rank01,
   'ca_rank_02_sigma_trace.png': rank02,
@@ -31,6 +36,10 @@ const RANK_ICONS = {
   'ca_rank_13_galaxy_devourer.png': rank13,
   'ca_rank_14_multiverse_glitch.png': rank14,
   'ca_rank_15_beyond_the_edge.png': rank15,
+  'ca_rank_16_copper_allseer.png': rank16,
+  'ca_rank_17_short_circuit.png': rank17,
+  'ca_rank_18_pink_apocalypse.png': rank18,
+  'ca_rank_19_crimson_raven.png': rank19,
 };
 
 export { CA_RANKS };

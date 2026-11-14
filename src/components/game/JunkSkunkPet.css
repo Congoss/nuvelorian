@@ -1,0 +1,14 @@
+.junk-skunk-pet{overflow:visible}
+.junk-skunk-breathe{transform-origin:110px 847px;animation:junk-skunk-breathe 3.7s ease-in-out infinite}
+.junk-skunk-tail{transform-origin:176px 790px;animation:junk-skunk-tail 5.6s ease-in-out infinite}
+@keyframes junk-skunk-breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.012)}}
+@keyframes junk-skunk-tail{0%,55%,100%{transform:rotate(0)}66%{transform:rotate(-4deg)}77%{transform:rotate(3deg)}88%{transform:rotate(-2deg)}}
+html[data-game-hidden="true"] .junk-skunk-pet *,html[data-animations-off="true"] .junk-skunk-pet *,[data-modal-open="true"] .animated-camp-scene .junk-skunk-pet *,.preview-paused .junk-skunk-pet *{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){.junk-skunk-pet *{animation:none!important}}
+.junk-skunk-pupils{animation:junk-skunk-look 9s ease-in-out infinite}
+.junk-skunk-lids{transform-box:fill-box;transform-origin:center;transform:scaleY(0);animation:junk-skunk-blink 6.7s ease-in-out infinite}
+.junk-skunk-puff{opacity:0;transform-origin:190px 790px;animation:junk-skunk-puff 11s ease-out var(--puff-delay) infinite}
+@keyframes junk-skunk-look{0%,18%,100%{transform:translate(0,0)}28%,43%{transform:translate(3px,1px)}57%,70%{transform:translate(-3px,-1px)}82%,90%{transform:translate(1px,-2px)}}
+@keyframes junk-skunk-blink{0%,34%,39%,72%,77%,100%{transform:scaleY(0)}36%,37%,74%,75%{transform:scaleY(1)}}
+@keyframes junk-skunk-puff{0%,62%{opacity:0;transform:translate(0,0) scale(.35)}65%{opacity:.75}73%{opacity:.5;transform:translate(42px,var(--puff-y)) scale(1.35)}88%,100%{opacity:0;transform:translate(95px,calc(var(--puff-y) - 20px)) scale(2)}}
+@media(prefers-reduced-motion:reduce){.junk-skunk-lids,.junk-skunk-puff{display:none}.junk-skunk-pupils{transform:none}}

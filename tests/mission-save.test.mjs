@@ -38,3 +38,39 @@ test('GO saves only the acting player and duplicate request cannot spend twice',
     await new Promise(resolve => app.close(resolve));
   }
 });
+
+test('MAX completes a quest bar once with one request while database writes are blocked', async () => {
+  store.players = playerDb.attachPlayers([{ id: 'batch-mission-player', telegram_id: '90103',
+    created_by: 'telegram_90103@miniapp.local', energy: 1160, max_energy: 130,
+    last_energy_update: new Date().toISOString(), level: 11, xp: 0 }]);
+  const originalFlush = playerDb.flushDirtyPlayers;
+  let unblock;
+  const blocked = new Promise(resolve => { unblock = resolve; });
+  playerDb.flushDirtyPlayers = () => blocked;
+  const app = createApp();
+  await new Promise(resolve => app.listen(0, '127.0.0.1', resolve));
+  const body = { task: { id: 'p4-u00-scout', locationId: 'p4-u00' }, count: 4, requestId: 'batch-mission-retry-1' };
+  const send = value => fetch(`http://127.0.0.1:${app.address().port}/players/batch-mission-player/tasks/complete`, {
+    method: 'POST', headers: { 'x-telegram-user-id': '90103', 'content-type': 'application/json' },
+    body: JSON.stringify(value), signal: AbortSignal.timeout(2000),
+  });
+  try {
+    for (const count of [0, -1, 1.5, '4', 5, 21]) {
+      assert.equal((await send({ ...body, count })).status, 400);
+    }
+    assert.equal(store.players[0].energy, 1160);
+    const response = await send(body);
+    assert.equal(response.status, 200);
+    const result = (await response.json()).data;
+    assert.equal(result.completedCount, 4);
+    assert.equal(result.questProgress, 4);
+    assert.equal(result.spentEnergy, 12);
+    assert.equal(result.player.energy, 1148);
+    const retry = (await (await send(body)).json()).data;
+    assert.equal(retry.player.energy, 1148);
+    assert.equal(retry.questProgress, 4);
+  } finally {
+    unblock(); playerDb.flushDirtyPlayers = originalFlush;
+    await new Promise(resolve => app.close(resolve));
+  }
+});

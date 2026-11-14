@@ -1,0 +1,2 @@
+Built-in image_gen; transparent alpha.
+Prompt: Original funny overcrowded Planet4 junk planet, not Earth. Blue-purple rocky globe with moss patches and cyan atmosphere rim; three clear features: crooked scrap shack with TV antenna, battered orange rocket stuck nose-first in the side, sly grin-shaped crater with uneven eye-like craters. Small broken satellite and two tin cans in orbit. Hand-painted comic RPG game art, dark contours, worn texture, crisp cel shading, readable at 320px. Whole globe visible, transparent padding, no text, no real continents, no sky or backdrop.

@@ -1,0 +1,12 @@
+Built-in image_gen, transparent_background=true. Edit target/reference: ../pet-haunted-toaster.png.
+Four separate calls, all preserving reference perspective, worn dark teal/copper paint, illustrated ink texture and transparent background:
+1 body: only complete toaster chassis, glowing face, lever, ghost charms and power cord. Remove bread, smoke and both legs; reconstruct empty slot and hidden underside.
+2 bread: only skull-faced burnt bread slice; restore its hidden lower third so the whole slice can retract. No toaster, smoke, legs or cord.
+3 smoke: only one reference-shaped violet spectral plume, translucent lavender edges, deep purple center; no bread, body or face.
+4 legs: only both original mechanical legs and claw feet, with hidden shin overlap and transparent gap. No body, bread, smoke or cord.
+All parts centered with safe transparent padding, no redesign, background, floor, checkerboard, exterior shadow, labels, atlases or animation frames.
+Original PNG outputs are retained unmodified. SVG rig uses measured alpha bounds and source viewBoxes for alignment.
+
+Additional built-in image_gen edits, transparent_background=true, reference body.png:
+5 body-no-lever: remove ONLY viewer-right rectangular lever handle, preserve vertical track and reconstruct panel. Turn eye lenses dark amber/charcoal, preserving their texture and sockets. Preserve exact full body framing, silhouette, perspective, charms, cable, plug and empty bread slot.
+6 lever: isolate only the viewer-right rectangular rusty copper thumb paddle with short dark left attachment stem; matching perspective and painted texture, transparent padding, no panel, eyes, cord, background or floor.

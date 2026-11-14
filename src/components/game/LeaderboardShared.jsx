@@ -1,4 +1,7 @@
+import { PROFILE_HEADER_THEMES } from '@/lib/profileHeaderThemes';
+import { useLocalProfileHeaderSkin } from '@/lib/localProfileHeaderSkin';
 import AvatarWithFrame from '@/components/game/AvatarWithFrame';
+import './leaderboardBackground.css';
 import PlayerName from '@/components/game/PlayerName';
 import heroIcon from '@/assets/optimized/nav-hero.webp';
 import goldMedal from '@/assets/boss-ui/gold-medal.png';
@@ -88,18 +91,18 @@ export function LeaderboardBadgePill({ label, icon = null, tone = 'green', class
   );
 }
 
-export function LeaderboardValuePill({ value, icon = null, className = '', compact = false }) {
-  if (compact) return <div className={`relative h-9 min-w-[88px] ${className}`}><div className={`absolute inset-y-[6px] right-0 border border-[#28ee90] bg-[#10170d] ${icon ? 'left-[16px]' : 'left-0'}`} />{icon ? <img src={icon} alt="" aria-hidden="true" className="absolute left-0 top-0 z-[2] h-9 w-9 object-contain" /> : null}<span className={`absolute inset-y-[6px] right-0 z-[3] flex min-w-[46px] items-center justify-center px-1.5 font-mono text-[11px] font-black leading-none text-[#fff5ba] ${icon ? 'left-[30px]' : 'left-0'}`}>{formatValue(value)}</span></div>;
+export function LeaderboardValuePill({ value, icon = null, className = '', compact = false, valueFormatter = formatValue }) {
   return (
-    <div className={`relative h-11 min-w-[108px] ${className}`}>
-      <div className={`absolute inset-y-[8px] right-0 border border-[#28ee90] bg-[#10170d] ${icon ? 'left-[20px]' : 'left-0'}`} />
-      {icon ? <img src={icon} alt="" aria-hidden="true" className="absolute left-0 top-0 z-[2] h-[44px] w-[44px] object-contain" /> : null}
-      <span className={`absolute inset-y-[8px] right-0 z-[3] flex min-w-[52px] items-center justify-center px-2 font-mono text-[12px] font-black leading-none text-[#fff5ba] ${icon ? 'left-[38px]' : 'left-0'}`}>{formatValue(value)}</span>
+    <div className={`relative flex shrink-0 items-center ${compact ? 'h-9 min-w-[88px]' : 'h-11 min-w-[108px]'} ${className}`}>
+      <div className={`pointer-events-none absolute right-0 rounded-full bg-[radial-gradient(ellipse,rgba(5,10,8,0.86)_25%,rgba(5,10,8,0.55)_60%,transparent_80%)] ${compact ? 'inset-y-[4px]' : 'inset-y-[6px]'} ${icon ? (compact ? 'left-[12px]' : 'left-[16px]') : 'left-0'}`} />
+      {icon ? <img src={icon} alt="" aria-hidden="true" className={`relative z-[2] shrink-0 object-contain ${compact ? 'h-9 w-9' : 'h-11 w-11'}`} /> : null}
+      <span className={`relative z-[3] flex flex-1 items-center justify-center whitespace-nowrap px-2 font-mono font-black leading-none text-[#fff5ba] ${compact ? 'text-[11px]' : 'text-[12px]'}`}>{valueFormatter(value)}</span>
     </div>
   );
 }
 
 export function LeaderboardRow({
+  previewHeaderSkin = false,
   rank,
   mediaKind = 'avatar',
   mediaSrc = null,
@@ -107,6 +110,7 @@ export function LeaderboardRow({
   mediaText = '',
   title,
   titlePlayer = null,
+  clanHeaderTheme = null,
   subtitle = '',
   badges = [],
   rightNode = null,
@@ -120,8 +124,15 @@ export function LeaderboardRow({
   titleClassName = '',
   subtitleClassName = '',
 }) {
+  const headerSkin = useLocalProfileHeaderSkin(titlePlayer?.id);
+  const equippedTheme = Object.hasOwn(PROFILE_HEADER_THEMES, titlePlayer?.profile_header_theme) ? titlePlayer.profile_header_theme : null;
+  const previewTheme = import.meta.env.DEV && previewHeaderSkin ? (typeof previewHeaderSkin === 'string' ? previewHeaderSkin : 'heli') : null;
+  const theme = clanHeaderTheme?.startsWith('friday13_guild_') ? clanHeaderTheme : previewTheme || (equippedTheme?.startsWith('friday13_guild_') ? null : equippedTheme);
+  const hasHeaderSkin = Boolean(theme || headerSkin.hasEquipped);
+  const headerBackground = theme ? <ProfileHeaderSkinPreview bossId={theme}/> : <ProfileHeaderSkin ownerId={titlePlayer?.id}/>;
   if (rightActions) return (
-    <div className={`relative flex w-full min-w-0 items-center gap-1 rounded-none border border-[#28ee90] px-2 py-1.5 ${selected ? 'bg-[#162811]' : 'bg-[#090d09]'} ${className}`}>
+    <div data-ranking-row="true" className={`${hasHeaderSkin ? 'gold-ranking-row' : ''} relative isolate overflow-hidden [&>*:not([aria-hidden])]:relative [&>*:not([aria-hidden])]:z-10 flex w-full min-w-0 items-center gap-1 rounded-none border ${hasHeaderSkin ? 'border-transparent' : 'border-[#28ee90]'} px-2 py-1.5 ${selected ? 'bg-[#162811]' : 'bg-[#090d09]'} ${className}`}>
+      {headerBackground}
       <button type="button" onClick={onClick || undefined} disabled={!onClick} className="flex min-w-0 flex-1 items-center gap-2 text-left">
         {showRankBadge && <LeaderboardRankBadge rank={rank} compact={compactRank} />}
         <LeaderboardMedia mediaKind={mediaKind} mediaSrc={mediaSrc} mediaFrameId={mediaFrameId} mediaText={mediaText} compact={compactRank} />
@@ -134,11 +145,13 @@ export function LeaderboardRow({
     return (
       <button
         type="button"
+        data-ranking-row="true"
         onClick={onClick}
-      className={`relative flex w-full min-w-0 items-center ${compactRank ? 'gap-2 px-2 py-1.5' : 'gap-3 px-3 py-2.5'} rounded-none border border-[#28ee90] text-left transition ${
+      className={`${hasHeaderSkin ? 'gold-ranking-row' : ''} relative isolate overflow-hidden [&>*:not([aria-hidden])]:relative [&>*:not([aria-hidden])]:z-10 flex w-full min-w-0 items-center ${compactRank ? 'gap-2 px-2 py-1.5' : 'gap-3 px-3 py-2.5'} rounded-none border ${hasHeaderSkin ? 'border-transparent' : 'border-[#28ee90]'} text-left transition ${
           selected ? 'bg-[#162811]' : 'bg-[#090d09] hover:bg-[#101710]'
         } ${className}`}
       >
+        {headerBackground}
         {showRankBadge ? <LeaderboardRankBadge rank={rank} compact={compactRank} /> : null}
         <LeaderboardMedia mediaKind={mediaKind} mediaSrc={mediaSrc} mediaFrameId={mediaFrameId} mediaText={mediaText} compact={compactRank} />
         <div className="min-w-0 flex-1">
@@ -163,10 +176,12 @@ export function LeaderboardRow({
 
   return (
     <div
-      className={`relative flex w-full min-w-0 items-center ${compactRank ? 'gap-2 px-2 py-1.5' : 'gap-3 px-3 py-2.5'} rounded-none border border-[#28ee90] text-left transition ${
+      data-ranking-row="true"
+      className={`${hasHeaderSkin ? 'gold-ranking-row' : ''} relative isolate overflow-hidden [&>*:not([aria-hidden])]:relative [&>*:not([aria-hidden])]:z-10 flex w-full min-w-0 items-center ${compactRank ? 'gap-2 px-2 py-1.5' : 'gap-3 px-3 py-2.5'} rounded-none border ${hasHeaderSkin ? 'border-transparent' : 'border-[#28ee90]'} text-left transition ${
         selected ? 'bg-[#162811]' : 'bg-[#090d09] hover:bg-[#101710]'
       } ${className}`}
     >
+      {headerBackground}
       {showRankBadge ? <LeaderboardRankBadge rank={rank} compact={compactRank} /> : null}
       <LeaderboardMedia mediaKind={mediaKind} mediaSrc={mediaSrc} mediaFrameId={mediaFrameId} mediaText={mediaText} compact={compactRank} />
       <div className="min-w-0 flex-1">
@@ -189,7 +204,7 @@ export function LeaderboardRow({
   );
 }
 
-function LeaderboardPodiumCard({ rank, row, value, valueIcon = null, compact = false, onOpenPlayerProfile = null }) {
+function LeaderboardPodiumCard({ rank, row, value, valueIcon = null, compact = false, onOpenPlayerProfile = null, valueFormatter }) {
   const mediaKind = row?.mediaKind || 'avatar';
   const isFirst = rank === 1;
   const onClick = row?.onClick || (row?.titlePlayer?.id ? () => onOpenPlayerProfile?.(row.titlePlayer) : null);
@@ -199,7 +214,7 @@ function LeaderboardPodiumCard({ rank, row, value, valueIcon = null, compact = f
         <img src={PODIUM_BANNERS[rank]} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain" />
         <div className="absolute inset-x-[12%] top-[14%] z-[3] flex items-center justify-center gap-1 text-[#fff9d8] [text-shadow:0_2px_0_rgba(0,0,0,0.9)]">
           {valueIcon ? <img src={valueIcon} alt="" aria-hidden="true" className="h-5 w-5 object-contain sm:h-6 sm:w-6" /> : null}
-          <span className="font-mono text-[11px] font-black leading-none sm:text-[12px]">{formatValue(value)}</span>
+          <span className="font-mono text-[11px] font-black leading-none sm:text-[12px]">{valueFormatter(value)}</span>
         </div>
         <div className="absolute inset-x-0 top-[24%] flex justify-center">
           <LeaderboardMedia
@@ -220,7 +235,7 @@ function LeaderboardPodiumCard({ rank, row, value, valueIcon = null, compact = f
   );
 }
 
-export function LeaderboardPodium({ rows = [], getRowLabel = (rank) => `Top ${rank}`, getRowValue = (row) => row?.value || 0, getRowValueIcon = (row) => row?.valueIcon || null, compact = false, onOpenPlayerProfile = null }) {
+export function LeaderboardPodium({ rows = [], getRowLabel = (rank) => `Top ${rank}`, getRowValue = (row) => row?.value || 0, getRowValueIcon = (row) => row?.valueIcon || null, compact = false, onOpenPlayerProfile = null, valueFormatter = formatValue }) {
   const top = rows.slice(0, 3);
   const podiumRows = [
     { rank: 2, row: top[1] },
@@ -237,6 +252,7 @@ export function LeaderboardPodium({ rows = [], getRowLabel = (rank) => `Top ${ra
           row={row}
           label={getRowLabel(rank, row)}
           value={getRowValue(row)}
+          valueFormatter={valueFormatter}
           valueIcon={getRowValueIcon(row)}
           onOpenPlayerProfile={onOpenPlayerProfile}
         />
@@ -244,3 +260,5 @@ export function LeaderboardPodium({ rows = [], getRowLabel = (rank) => `Top ${ra
     </div>
   );
 }
+import ProfileHeaderSkin from './ProfileHeaderSkin';
+import ProfileHeaderSkinPreview from './ProfileHeaderSkinPreview';

@@ -106,12 +106,12 @@
     "claimed": "Забрано",
     "friends_list": "Запрошені друзі",
     "rewards_title": "Реферальні нагороди",
-    "reward_line": "{{count}} active friend: {{reward}}",
+    "reward_line": "{{count}} друзів 20 рівня: {{reward}}",
     "no_friends": "Ще немає запрошених друзів",
-    "friend_status_joined": "joined",
-    "friend_status_active": "active",
-    "friend_status_reward_ready": "reward_ready",
-    "friend_status_claimed": "claimed"
+    "friend_status_joined": "1 рівень · ще не зараховано",
+    "friend_status_active": "качається до 20 рівня",
+    "friend_status_reward_ready": "20 рівень · скриня готова",
+    "friend_status_claimed": "зараховано · отримано"
   },
   "chat_panel": {
     "clan_tab": "Клан",
@@ -168,7 +168,7 @@
     "codeUsed": "Цей код вже активовано",
     "activated": "Активовано",
     "walletLink": "Підключення гаманця",
-    "walletStatus": "TON live / NEAR скоро",
+    "walletStatus": "Гаманці TON та NEAR",
     "nearSoon": "NEAR скоро",
     "achievements": "Досягнення",
     "futureBonuses": "майбутні бонуси",
@@ -437,7 +437,7 @@
     "season": "СЕЗОН 01 · 28 ДНІВ",
     "season_title": "ШЛЯХ ВИЖИВАННЯ",
     "season_subtitle": "50 рівнів. Твоя історія.",
-    "season_art": "АРТ СЕЗОНУ · ЗАГЛУШКА",
+    "season_art": "АРТ СЕЗОНУ",
     "level": "РІВЕНЬ {{level}}",
     "days_left": "{{days}} дн. до кінця",
     "inactive": "Сезон неактивний",
@@ -448,8 +448,8 @@
     "loading": "Завантаження сезону…",
     "tasks_aria": "Завдання Battle Pass",
     "tasks_title": "ЗАВДАННЯ BATTLE PASS",
-    "tasks_hint": "XP зараховується автоматично. Щоденні — 00:00 UTC, тижневі — понеділок 00:00 UTC.",
-    "boss_victory_xp": "10–30 XP за перемогу · до 3/день · власнику бою",
+    "tasks_hint": "XP зараховується автоматично. Щоденні завдання скидаються о 00:00 за Києвом, тижневі — на початку нового тижня сезону.",
+    "boss_victory_xp": "10–30 XP за перемогу · до 3/день · власнику бою · корабельний бос — учасникам",
     "done": "Виконано",
     "claim": "Забрати",
     "claimed": "отримано",
@@ -469,6 +469,7 @@
       "season": "Сезонні · 1 800 XP"
     },
     "rewards": {
+      "spin": "Спіни",
       "epic_background": "Епічний фон",
       "legendary_background": "Легендарний фон",
       "dm": "tentacles",
@@ -484,7 +485,7 @@
       "head": "Головний убір",
       "weapon": "Зброя",
       "animated": "Анімація",
-      "pet": "Пет сезону",
+      "pet": "Пустотник",
       "legendary_boots": "Легендарне взуття",
       "legendary_legs": "Легендарні штани",
       "legendary_hands": "Легендарні рукавички",
@@ -538,7 +539,7 @@
     "ok": "ОК",
     "used": "Використано",
     "ton_wallet": "TON Wallet",
-    "ton_wallet_desc": "Офіційний TonConnect UI вже працює. Backend зберігає прив’язаний гаманець і proof-session для наступного кроку перевірки.",
+    "ton_wallet_desc": "Підключіть TON-гаманець для доступних операцій із гаманцем.",
     "connected": "підключено",
     "not_linked": "не підключено",
     "loading_wallet_state": "Завантаження стану гаманця...",
@@ -571,7 +572,7 @@
   "talentTree": {
     "title": "ТАЛАНТИ",
     "tree": "ВЕРТИКАЛЬНЕ ДЕРЕВО",
-    "progress": "До наступного очка: {{current}}/{{goal}} · витрачено: {{spent}}",
+    "progress": "Шкода отрутами: {{current}}/{{goal}} · витрачено: {{spent}}",
     "progressHintLabel": "Пояснення шкали талантів",
     "progressHint": "Шкала талантів показує прогрес до наступного рівня. Заповнюй її в бою, отримуй очки талантів і витрачай їх у вкладці «Таланти», щоб посилювати героя.",
     "sector": "СЕКТОР {{id}} · {{name}}",
@@ -589,7 +590,7 @@
     "unlockPointsProgress": "Витрачено очок: {{spent}}/{{points}}",
     "upgrade": "Покращити {{name}}",
     "level": "Рівень: {{level}}/{{max}}",
-    "nextLevel": "Наступний рівень: {{level}}/{{max}} · ціна 1 ★",
+    "nextLevel": "Наступний рівень: {{level}}/{{max}} · ціна {{cost}} ★",
     "maxLevel": "Максимальний рівень",
     "requirements": "Вимоги: {{requirements}}",
     "none": "немає",
@@ -781,7 +782,7 @@
       },
       "t47": {
         "name": "Довгий бій",
-        "description": "Час активності кланового боса +30 хвилин."
+        "description": "Кожен рівень додає 30 хвилин до ваших боїв із босами, зокрема поточного. Рейдбоси не подовжуються."
       },
       "t48": {
         "name": "Перехопити дух",
@@ -836,5 +837,8 @@
         "description": "Якщо бос кровоточить і має 5 токсичних марок, усі атаки завдають на 20 більше шкоди за рівень. Фляга з отрутою після удару витрачає марки."
       }
     }
+  },
+  "common": {
+    "close": "Закрити"
   }
 }

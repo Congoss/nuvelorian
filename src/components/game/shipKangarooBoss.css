@@ -1,0 +1,16 @@
+.kangaroo-arena{position:absolute;inset:0;overflow:hidden;background:#263b32;pointer-events:none}
+.kangaroo-art{position:absolute;inset:0;width:100%;height:100%}
+.kangaroo-idle{animation:kangaroo-breathe 3.9s ease-in-out infinite}
+.kangaroo-part{transform-box:view-box;animation:kangaroo-sway 3.9s ease-in-out infinite alternate}
+.kangaroo-ear-left{--turn:5.15deg}.kangaroo-ear-right{--turn:-3.15deg;animation-delay:-1.1s}
+.kangaroo-glove-left{--turn:3.72deg}.kangaroo-glove-right{--turn:-3.15deg;animation-delay:-.8s}
+.kangaroo-straw{--turn:3.15deg;animation-duration:2.8s;animation-delay:-1.3s}
+.kangaroo-sun{animation:kangaroo-solar 3s ease-in-out infinite alternate}
+.kangaroo-smoke-wisp{opacity:0;animation:kangaroo-smoke 3.3s linear infinite}
+@keyframes kangaroo-smoke{0%{opacity:0;transform:translate(0,0)}15%{opacity:.28}65%{opacity:.16}100%{opacity:0;transform:translate(9px,-72px)}}
+.kangaroo-arena[data-paused=true] *{animation-play-state:paused!important}
+html[data-game-hidden=true] .kangaroo-arena *{animation-play-state:paused!important}
+@keyframes kangaroo-sway{from{transform:rotate(calc(var(--turn)*-1))}to{transform:rotate(var(--turn))}}
+@keyframes kangaroo-breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+@keyframes kangaroo-solar{from{opacity:.7}to{opacity:.95}}
+@media(prefers-reduced-motion:reduce){.kangaroo-arena *{animation:none!important}}

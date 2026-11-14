@@ -1,7 +1,15 @@
+import { getFriday13BossName } from '@/lib/raidBossConfig';
+import './bossProfileFrame.css';
+import { warmFirstFrameImages } from '@/lib/sceneAssets';
+import FirstFrameImage from './FirstFrameImage';
+import eventsBannerFull from '@/assets/IVENTS/event-banner.png';
+import { usePartnerTasks } from '@/lib/usePartnerTasks';
+import pumpkinIcon from '@/assets/ui/halloween-pumpkin.webp';
 import EventPoisonShop from './EventPoisonShop';
 import { Fragment } from 'react';
 import { translateUiText } from '@/lib/uiTextTranslations';
 import { eventPhase, eventCountdown } from '@/lib/eventSchedule.js';
+import FishingBeacon from './FishingBeacon';
 import { serverNow } from '@/lib/serverClock.js';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -21,9 +29,9 @@ import fishMythic from '@/assets/IVENTS/COSMOFISH/cosmofish_mythic.png';
 import fishLegendary from '@/assets/IVENTS/COSMOFISH/cosmofish_legendary.png';
 import fishBlackHole from '@/assets/IVENTS/COSMOFISH/cosmofish_black_hole.png';
 import fishExchangeIcon from '@/assets/IVENTS/COSMOFISH/Fish Exchange.png';
-import eventRaidBossImg from '@/assets/IVENTS/event-raid-boss.png';
 import eventSpaceFishingImg from '@/assets/IVENTS/event-space-fishing.png';
-import eventsBannerImg from '@/assets/IVENTS/event-banner.png';
+import eventSpaceFishingCard from '@/assets/optimized/first-frame/event-space-fishing.webp?inline';
+import eventsBannerImg from '@/assets/optimized/first-frame/events-banner.webp?inline';
 import dailyEventBannerImg from '@/assets/IVENTS/daily-event-banner.png';
 import newbieQuestBannerImg from '@/assets/IVENTS/newbie-quest-banner.png';
 import extraQuestsBannerImg from '@/assets/IVENTS/Extra-Quests-banner.png';
@@ -57,7 +65,7 @@ import talentPointIcon from '@/assets/daily-icons/Talent Point.png';
 import talentUpgradeIcon from '@/assets/daily-icons/Talent Upgrade.png';
 import tutorialCompleteIcon from '@/assets/daily-icons/Tutorial Complete.png';
 
-import { DAY_COUNT, DAILY_UNLOCK_LEVEL, WEEKLY_BONUSES, getDayTasks as getDailyTasks, getTaskState, getQuestRewardNotifications } from '@/lib/questNotifications';
+import { DAY_COUNT, DAILY_UNLOCK_LEVEL, WEEKLY_BONUSES, getDailyCompletionReward, getDayTasks as getDailyTasks, getTaskState, getQuestRewardNotifications } from '@/lib/questNotifications';
 const EVENT_PLACEHOLDERS = [
   {
     id: 'raid-boss',
@@ -65,7 +73,7 @@ const EVENT_PLACEHOLDERS = [
     guildOnly: true,
     title: { uk: 'Рейдбос', en: 'Raid Boss', ru: 'Рейдбосс' },
     subtitle: { uk: 'Скоро старт', en: 'Starting soon', ru: 'Скоро старт' },
-    image: eventRaidBossImg,
+    image: '/friday13/raid-boss-event-avatar.webp',
     rewardPreview: [
       { type: 'strength', qty: '+CA' },
       { type: 'xp', qty: '+EXP' },
@@ -77,7 +85,7 @@ const EVENT_PLACEHOLDERS = [
     requiredLevel: 10,
     title: { uk: 'Косморибалка', en: 'Space Fishing', ru: 'Косморыбалка' },
     subtitle: { uk: 'Скоро старт', en: 'Starting soon', ru: 'Скоро старт' },
-    image: eventSpaceFishingImg,
+    image: eventSpaceFishingCard, fullImage: eventSpaceFishingImg,
     rewardPreview: [
       { type: 'strength', qty: '+CA' },
       { type: 'xp', qty: '+EXP' },
@@ -136,6 +144,7 @@ function buildClaimRewardItems(reward = {}) {
     label,
     text: `+${Number(reward[key])} ${suffix}`,
   }));
+  if (Number(reward.pumpkins || 0) > 0) items.push({ id: 'pumpkins', icon: pumpkinIcon, label: '🎃', text: '+' + reward.pumpkins });
   [['small', 'Small poison', poisonIcon], ['medium', 'Medium poison', mediumPoisonIcon], ['large', 'Poison flask', largePoisonIcon]].forEach(([key, label, icon]) => {
     if (Number(reward[key] || 0) > 0) items.push({ id: key, icon, label, text: `+${Number(reward[key])}` });
   });
@@ -297,6 +306,7 @@ const TASK_ICONS = {
   poisonUse: dailyPoisonIcon,
   setFragments: setFragmentIcon,
   raidBoss: raidBossIcon,
+  catchFish: fishCommon,
 };
 
 const NEWBIE_TASK_ICONS = {
@@ -535,7 +545,7 @@ function NewbieQuestTab({ profile, onUpdateProfile, onGo, suspended = false }) {
         </GameTextureButton>
       </div>
       {packDrops?.length ? (
-        <div className="fixed inset-0 z-[20] flex items-center justify-center bg-black/80 px-4">
+        <div onClick={event=>{if(event.target===event.currentTarget)setPackDrops(null);}} className="fixed inset-0 z-[20] flex items-center justify-center bg-black/80 px-4">
           <MarkerFrame className="w-full max-w-[340px] bg-[#0b1209]" innerClassName="p-3" variant="transparent">
             <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#9dff43]">
               {lang === 'en' ? 'Pack Rewards' : lang === 'ru' ? 'Награды пака' : 'Нагороди пака'}
@@ -930,12 +940,12 @@ function WeeklyProgress({ fullDays, claimedBonuses, onClaimBonus, onPreviewBonus
   );
 }
 
-export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile = null, onClose, onGoToTask, onOpenRaidBoss = null, onOpenSpaceFishing = null, onBackToEvents = null, panelMode = 'daily', initialTab = 'event', initialEventScene = null, suspended = false }) {
+export default function DailyPanel({ profile, onSyncProfile = null, onUpdateProfile, onRefreshProfile = null, onClose, onGoToTask, onOpenRaidBoss = null, onOpenSpaceFishing = null, onBackToEvents = null, panelMode = 'daily', initialTab = 'event', initialEventScene = null, suspended = false }) {
   const todayKey = profile?.currentDateKey || '';
   const weekKey = profile?.currentWeekKey || '';
   const currentDay = Number(profile?.currentDayIndex || 1);
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [partnerTasks, setPartnerTasks] = useState([]);
+  const { tasks: partnerTasks, hasNew: hasNewPartners, markSeen: markPartnersSeen } = usePartnerTasks(profile);
   const [openedPartnerIds, setOpenedPartnerIds] = useState({});
   const [partnerBusyId, setPartnerBusyId] = useState(null);
   const [partnerClaimedIds, setPartnerClaimedIds] = useState({});
@@ -955,6 +965,7 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
   const [showFishingPopup, setShowFishingPopup] = useState(false);
   const [hookNow, setHookNow] = useState(serverNow());
   const [pendingFishCycle, setPendingFishCycle] = useState(null);
+  const fishingActionBusy = useRef(false);
   const [claimRewardPopup, setClaimRewardPopup] = useState(null);
   const [weeklyRewardPreview, setWeeklyRewardPreview] = useState(null);
   const [claimError, setClaimError] = useState('');
@@ -974,7 +985,9 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
     }
   }, [profile?.id]);
   const openPartner = async (partner) => {
-    window.open(partner.link, '_blank', 'noopener,noreferrer');
+    if (/^https:\/\/t\.me\//i.test(partner.link) && window.Telegram?.WebApp?.openTelegramLink) {
+      window.Telegram.WebApp.openTelegramLink(partner.link);
+    } else window.open(partner.link, '_blank', 'noopener,noreferrer');
     {
       setPartnerBusyId(partner.id);
       try {
@@ -1030,14 +1043,7 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
       setPartnerBusyId(null);
     }
   };
-  useEffect(() => {
-    if (activeTab !== 'extra') return undefined;
-    let cancelled = false;
-    fetch('/api/partners').then((response) => response.json()).then((json) => {
-      if (!cancelled) setPartnerTasks(Array.isArray(json?.data) ? json.data : []);
-    }).catch(() => { if (!cancelled) setPartnerTasks([]); });
-    return () => { cancelled = true; };
-  }, [activeTab]);
+  useEffect(() => { if (activeTab === 'extra') markPartnersSeen(); }, [activeTab, markPartnersSeen]);
   const isEventsMode = panelMode === 'events';
   const fishCopy = FISH_EXCHANGE_TEXT[lang] || FISH_EXCHANGE_TEXT.ua;
   const fishingUi = COSMO_FISHING_UI[lang] || COSMO_FISHING_UI.ua;
@@ -1129,24 +1135,41 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
   };
 
   const resolveFishing = async (successfulHook, cycle) => {
-    if (!cycle || cycle.claimed || cycle.resolved) return;
-    const response = await onUpdateProfile({ playerAction: { type: 'fishing-resolve', hook: Boolean(successfulHook) } });
-    setFishingResult(response?.result || null);
-    setShowFishingPopup(true);
+    if (fishingActionBusy.current || !cycle || cycle.claimed || cycle.resolved) return;
+    fishingActionBusy.current = true;
+    try {
+      const response = await onUpdateProfile({ playerAction: { type: 'fishing-resolve', hook: Boolean(successfulHook) } });
+      const savedCycle = response?.player?.cosmo_fishing_cycle || response?.cosmo_fishing_cycle;
+      if (savedCycle) setPendingFishCycle(savedCycle);
+      setFishingResult(response?.result || null);
+      setShowFishingPopup(true);
+    } catch (error) {
+      setClaimError(error?.message || 'Fishing failed');
+      void Promise.resolve(onRefreshProfile?.()).catch(() => {});
+    } finally { fishingActionBusy.current = false; }
   };
 
   const startFishingCycle = async () => {
-    if (fishCycleExists && !fishCycleClaimed) return;
-    await onUpdateProfile({ playerAction: { type: 'fishing-cast' } });
-    setHookNow(serverNow());
-    setFishingResult(null);
-    setShowFishingPopup(false);
+    if (fishingActionBusy.current || (fishCycleExists && !fishCycleClaimed)) return;
+    fishingActionBusy.current = true;
+    try {
+      const saved = await onUpdateProfile({ playerAction: { type: 'fishing-cast' } });
+      const cycle = saved?.player?.cosmo_fishing_cycle || saved?.cosmo_fishing_cycle;
+      if (cycle) setPendingFishCycle(cycle);
+      setHookNow(serverNow());
+      setFishingResult(null);
+      setShowFishingPopup(false);
+    } catch (error) {
+      setClaimError(error?.message || 'Fishing failed');
+      void Promise.resolve(onRefreshProfile?.()).catch(() => {});
+    } finally { fishingActionBusy.current = false; }
   };
 
   const dismissFishingPopup = async () => {
     setShowFishingPopup(false);
     if (profile?.cosmo_fishing_last_result && !profile?.cosmo_fishing_last_result_seen) {
-      await onUpdateProfile?.({ playerAction: { type: 'fishing-seen' } });
+      try { await onUpdateProfile?.({ playerAction: { type: 'fishing-seen' } }); }
+      catch (error) { setClaimError(error?.message || 'Fishing failed'); }
     }
   };
   const profileLevel = Number(profile?.level ?? profile?.player_level ?? profile?.lvl ?? 1);
@@ -1181,7 +1204,7 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
     try {
       const result = await onUpdateProfile({ playerAction: { type: 'daily-task', day: selectedDay, taskId: task.id } });
       if (!result?.alreadyClaimed) {
-        setClaimRewardPopup({ title: 'Reward', items: buildClaimRewardItems({ xp: task.xp, energy: task.energyBonus, tentacles: task.tentacles, freeSpins: 1 }) });
+        setClaimRewardPopup({ title: 'Reward', items: buildClaimRewardItems(result?.reward || { xp: task.xp, energy: task.energyBonus, tentacles: task.tentacles, freeSpins: 1 }) });
         window.dispatchEvent(new Event('tutorial-daily-claim-complete'));
       }
     } catch (error) {
@@ -1196,19 +1219,11 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
 
   const claimDay = async () => {
     if (selectedDay > currentDay || !dayReadyToClaim || dayClaimed || claimingDay) return;
-    const dayTotal = taskStates.reduce(
-      (acc, task) => ({
-        xp: acc.xp + (task.xp || 0),
-        tentacles: acc.tentacles + (task.tentacles || 0),
-        energy: acc.energy + (task.energyBonus || 0),
-      }),
-      { xp: 0, tentacles: 0, energy: 0 },
-    );
     setClaimingDay(true);
     setClaimError('');
     try {
-      await onUpdateProfile({ playerAction: { type: 'daily-day', day: selectedDay } });
-      setClaimRewardPopup({ title: 'Day complete', items: buildClaimRewardItems(dayTotal) });
+      const result = await onUpdateProfile({ playerAction: { type: 'daily-day', day: selectedDay } });
+      setClaimRewardPopup({ title: lang === 'en' ? 'Full day reward' : lang === 'ru' ? 'Приз за полный день' : 'Приз за повний день', items: buildClaimRewardItems(result?.reward || getDailyCompletionReward(selectedDay)) });
       window.dispatchEvent(new Event('tutorial-daily-claim-complete'));
     } catch (error) {
       console.error('[daily] day claim failed', error);
@@ -1308,7 +1323,6 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
     <div className={`relative flex h-full min-h-0 w-full flex-col text-[#142016] ${isRaidBossScene ? 'px-0 py-0' : 'px-2 py-2'}`}>
       <div className="pointer-events-none absolute inset-x-3 top-2 h-20 rounded-full bg-[#8dff32]/10 blur-2xl" />
       <div className="relative z-10 flex min-h-0 w-full flex-1 flex-col">
-        {!isEventsMode && <button type="button" onClick={onClose} className="mb-2 shrink-0 self-start rounded-md border border-[#28ee90] bg-[#081008] px-3 py-2 font-mono text-[12px] font-bold text-[#d8ff84]">← {lang === 'en' ? 'Back' : 'Назад'}</button>}
         {!isRaidBossScene && (isFishingHeader ? (
           <div className="relative mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 overflow-hidden rounded-none bg-[#07100b] px-2 py-2">
             <div className="min-w-0 text-left">
@@ -1328,6 +1342,7 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
           <div
             className={`relative mb-2 flex ${headerMinHeightClass} justify-between gap-2 overflow-hidden rounded-none px-2 py-2 ${isEventsMode ? 'bg-[#07100b]' : 'bg-[linear-gradient(180deg,rgba(12,20,10,0.96)_0%,rgba(4,7,4,0.96)_100%)]'}`}
           >
+            {!isEventsMode && <button type="button" data-tutorial-target={activeTab === 'newbie' ? 'newbie-close' : undefined} onClick={onClose} className="absolute left-2 top-2 z-30 rounded-md border border-[#28ee90] bg-[#081008]/90 px-3 py-2 font-mono text-[12px] font-bold text-[#d8ff84]">← {lang === 'en' ? 'Back' : 'Назад'}</button>}
             {!isEventsMode && activeTab === 'event' ? (
               <>
                 <img
@@ -1363,8 +1378,8 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
             ) : null}
             {isEventsMode && eventScene === null ? (
               <>
-                <img
-                  src={eventsBannerImg}
+                <FirstFrameImage
+                  preview={eventsBannerImg} src={eventsBannerFull}
                   alt=""
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center opacity-100"
@@ -1376,14 +1391,14 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
               <p className="font-mono text-[10px] font-black uppercase tracking-[0.16em] text-[#9dff43]">{headerEyebrow}</p>
               <h2 className="font-sans text-[23px] font-black uppercase leading-none text-[#f8ffe8] [text-shadow:0_2px_0_rgba(0,0,0,0.85)]">{headerTitle}</h2>
             </div>
-            <button
+            {isEventsMode && (            <button
               type="button"
               data-tutorial-target={activeTab === 'newbie' ? 'newbie-close' : undefined}
               onClick={onClose}
               className={`relative z-[60] flex h-8 w-8 items-center justify-center overflow-hidden bg-transparent transition hover:brightness-110 ${isEventsMode ? `absolute right-2 ${isFishingHeader ? 'top-1' : 'top-0'}` : ''}`}
             >
               <X className="relative z-[1] h-4 w-4 text-white" />
-            </button>
+            </button>)}
           </div>
         ))}
 
@@ -1391,7 +1406,7 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
           <div className="mb-2 grid grid-cols-3 gap-1.5 sm:gap-2">
             <BigTabButton active={activeTab === 'event'} label={lang === 'en' ? '7 days event' : lang === 'ru' ? '7 дней событий' : '7 днів подій'} onClick={() => setActiveTab('event')} alert={questNotifications.daily} />
             <BigTabButton active={activeTab === 'newbie'} label={lang === 'en' ? 'newbie quest' : lang === 'ru' ? 'квест новичка' : 'квест новачка'} onClick={() => setActiveTab('newbie')} alert={questNotifications.newbie} tutorialTarget="newbie-tab" />
-            <BigTabButton active={activeTab === 'extra'} label={extraTabLabel} onClick={() => setActiveTab('extra')} alert={questNotifications.extra} />
+            <BigTabButton active={activeTab === 'extra'} label={extraTabLabel} onClick={() => setActiveTab('extra')} alert={questNotifications.extra || hasNewPartners} />
           </div>
         ) : null}
 
@@ -1429,14 +1444,15 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
                       innerClassName="grid grid-cols-[84px_minmax(0,1fr)] gap-3 px-2 py-2 sm:grid-cols-[92px_minmax(0,1fr)] sm:gap-4 sm:px-3"
                       variant="transparent"
                     >
+                      {event.id === 'space-fishing' && !eventLocked ? <FishingBeacon profile={profile} /> : null}
                       <div className="flex h-[100px] w-[84px] overflow-hidden rounded-[8px] border border-[#28ee90] bg-[#0a1108] sm:h-[110px] sm:w-[92px]">
-                        <img src={event.image} alt="" aria-hidden="true" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                        <FirstFrameImage preview={event.fullImage ? event.image : undefined} src={event.fullImage || event.image} alt="" aria-hidden="true" className="h-full w-full object-cover" />
                       </div>
                       <div className="min-w-0">
                         <p className="font-sans text-[18px] font-black uppercase leading-none text-[#9aa493] opacity-75">
-                          {localizeCopy(event.title, lang)}
+                          {event.id === 'raid-boss' ? <span className="friday13-event-heading"><span className="friday13-boss-name">{getFriday13BossName(lang)}</span><span className="friday13-event-name">13<sup>th</sup></span></span> : localizeCopy(event.title, lang)}
                         </p>
-                        <p className="mt-1 font-mono text-[10px] font-black text-[#ff5148]">{eventCountdown(event.id, hookNow, lang)}</p>
+                        {event.id !== 'space-fishing' ? <p className="mt-1 font-mono text-[10px] font-black text-[#ff5148]">{eventCountdown(event.id, hookNow, lang)}</p> : null}
                         <div className="mt-3 flex flex-wrap items-center gap-1.5">
                           {(event.rewardPreview || []).map((reward, idx) => {
                             const label = reward.qtyI18n ? (reward.qtyI18n[lang] || reward.qtyI18n.ua || reward.qty) : reward.qty;
@@ -1452,7 +1468,7 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
                       </div>
                       {levelLocked || guildLocked ? <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#050805]/65 px-4 text-center backdrop-blur-[3px]"><ScrambleLockHint text={localizeCopy(lockHint, lang)} /></div> : null}
                     </MarkerFrame>
-                  </button>{event.id === 'raid-boss' ? <EventPoisonShop profile={profile} onRefreshProfile={onRefreshProfile} lang={lang} /> : null}</Fragment>
+                  </button>{event.id === 'raid-boss' ? <EventPoisonShop onSyncProfile={onSyncProfile} profile={profile} onRefreshProfile={onRefreshProfile} lang={lang} /> : null}</Fragment>
                   })()
                 ))
               ) : eventScene === 'raid-boss' ? (
@@ -1568,7 +1584,7 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
                       />
                     </div>
                     {showFishingPopup && fishingResult ? (
-                      <div className="absolute inset-3 z-40 flex items-center justify-center bg-black/65 p-3">
+                      <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/65 p-3" onClick={event => { if (event.target === event.currentTarget) void dismissFishingPopup(); }}>
                         <div className="relative w-full max-w-[340px] overflow-hidden bg-[linear-gradient(180deg,#0f170d_0%,#070a06_100%)] p-3">
                           <MarkerBorder />
                           <button
@@ -1597,6 +1613,7 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
                             <p className="relative z-[1] mt-2 font-mono text-[11px] text-[#d7ff94]">{fishingUi.noFish}</p>
                           )}
                           <p className="relative z-[1] mt-2 font-mono text-[10px] text-[#b9d59d]">{fishingUi.bonus}: {fishingResult.bonusLabel}</p>
+                          {fishingResult.pumpkins > 0 && <div className="relative z-[1] mt-3 flex items-center justify-center gap-2 rounded-lg border border-orange-400/60 bg-black/40 p-2"><img src={pumpkinIcon} alt="" className="h-10 w-10 object-contain"/><span className="font-mono text-lg font-black text-orange-300">+{fishingResult.pumpkins}</span></div>}
                         </div>
                       </div>
                     ) : null}
@@ -1767,6 +1784,7 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
               </div>
 
               <div className="mt-3">
+                <p className="mb-2 text-center font-mono text-[10px] text-[#d8ff84]">{lang === 'en' ? 'Full day prize' : lang === 'ru' ? 'Приз за полный день' : 'Приз за повний день'}: +140 {lang === 'en' ? 'energy' : lang === 'ru' ? 'энергии' : 'енергії'} · +{getDailyCompletionReward(selectedDay).tentacles} {lang === 'en' ? 'tentacles' : lang === 'ru' ? 'щупалец' : 'щупалець'}</p>
                 <ClaimStateButton
                   tone={dayClaimed ? 'gray' : dayReadyToClaim ? 'green' : 'gray'}
                   onClick={claimDay}
@@ -1826,3 +1844,7 @@ export default function DailyPanel({ profile, onUpdateProfile, onRefreshProfile 
 
 
 
+
+export function warmFirstFrame() {
+  return warmFirstFrameImages([eventsBannerFull, '/friday13/raid-boss-event-avatar.webp', eventSpaceFishingImg, dailyEventBannerImg]);
+}

@@ -106,12 +106,12 @@
     "claimed": "Забрано",
     "friends_list": "Приглашенные друзья",
     "rewards_title": "Реферальные награды",
-    "reward_line": "{{count}} active friend: {{reward}}",
+    "reward_line": "{{count}} друзей 20 уровня: {{reward}}",
     "no_friends": "Пока нет приглашенных друзей",
-    "friend_status_joined": "joined",
-    "friend_status_active": "active",
-    "friend_status_reward_ready": "reward_ready",
-    "friend_status_claimed": "claimed"
+    "friend_status_joined": "1 уровень · ещё не засчитан",
+    "friend_status_active": "качается до 20 уровня",
+    "friend_status_reward_ready": "20 уровень · сундук готов",
+    "friend_status_claimed": "засчитан · получено"
   },
   "chat_panel": {
     "clan_tab": "Клан",
@@ -168,7 +168,7 @@
     "codeUsed": "Этот код уже активирован",
     "activated": "Активировано",
     "walletLink": "Подключение кошелька",
-    "walletStatus": "TON live / NEAR скоро",
+    "walletStatus": "Кошельки TON и NEAR",
     "nearSoon": "NEAR скоро",
     "achievements": "Достижения",
     "futureBonuses": "будущие бонусы",
@@ -437,7 +437,7 @@
     "season": "СЕЗОН 01 · 28 ДНЕЙ",
     "season_title": "ПУТЬ ВЫЖИВАНИЯ",
     "season_subtitle": "50 уровней. Твоя история.",
-    "season_art": "АРТ СЕЗОНА · ЗАГЛУШКА",
+    "season_art": "АРТ СЕЗОНА",
     "level": "УРОВЕНЬ {{level}}",
     "days_left": "{{days}} дн. до конца",
     "inactive": "Сезон неактивен",
@@ -448,8 +448,8 @@
     "loading": "Загрузка сезона…",
     "tasks_aria": "Задания Battle Pass",
     "tasks_title": "ЗАДАНИЯ BATTLE PASS",
-    "tasks_hint": "XP начисляется автоматически. Ежедневные — 00:00 UTC, недельные — понедельник 00:00 UTC.",
-    "boss_victory_xp": "10–30 XP за победу · до 3/день · владельцу боя",
+    "tasks_hint": "XP начисляется автоматически. Ежедневные задания сбрасываются в 00:00 по Киеву, недельные — в начале новой недели сезона.",
+    "boss_victory_xp": "10–30 XP за победу · до 3/день · владельцу боя · корабельный босс — участникам",
     "done": "Выполнено",
     "claim": "Забрать",
     "claimed": "получено",
@@ -469,6 +469,7 @@
       "season": "Сезонные · 1 800 XP"
     },
     "rewards": {
+      "spin": "Спины",
       "epic_background": "Эпический фон",
       "legendary_background": "Легендарный фон",
       "dm": "tentacles",
@@ -484,7 +485,7 @@
       "head": "Головной убор",
       "weapon": "Оружие",
       "animated": "Анимация",
-      "pet": "Пет сезона",
+      "pet": "Пустотник",
       "legendary_boots": "Легендарная обувь",
       "legendary_legs": "Легендарные штаны",
       "legendary_hands": "Легендарные перчатки",
@@ -538,7 +539,7 @@
     "ok": "ОК",
     "used": "Использовано",
     "ton_wallet": "TON Wallet",
-    "ton_wallet_desc": "Официальный TonConnect UI уже работает. Backend хранит привязанный кошелёк и proof-session для следующего шага проверки.",
+    "ton_wallet_desc": "Подключите TON-кошелёк для доступных операций с кошельком.",
     "connected": "подключено",
     "not_linked": "не подключено",
     "loading_wallet_state": "Загрузка состояния кошелька...",
@@ -571,7 +572,7 @@
   "talentTree": {
     "title": "ТАЛАНТЫ",
     "tree": "ВЕРТИКАЛЬНОЕ ДЕРЕВО",
-    "progress": "До следующего очка: {{current}}/{{goal}} · потрачено: {{spent}}",
+    "progress": "Урон ядами: {{current}}/{{goal}} · потрачено: {{spent}}",
     "progressHintLabel": "Пояснение шкалы талантов",
     "progressHint": "Шкала талантов показывает прогресс до следующего уровня. Заполняй её в бою, получай очки талантов и трать их во вкладке «Таланты», чтобы усиливать героя.",
     "sector": "СЕКТОР {{id}} · {{name}}",
@@ -589,7 +590,7 @@
     "unlockPointsProgress": "Потрачено очков: {{spent}}/{{points}}",
     "upgrade": "Улучшить {{name}}",
     "level": "Уровень: {{level}}/{{max}}",
-    "nextLevel": "Следующий уровень: {{level}}/{{max}} · цена 1 ★",
+    "nextLevel": "Следующий уровень: {{level}}/{{max}} · цена {{cost}} ★",
     "maxLevel": "Максимальный уровень",
     "requirements": "Требования: {{requirements}}",
     "none": "нет",
@@ -781,7 +782,7 @@
       },
       "t47": {
         "name": "Долгий бой",
-        "description": "Время активности кланового босса +30 минут."
+        "description": "Каждый уровень добавляет 30 минут к вашим боям с боссами, включая текущий. Рейдбоссы не продлеваются."
       },
       "t48": {
         "name": "Перевести дух",
@@ -836,5 +837,8 @@
         "description": "Если босс истекает кровью и имеет 5 токсичных меток, все атаки наносят на 20 больше урона за уровень. Фляга с ядом после удара расходует метки."
       }
     }
+  },
+  "common": {
+    "close": "Закрыть"
   }
 }

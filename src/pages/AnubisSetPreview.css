@@ -1,0 +1,14 @@
+.anubis-preview { min-height:100dvh; display:flex; align-items:center; justify-content:center; gap:40px; padding:20px; color:#eee4c5; background:#151916; overflow:auto; }
+.anubis-preview-stage { width:min(500px,65vw); height:min(896px,94dvh); position:relative; flex-shrink:0; }
+.anubis-preview-hero { width:100%; height:100%; }
+.anubis-preview--light { background:#ddd9ca; }
+.anubis-preview--check .anubis-preview-stage { background:repeating-conic-gradient(#333 0 25%,#484848 0 50%) 0/24px 24px; }
+.anubis-preview-controls { width:260px; padding:20px; background:#202722; border:1px solid #78653c; border-radius:14px; }
+.anubis-preview-controls h1 { font-size:22px; margin-bottom:8px; }
+.anubis-preview-controls p { font-size:12px; margin-bottom:18px; color:#bdb9a6; }
+.anubis-preview-controls label { display:flex; align-items:center; gap:8px; margin:12px 0; }
+.anubis-preview-controls a { margin-left:auto; font-size:12px; color:#40d9c4; }
+.anubis-preview-slot { display:flex; align-items:center; }
+.anubis-preview-controls select { min-width:0; max-width:100%; flex:1; font-size:12px; }
+.anubis-preview-controls button,.anubis-preview-controls select { background:#353f34; color:#eee4c5; border:1px solid #78653c; border-radius:5px; padding:7px; margin-right:6px; }
+@media(max-width:700px) { .anubis-preview { flex-direction:column; gap:12px; padding:12px; height:100dvh; justify-content:flex-start; } .anubis-preview-stage { width:100%; height:67dvh; } .anubis-preview-controls { width:min(100%,440px); } .anubis-preview-controls label { display:inline-flex; margin:8px; font-size:13px; } }

@@ -12,7 +12,7 @@ for (const name of await readdir(distRoot, { recursive: true })) {
   if (!/\.(js|css|html|svg|json)$/.test(name)) continue;
   const file = path.join(distRoot, name);
   const data = await readFile(file);
-  if (data.length < 1024) continue;
+  if (data.length < 1024 && !['index.html', 'release-version.json'].includes(name.replaceAll('\\', '/'))) continue;
   const [brotli, zipped] = await Promise.all([br(data, { params: { [constants.BROTLI_PARAM_QUALITY]: 6 } }), gz(data, { level: 9 })]);
   await Promise.all([writeFile(file + '.br', brotli), writeFile(file + '.gz', zipped)]);
   before += data.length;

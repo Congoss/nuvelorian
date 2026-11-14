@@ -1,49 +1,34 @@
-import React, { useEffect, useRef, useState } from 'react';
-import background from '@/assets/boss/raidboss2/arena-alternative.jpg';
-import body from '@/assets/boss/raidboss2/raidboss2-body.png';
-import legs from '@/assets/boss/raidboss2/raidboss2-legs.png';
-import eyes from '@/assets/boss/raidboss2/raidboss2-anim-eye.png';
-import shoulder from '@/assets/boss/raidboss2/raidboss2-anim-pleche.png';
-import duckEye from '@/assets/boss/raidboss2/raidboss2-duck-eye.png';
-import weaponButton from '@/assets/boss/raidboss2/raidboss2-weap-knopka.png';
+import React from 'react';
+import { useAnimationsEnabled } from '@/lib/animationPreference.js';
 import './RaidBossTwo.css';
 
-const PHRASES = ['F*CK CRYPTO!', 'QUACK OFF!', 'WHERE LAMBO?!', 'RUG THIS!', 'BUY THE DIP?!', 'NO MORE MEMECOINS!', 'REKT AGAIN!', 'HODL MY DUCK!'];
-
 export function RaidBossTwoBackground() {
-  return <div className="rb2-background" aria-hidden="true">
-    <img src={background} alt="" />
+  const animationsOn = useAnimationsEnabled();
+  return <div className={`rb2-background${animationsOn ? ' is-animated' : ''}`} aria-hidden="true">
+    <div className="rb2-arena-plane">
+      <img src="/friday13/arena.webp" alt="" />
+      {animationsOn && <svg className="rb2-forest-eyes" viewBox="0 0 720 1280" aria-hidden="true">
+        <g style={{animationDelay:'-1.2s'}}><ellipse cx="148.5" cy="209.5" rx="2" ry="2.3"/><ellipse cx="155.5" cy="210" rx="2" ry="2.3"/></g>
+        <g style={{animationDelay:'-3.7s'}}><ellipse cx="213.5" cy="292.5" rx="2" ry="2.3"/><ellipse cx="220.5" cy="293" rx="2" ry="2.3"/></g>
+        <g style={{animationDelay:'-2.4s'}}><ellipse cx="187.5" cy="387.5" rx="2" ry="2"/><ellipse cx="194.5" cy="387.5" rx="1.5" ry="2"/></g>
+      </svg>}
+    </div>
+    {animationsOn && <div className="rb2-fog-field"><i /><i /><i /><i /><i /><i /></div>}
+    {animationsOn && <div className="rb2-lake-shimmer" />}
+    {animationsOn && <span className="rb2-moon-haze" />}
   </div>;
 }
 
 export function RaidBossTwo({ hitToken }) {
-  const [reaction, setReaction] = useState(null);
-  const lastPhrase = useRef(-1);
-  useEffect(() => {
-    if (!hitToken) return undefined;
-    let phrase = Math.floor(Math.random() * (PHRASES.length - (lastPhrase.current < 0 ? 0 : 1)));
-    if (lastPhrase.current >= 0 && phrase >= lastPhrase.current) phrase += 1;
-    lastPhrase.current = phrase;
-    setReaction({ token: hitToken, phrase });
-    const timer = setTimeout(() => setReaction(null), 1250);
-    return () => clearTimeout(timer);
-  }, [hitToken]);
-
-  return <div className="rb2-composite" aria-label="Raid Boss">
-    <img src={legs} className="rb2-layer rb2-legs" alt="" aria-hidden="true" />
-    <div className="rb2-upper">
-      <img src={body} className="rb2-layer" alt="Raid Boss" />
-      <img src={shoulder} className="rb2-layer rb2-shoulder" alt="" aria-hidden="true" />
-      <img src={weaponButton} className="rb2-layer rb2-button" alt="" aria-hidden="true" />
-      <img src={eyes} className="rb2-layer rb2-eyes" alt="" aria-hidden="true" />
-      <span className="rb2-fire rb2-fire-left" aria-hidden="true" />
-      <span className="rb2-fire rb2-fire-right" aria-hidden="true" />
-      <div className="rb2-breath" aria-hidden="true">{[0, 1, 2].map(i => <i key={i} style={{ '--puff': i }} />)}</div>
-      {reaction && <React.Fragment key={reaction.token}>
-        <img src={duckEye} className="rb2-layer rb2-duck-eye" alt="" aria-hidden="true" />
-        <span className="rb2-impact" aria-hidden="true" />
-        <span className="rb2-talk">{PHRASES[reaction.phrase]}</span>
-      </React.Fragment>}
-    </div>
+  const animationsOn = useAnimationsEnabled();
+  return <div className={`rb2-composite${animationsOn ? ' is-animated' : ''}`} aria-label="Raid Boss" data-hit-token={hitToken || ''}>
+    <img className="rb2-boss-body" src="/friday13/raid-boss-body-v3.webp" alt="" />
+    <img className={`rb2-boss-hand${animationsOn ? ' is-animated' : ''}`} src="/friday13/raid-boss-hand-v1.webp" alt="" />
+    <img className={`rb2-boss-head${animationsOn ? ' is-animated' : ''}`} src="/friday13/raid-boss-head-v2.webp" alt="Raid Boss" />
   </div>;
+}
+
+export function RaidBossTwoForeground() {
+  const animationsOn = useAnimationsEnabled();
+  return animationsOn ? <div className="rb2-front-fog" aria-hidden="true"><i/><i/><i/></div> : null;
 }

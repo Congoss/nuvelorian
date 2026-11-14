@@ -35,3 +35,32 @@ export async function closePostgres() {
     pool = null;
   }
 }
+
+export async function withPostgresTransaction(action, options) {
+ getPostgresSql();
+ return runPostgresTransaction(pool, action, options);
+}
+
+export function getPostgresPoolStats() {
+ return {total:pool?.totalCount || 0,idle:pool?.idleCount || 0,waiting:pool?.waitingCount || 0};
+}
+
+export async function runPostgresTransaction(transactionPool, action, {onTiming} = {}) {
+ const mark=(name,start)=>onTiming?.(name,Date.now()-start);
+ let start=Date.now();
+ const client = await transactionPool.connect();
+ mark('tx_pool',start);
+ const sql = async (strings, ...values) => {
+  let text = '';
+  for (let i=0;i<strings.length;i++) { text += strings[i]; if(i<values.length) text += '$'+(i+1); }
+  return (await client.query(text, values)).rows;
+ };
+ try {
+  start=Date.now();await client.query('BEGIN');mark('tx_begin',start);
+  const result = await action(sql);
+  start=Date.now();await client.query('COMMIT');mark('tx_commit',start);
+  return result;
+ }
+ catch(error) { await client.query('ROLLBACK').catch(()=>{}); throw error; }
+ finally { client.release(); }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import CleopatraCampBackground from './CleopatraCampBackground';
 import boss1Base from '@/assets/boss/boss_1/boss1_bck/background.png';
 import boss1Star from '@/assets/boss/boss_1/boss1_bck/STAR.png';
 import boss1Meteors from '@/assets/boss/boss_1/boss1_bck/METEORS.png';
@@ -257,6 +258,7 @@ function SceneStyles() {
 }
 
 export default function AnimatedCampBackground({ sceneId }) {
+  if (sceneId === 'boss7') return <CleopatraCampBackground />;
   if (sceneId === 'boss1') return <BossOneRoomScene />;
   if (sceneId === 'boss2') return <BossTwoRoomScene />;
   if (sceneId === 'boss3') return <ShorkRoomScene />;

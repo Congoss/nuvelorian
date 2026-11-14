@@ -1,3 +1,4 @@
+import {GAME_CONFIG} from '../src/lib/gameConfig.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizePlayerProgression } from '../server/utils/progression.js';
@@ -9,11 +10,11 @@ test('equipped auras accelerate actual regeneration without compounding after no
   for (const [animation, multiplier] of [['bp_epic_animation',1.2],['bp_legendary_animation',1.3],[null,1]]) {
     const player = { level:1,energy:0,max_energy:100,energy_regen_rate:1,last_energy_update:new Date(Date.now()-600000).toISOString(),equipped_items:{animation} };
     const normalized = normalizePlayerProgression(player);
-    assert.equal(normalized.energy_regen_rate,multiplier);
-    assert.equal(normalizePlayerProgression(normalized).energy_regen_rate,multiplier);
-    assert.equal(normalizePlayerProgression({...normalized,equipped_items:{animation:null}}).energy_regen_rate,1);
+    assert.equal(normalized.energy_regen_rate,GAME_CONFIG.ENERGY_REGEN_PER_MIN*multiplier);
+    assert.equal(normalizePlayerProgression(normalized).energy_regen_rate,GAME_CONFIG.ENERGY_REGEN_PER_MIN*multiplier);
+    assert.equal(normalizePlayerProgression({...normalized,equipped_items:{animation:null}}).energy_regen_rate,GAME_CONFIG.ENERGY_REGEN_PER_MIN);
     const energy = buildPlayerStateSnapshot(player).energy;
-    assert.ok(energy >= 10*multiplier && energy < 10*multiplier+.02);
+    assert.ok(energy >= 10*GAME_CONFIG.ENERGY_REGEN_PER_MIN*multiplier && energy < 10*GAME_CONFIG.ENERGY_REGEN_PER_MIN*multiplier+.02);
   }
 });
 

@@ -1,0 +1,21 @@
+.friday13-pet{position:relative;aspect-ratio:1192/1320;pointer-events:none;isolation:isolate;filter:drop-shadow(0 5px 3px #0007)}
+.friday13-pet>img,.friday13-pet-head,.friday13-pet-head>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.friday13-pet-body{z-index:1;transform-origin:50% 94%}.friday13-pet-arm{z-index:2;transform-origin:35% 59%}.friday13-pet-head{z-index:3;transform-origin:50% 56%}
+.friday13-pet.is-animated .friday13-pet-body{animation:friday13-pet-breath 4.5s ease-in-out infinite}
+.friday13-pet.is-animated .friday13-pet-head{animation:friday13-pet-stare 9.2s ease-in-out infinite}
+.friday13-pet.is-animated .friday13-pet-arm{animation:friday13-pet-knife 9.2s ease-in-out infinite}
+.friday13-tear{position:absolute;top:51%;left:39.5%;width:1.3%;height:1.4%;background:#a80d1c;border-radius:45% 45% 60% 60%;opacity:0;animation:friday13-pet-tear 8s ease-in infinite}
+.friday13-tear.right{left:62%;top:49%;animation-delay:-3.4s}
+@keyframes friday13-pet-breath{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.009)}}
+@keyframes friday13-pet-stare{0%,18%,75%,100%{transform:rotate(0)}32%,48%{transform:rotate(-2.1deg)}55%{transform:rotate(.8deg)}61%{transform:rotate(0)}}
+@keyframes friday13-pet-knife{0%,46%,85%,100%{transform:rotate(0)}56%{transform:rotate(4deg)}59%{transform:rotate(13deg)}64%{transform:rotate(11deg)}76%{transform:rotate(0)}}
+@keyframes friday13-pet-tear{0%,45%,100%{opacity:0;transform:translateY(0) scale(.6)}50%{opacity:.9}70%{opacity:.8;transform:translateY(140%) scale(.9)}78%{opacity:0;transform:translateY(200%) scale(.5)}}
+@media(prefers-reduced-motion:reduce){.friday13-pet *{animation:none!important}.friday13-tear{display:none}}
+:root[data-animations-off="true"] .friday13-pet *{animation:none!important}
+.friday13-pet-body{z-index:2}.friday13-pet-arm{z-index:1;transform-origin:38.2% 56.8%}
+.friday13-pet.is-animated{transform-origin:50% 95%;animation:friday13-pet-breath 4.5s ease-in-out infinite}
+.friday13-pet.is-animated .friday13-pet-body{animation:none}
+@keyframes friday13-pet-knife{0%,46%,85%,100%{transform:rotate(0)}56%{transform:rotate(2deg)}59%{transform:rotate(6deg)}64%{transform:rotate(5deg)}76%{transform:rotate(0)}}
+@media(prefers-reduced-motion:reduce){.friday13-pet{animation:none!important}}
+
+.friday13-pet.friday13-pet-camp{position:absolute;left:3%;right:auto;bottom:3%;top:auto;z-index:4;height:37%;width:35%}

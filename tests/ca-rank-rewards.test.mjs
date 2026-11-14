@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getPendingCARankRewards } from '../src/lib/caRankRewards.js';
+import { getPendingCARankRewards, getCARankReward } from '../src/lib/caRankRewards.js';
 
 process.env.NODE_ENV = 'test';
 for (const key of ['DATABASE_URL', 'POSTGRES_URL', 'POSTGRES_PRISMA_URL', 'POSTGRES_URL_NON_POOLING']) process.env[key] = '';
@@ -63,6 +63,18 @@ test('CA rank rewards queue in order and server claims once after reaching rank'
     const bootstrap = buildBootstrapPayload(player).bootstrap;
     assert.deepEqual(bootstrap.progression.ca_rank_rewards_claimed, [2]);
     assert.deepEqual(bootstrap.player.ca_rank_rewards_claimed, [2]);
+    player.stat_strength=2560000;
+    player.ca_rank_rewards_claimed=Array.from({length:14},(_,i)=>i+2);
+    const balanceBefore=player.tentacles,poisonBefore=Number(player.weapon_inventory['large-poison']||0);
+    for(const rank of [16,17,18,19]){
+      assert.equal((await claim(rank)).status,200);
+      assert.equal((await claim(rank)).status,409);
+    }
+    assert.equal(player.tentacles-balanceBefore,[16,17,18,19].reduce((sum,rank)=>sum+getCARankReward(rank).tentacles,0));
+    assert.equal(player.weapon_inventory['large-poison']-poisonBefore,1350);
+    assert.deepEqual(getPendingCARankRewards(player),[]);
+    assert.deepEqual(persistedPlayer.ca_rank_rewards_claimed,Array.from({length:18},(_,i)=>i+2));
+
   } finally {
     await new Promise((resolve) => app.close(resolve));
   }

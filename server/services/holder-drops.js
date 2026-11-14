@@ -1,3 +1,4 @@
+import { kyivDayKey, nextKyivMidnight } from "../../src/lib/kyivDay.js";
 import { store } from '../data/store.js';
 import { playerDb } from '../data/player-db.js';
 import { normalizeGiftMailContent, normalizeGiftRewards } from '../utils/giftMail.js';
@@ -5,7 +6,7 @@ import { defaultNftHolderCampaign, loadNearCampaignMetadata } from './nft-holder
 import { HOLDER_PET_OPTIONS, holderPetAlreadyGranted } from '../../src/lib/holderPetRewards.js';
 
 const accountPattern = /^[a-z0-9]+(?:[-_.][a-z0-9]+)*$/;
-const utcDay = () => new Date().toISOString().slice(0, 10);
+const utcDay = () => kyivDayKey();
 const rpcUrls = () => {
   const network = process.env.NEAR_NETWORK || process.env.VITE_NEAR_NETWORK || 'mainnet';
   if (!['mainnet', 'testnet'].includes(network)) throw new Error('Unsupported NEAR network');
@@ -63,6 +64,7 @@ export function newHolderDrop(kind = 'nft') {
     name: type === 'nft' ? '' : 'Planet4', symbol: type === 'token' ? 'PL4' : '',
     decimals: type === 'token' ? 18 : 0, icon: '', iconMime: '',
     threshold: type === 'token' ? '1000000' : '1',
+    rewardMode: 'per_unit',
     rewards: type === 'nft' ? [{ field: 'large_poison', amount: 1 }] : [{ field: 'large_poison', amount: 1 }],
     title: titleDefaults(type), text: { uk: '', en: '', ru: '' }, sentByDay: {},
     lastRunAt: '', lastResult: null, holders: [],
@@ -84,7 +86,9 @@ export function normalizeHolderDrop(input = {}, { keepState = true } = {}) {
   drop.icon = String(input.icon || '').slice(0, 2_000_000);
   drop.iconMime = String(input.iconMime || '').slice(0, 80);
   drop.threshold = String(input.threshold || (kind === 'token' ? '1000000' : '1')).trim();
+  drop.rewardMode = ['fixed', 'per_unit'].includes(input.rewardMode) ? input.rewardMode : kind === 'token' ? 'per_unit' : 'fixed';
   if (kind === 'token' && !/^\d+(?:\.\d{1,36})?$/.test(drop.threshold)) throw new Error('Token threshold must be a positive decimal amount');
+  if (kind === 'token' && unitRaw(drop.threshold, drop.decimals) <= 0n) throw new Error('Token threshold must be greater than zero');
   if (kind === 'nft' && (!/^\d+$/.test(drop.threshold) || BigInt(drop.threshold) < 1n)) throw new Error('NFT threshold must be a positive whole number');
   drop.rewards = normalizeGiftRewards(input.rewards || [{ field: 'large_poison', amount: 1 }]);
   drop.title = normalizeGiftMailContent(input.title || titleDefaults(kind), `${kind} holder bonus`, 120);
@@ -129,12 +133,59 @@ function migrateLegacy() {
   return drops;
 }
 
+const BUILT_IN_PET_DROPS = [{
+  id: 'near-legion-pet', kind: 'nft', enabled: false,
+  contract: 'nearlegion.nfts.tg', name: 'NEAR Legion', threshold: '1', petRewardId: 'legion_pet',
+  rewards: [{ field: 'large_poison', amount: 1 }],
+  title: { uk: 'Пет NEAR Legion', ru: 'Пет NEAR Legion', en: 'NEAR Legion pet' },
+  text: { uk: '', ru: '', en: '' },
+}];
+
+export function ensureBuiltInHolderDrops() {
+  const drops = migrateLegacy();
+  let changed = false;
+  for (const builtIn of BUILT_IN_PET_DROPS) {
+    const existing = drops.find((drop) => drop.petRewardId === builtIn.petRewardId);
+    if (existing) {
+      // Built-in rewards have a canonical collection. Older deployments briefly
+      // created legion_pet with the HERE contract, which made every claim check
+      // the wrong collection and surface as a generic RPC failure.
+      if (existing.contract !== builtIn.contract || existing.name !== builtIn.name) {
+        existing.contract = builtIn.contract;
+        existing.name = builtIn.name;
+        changed = true;
+      }
+      continue;
+    }
+    if (drops.some((drop) => drop.contract === builtIn.contract && drop.petRewardId)) continue;
+    drops.push(normalizeHolderDrop(builtIn, { keepState: false }));
+    changed = true;
+  }
+  if (changed) { store.nftHolderDrops = drops; store.persistSoon(0); }
+  return drops;
+}
 export function getHolderDrops() { return migrateLegacy(); }
 export function getHolderDrop(id) { return getHolderDrops().find((drop) => drop.id === String(id)); }
+const nextUtcDay = (now = Date.now()) => new Date(nextKyivMidnight(now)).toISOString();
+export function holderDropStatus(drop, now = Date.now()) {
+  const running = runningDrops.has(drop.id);
+  const dueAt = drop.enabled ? drop.nextRunAt || (drop.lastSuccessfulFullScanDay === kyivDayKey(now) ? nextUtcDay(now) : new Date(now).toISOString()) : '';
+  return { running, status: running ? 'running' : drop.runStatus === 'running' ? 'interrupted' : drop.runStatus || 'idle',
+    nextRunAt: dueAt, due: Boolean(dueAt && Date.parse(dueAt) <= now),
+    lastSentAt: drop.lastSentAt || '', startedAt: drop.runStartedAt || '', finishedAt: drop.runFinishedAt || '', error: drop.runError || '' };
+}
 export function saveHolderDrop(input) {
   if (runningDrops.has(String(input.id))) throw Object.assign(new Error('Holder drop is already running'), { statusCode: 409, code: 'HOLDER_DROP_BUSY' });
   const old = getHolderDrop(input.id);
   const drop = normalizeHolderDrop({ ...input, sentByDay: old?.sentByDay, lastRunAt: old?.lastRunAt, lastResult: old?.lastResult, holders: old?.holders });
+  for (const key of ['lastSuccessfulFullScanDay','lastPreviewAt','lastPreviewResult','lastScanErrors','nextRunAt','lastSentAt','runStatus','runStartedAt','runFinishedAt','runError']) {
+    if (old?.[key] !== undefined) drop[key] = old[key];
+    else delete drop[key];
+  }
+  if (drop.enabled && !old?.enabled) drop.nextRunAt = drop.lastSuccessfulFullScanDay === utcDay() ? nextUtcDay() : new Date().toISOString();
+  if (old && ['contract','kind','threshold','decimals','rewardMode'].some(key => old[key] !== drop[key])) {
+    drop.holders=[]; drop.lastPreviewAt=''; drop.lastPreviewResult=null; drop.lastScanErrors=[];
+  }
   store.nftHolderDrops = [...getHolderDrops().filter((item) => item.id !== drop.id), drop];
   store.persistSoon(0);
   return drop;
@@ -228,15 +279,24 @@ async function evaluate(drop, player) {
       }
       if (BigInt(tokenIds.length) !== count) throw new Error('NFT ownership changed during scan; try again');
     }
-    return { wallet, holding: count.toString(), rewardMultiplier: 1, tokenIds };
+    return { wallet, holding: count.toString(), rewardMultiplier: holderRewardMultiplier(drop, count), tokenIds };
   }
   const balance = String(await view(drop.contract, 'ft_balance_of', { account_id: wallet }));
   if (!/^\d+$/.test(balance)) throw new Error('Contract returned an invalid token balance');
   const threshold = unitRaw(drop.threshold, drop.decimals);
   if (threshold <= 0n) throw new Error('Token threshold must be greater than zero');
-  const multiplier = BigInt(balance) / threshold;
+  const multiplier = BigInt(holderRewardMultiplier(drop, balance));
   if (multiplier < 1n) return null;
   return { wallet, holding: balance, rewardMultiplier: Number(multiplier > 1000000n ? 1000000n : multiplier), displayBalance: formatToken(balance, drop.decimals) };
+}
+
+export function holderRewardMultiplier(drop, rawBalance) {
+  const threshold = drop.kind === 'nft' ? BigInt(drop.threshold) : unitRaw(drop.threshold, drop.decimals);
+  if (threshold <= 0n) throw new Error('Holding unit must be greater than zero');
+  const units = BigInt(rawBalance) / threshold;
+  if (units < 1n) return 0;
+  if (drop.rewardMode === 'fixed' || (drop.kind === 'nft' && !drop.rewardMode)) return 1;
+  return Number(units > 1000000n ? 1000000n : units);
 }
 
 function publicHolder(player, holding, previous, drop) {
@@ -303,6 +363,7 @@ export async function previewHolderDrop(id) {
 
 export async function claimNftHolderPet(player, petId) {
   if (!HOLDER_PET_OPTIONS.some(pet => pet.id === petId)) throw Object.assign(new Error('Unknown pet'), { statusCode: 400 });
+  if (petId === 'legion_pet') ensureBuiltInHolderDrops();
   if (player.inventory_items?.some(item => item.id === petId) || player.equipped_items?.pet === petId) return { status: 'owned' };
   if (!player.near_wallet_id) return { status: 'wallet_required' };
   if (player.near_wallet_verified !== true) return { status: 'wallet_unverified' };
@@ -332,8 +393,26 @@ export async function processHolderDrop(options = {}) {
   if (options.petOnly && petGrantRunning) throw Object.assign(new Error('Pet issuance is already running'), { statusCode: 409, code: 'HOLDER_DROP_BUSY' });
   if (runningDrops.has(id)) throw Object.assign(new Error('Holder drop is already running. Try again after it finishes.'), { statusCode: 409, code: 'HOLDER_DROP_BUSY' });
   runningDrops.add(id);
+  const drop = getHolderDrop(id);
+  if (drop) { drop.runStatus = 'running'; drop.runStartedAt = new Date().toISOString(); drop.runError = ''; store.persistSoon(0); }
   if (options.petOnly) petGrantRunning = true;
-  try { return await runHolderDrop(options); }
+  try {
+    const result = await runHolderDrop(options);
+    const current = getHolderDrop(id);
+    if (current) {
+      current.runStatus = result.skipped ? 'skipped' : result.errors?.length || Number(result.errors) > 0 ? 'partial' : 'completed';
+      current.runFinishedAt = new Date().toISOString();
+      if (options.previewOnly) current.lastPreviewResult = {checked:result.checked, holders:result.holders?.length || 0, errors:result.errors?.length || 0};
+      else if (result.sent > 0) current.lastSentAt = current.runFinishedAt;
+      if (!options.previewOnly && !options.petOnly && !options.forcePlayerId && !options.playerIds) current.nextRunAt = current.lastSuccessfulFullScanDay === utcDay() ? nextUtcDay() : new Date(Date.now()+300000).toISOString();
+      store.persistSoon(0);
+    }
+    return result;
+  } catch (error) {
+    const current = getHolderDrop(id);
+    if (current) { current.runStatus='failed'; current.runError=error.message; current.runFinishedAt=new Date().toISOString(); current.nextRunAt=new Date(Date.now()+300000).toISOString(); store.persistSoon(0); }
+    throw error;
+  }
   finally { runningDrops.delete(id); if (options.petOnly) petGrantRunning = false; }
 }
 
@@ -379,14 +458,21 @@ async function runHolderDrop({ id, forcePlayerId = '', playerIds, previewOnly = 
       if (!eligibleToken) continue;
       store.nftPetClaims ||= [];
       store.nftPetClaims.push({ network: nearNetwork(), contract: drop.contract, tokenId: eligibleToken, petId: drop.petRewardId, wallet: holder.wallet, playerId: String(player.id), at });
-      player.inventory_items = [...(player.inventory_items || []), { id: drop.petRewardId, slot: 'pet', type: 'equipment', count: 1, locked: false, sourceType: 'nft_holder', sourceContract: drop.contract }];
+      player.inventory_items = [...(player.inventory_items || []), { id: drop.petRewardId, slot: 'pet', type: 'equipment', count: 1, locked: false, nonTransferable: true, sourceType: 'nft_holder', sourceContract: drop.contract, sourceTokenId: eligibleToken }];
       player.holder_pet_grants = { ...player.holder_pet_grants, [drop.petRewardId]: { wallet: holder.wallet, contract: drop.contract, tokenId: eligibleToken, network: nearNetwork(), at } };
       sent.push({ ...holder, petGranted: true, sent: true });
       continue;
     }
-    if (!forcePlayerId && previous[String(player.id)]) continue;
+    const receiptKey = `${drop.id}:${day}`;
+    const savedReceipt = player.holder_drop_receipts?.[receiptKey];
+    if (!forcePlayerId && (previous[String(player.id)] || savedReceipt)) {
+      if (savedReceipt) previous[String(player.id)] = savedReceipt;
+      continue;
+    }
     player.gift_mail = [...(player.gift_mail || []), makeMail(drop, at, holder.rewardMultiplier)].slice(-100);
     previous[String(player.id)] = { at, wallet: holder.wallet, holding: holder.holding, rewardMultiplier: holder.rewardMultiplier };
+    const receiptCutoff = new Date(Date.now() - 7 * 86400000).toISOString().slice(0,10);
+    player.holder_drop_receipts = { ...Object.fromEntries(Object.entries(player.holder_drop_receipts || {}).filter(([key]) => key.slice(-10) >= receiptCutoff)), [receiptKey]: previous[String(player.id)] };
     sent.push({ ...holder, sent: true });
   }
   drop.sentByDay = { [day]: previous };
@@ -411,6 +497,7 @@ async function runHolderDrop({ id, forcePlayerId = '', playerIds, previewOnly = 
 export async function processAllHolderDrops() {
   const results = [];
   for (const drop of getHolderDrops().filter((item) => item.enabled)) {
+    if (Date.parse(drop.nextRunAt || '') > Date.now()) continue;
     if (scheduledDrops.has(drop.id)) continue;
     scheduledDrops.add(drop.id);
     try { results.push({ id: drop.id, ...(await processHolderDrop({ id: drop.id })) }); }

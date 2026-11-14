@@ -1,0 +1,2 @@
+export const effectDialogClass = 'max-h-[88dvh] min-h-0 w-full max-w-[440px] touch-pan-y overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-2xl border-2 border-[#38e88e] bg-[#10170f] bg-[url(/skills/advanced/armor-help.webp)] bg-[length:100%_100%] p-4 text-[#eaf5d8] shadow-[0_0_30px_rgba(56,232,142,.2)]';
+export const effectCloseClass = 'mt-3 h-10 w-full rounded-lg border border-[#b9ff68] bg-[#182318] text-xs font-black uppercase text-[#dfffaa]';

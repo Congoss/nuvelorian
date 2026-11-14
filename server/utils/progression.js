@@ -1,5 +1,9 @@
+import { getCARankBackfillNotice } from './caRankBackfillNotice.js';
+import {gameDebugLog} from './gameDebugLog.js';
+import { auditXp, trackPlayer } from './playerAudit.js';
+import { reconcilePlayerAchievements } from './playerAchievements.js';
 import { captureDailyTaskProgress } from '../../src/lib/questNotifications.js';
-import { GAME_CONFIG, getXpForLevel } from '../../src/lib/gameConfig.js';
+import { getXpForLevel, getBaseEnergyRegenRate } from '../../src/lib/gameConfig.js';
 import { getGlobalWeekMeta } from './globalWeeklyCycle.js';
 import { battlePassView } from './battlePass.js';
 import { ensurePassiveTimer } from './passiveRewards.js';
@@ -14,13 +18,18 @@ function getHeroTier(level) {
 }
 
 export function normalizePlayerProgression(player) {
+  reconcilePlayerAchievements(player);
   captureDailyTaskProgress(player, getGlobalWeekMeta());
   ensurePassiveTimer(player);
   const currentBattlePassView = battlePassView(player);
   const equipmentEffects = calculateEquipmentEffects(player).effects;
   const equipmentEnergyCapacity = equipmentEffects.energyCapacityFlat;
-  const energyRegenBase = Number(player.energy_regen_base_rate) || (Number(player.energy_regen_rate) || GAME_CONFIG.ENERGY_REGEN_PER_MIN) / (1 + Number(player.equipment_energy_regen_pct || 0));
-  const { scrap, safe_scrap, scrap_per_hour, coins, x_oauth, ...currentFields } = player;
+  const energyRegenBase = getBaseEnergyRegenRate(player);
+  // Retry journals contain previous response bodies. Keep them in authoritative
+  // storage, outside every client profile and redundant bootstrap projection.
+  const { scrap, safe_scrap, scrap_per_hour, coins, x_oauth,
+    combat_receipts, combat_retired_requests, combat_request_floor, forge_receipts,
+    ...currentFields } = player;
   const weekMeta = getGlobalWeekMeta();
   let level = Math.max(1, Math.floor(Number(player.level) || 1));
   let xp = Math.max(0, Number(player.xp) || 0);
@@ -34,6 +43,7 @@ export function normalizePlayerProgression(player) {
   }
   return {
     ...currentFields,
+    ca_rank_backfill_notice: getCARankBackfillNotice(player),
     max_energy: Math.max(1, Number(player.talent_base_max_energy) ||
       (Number(player.max_energy || 100) - getTalentEnergyBonus(player) - Number(player.equipment_energy_capacity || 0)))
       + getPlayerLevelEnergyBonus(level) + getTalentEnergyBonus(player) + equipmentEnergyCapacity,
@@ -110,6 +120,8 @@ export function migrateLegacyResourceFields(player) {
 }
 
 export function grantXpToPlayer(player, amount) {
+  trackPlayer(player);
+  auditXp(player,amount);
   const normalized = normalizePlayerProgression(player);
   let xp = (normalized.xp || 0) + Math.max(0, amount || 0);
   let level = normalized.level || 1;
@@ -133,7 +145,7 @@ export function grantXpToPlayer(player, amount) {
     hero_tier: normalized.hero_tier,
   });
 
-  console.log('[xp] updated', {
+  gameDebugLog('[xp] updated', {
     playerId: player?.id || null,
     gain: Math.max(0, amount || 0),
     xp: normalized.xp,

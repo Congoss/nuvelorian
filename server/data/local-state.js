@@ -15,7 +15,15 @@ export function saveLocalState(store) {
   if (!path) return false;
   const snapshot = Object.fromEntries(Object.entries(store).filter(([, value]) => typeof value !== 'function'));
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(`${path}.tmp`, JSON.stringify(snapshot), 'utf8');
-  renameSync(`${path}.tmp`, path);
-  return true;
+  // A per-process temp file keeps concurrent local servers/tests from renaming
+  // each other's half-written snapshot; Windows can briefly lock the target.
+  const temp = `${path}.${process.pid}.tmp`;
+  writeFileSync(temp, JSON.stringify(snapshot), 'utf8');
+  for (let attempt = 0; ; attempt += 1) {
+    try { renameSync(temp, path); return true; }
+    catch (error) {
+      if (!['EPERM', 'EBUSY', 'EACCES'].includes(error?.code) || attempt >= 20) throw error;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10);
+    }
+  }
 }

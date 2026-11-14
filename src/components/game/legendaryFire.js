@@ -5,7 +5,7 @@ function animateWhenVisible(canvas, enabled, draw, fps) {
   let last = 0;
   let visible = typeof IntersectionObserver === 'undefined';
   const interval = 1000 / fps;
-  const canAnimate = () => !disposed && visible && !document.hidden;
+  let canAnimate = () => !disposed && visible && !document.hidden;
   const tick = (time) => {
     frame = 0;
     if (!canAnimate()) return;
@@ -30,6 +30,15 @@ function animateWhenVisible(canvas, enabled, draw, fps) {
   });
   intersection?.observe(canvas);
   document.addEventListener('visibilitychange', sync);
+  // Android WebView can drop canvas backing stores under GPU memory pressure.
+  // Hide the effect instead of letting a lost surface paint as a white block.
+  let lost = false;
+  const onLost = event => { event.preventDefault?.(); lost = true; canvas.style.visibility = 'hidden'; if (frame) cancelAnimationFrame(frame); frame = 0; };
+  const onRestored = () => { lost = false; canvas.style.visibility = ''; sync(); };
+  canvas.addEventListener('contextlost', onLost);
+  canvas.addEventListener('contextrestored', onRestored);
+  const baseCanAnimate = canAnimate;
+  canAnimate = () => !lost && baseCanAnimate();
   sync();
   return () => {
     disposed = true;
@@ -37,6 +46,8 @@ function animateWhenVisible(canvas, enabled, draw, fps) {
     frame = 0;
     intersection?.disconnect();
     document.removeEventListener('visibilitychange', sync);
+    canvas.removeEventListener('contextlost', onLost);
+    canvas.removeEventListener('contextrestored', onRestored);
   };
 }
 

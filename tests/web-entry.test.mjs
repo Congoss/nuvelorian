@@ -57,7 +57,7 @@ test('Telegram -> browser -> same player, with replay and cross-origin rejection
     unlockBattlePassTier(store.players[0], 'legendary');
     store.players[0].clan_logo_id = 'nuvelor03';
     store.players[0].boss_kills_by_id = { heli: 10 };
-    store.players[0].referred_friends = [{ id: "friend-a" }, { id: "friend-b" }];
+    store.players[0].referred_friends = [{ id: "friend-a",level:20 }, { id: "friend-b",level:20 }];
     const publicResponse = await fetch(base + '/api/players');
     assert.equal(publicResponse.status, 200);
     const publicPlayer = (await publicResponse.json()).data.find(p => p.id === 'existing-player');
@@ -66,7 +66,7 @@ test('Telegram -> browser -> same player, with replay and cross-origin rejection
     assert.equal(publicPlayer.boss_kills_by_id.heli, 10);
     assert.equal(publicPlayer.referralsCount, 2);
     store.players.push({ id: 'other-inviter', telegram_id: '456', username: 'other', referred_friends: [] });
-    store.players.push({ id: 'other-friend', referred_by: '456', username: 'friend' });
+    store.players.push({ id: 'other-friend', referred_by: '456', username: 'friend',level:20 });
     const referralTop = await fetch(base + '/api/leaderboard?sort=-referrals');
     const referralRows = (await referralTop.json()).data;
     assert.equal(referralRows.find(p => p.id === 'other-inviter').referralsCount, 1);
@@ -148,6 +148,8 @@ test('Telegram -> browser -> same player, with replay and cross-origin rejection
     assert.equal(result.status, 200);
     assert.equal(store.players[0].premium, before + 35);
     store.players[0].referred_friends=[{playerId:'friend-test',newbiePart1Done:true,boss1Damage:0}];
+    // Friend rewards unlock once the referred player reaches level 20.
+    store.players.push({id:'friend-test',created_by:'friend-test@game',username:'friend',level:20});
     const claimReferral=reward=>fetch(base+'/api/players/existing-player',{method:'PATCH',headers:{Origin:base,Cookie:cookie,'Content-Type':'application/json'},body:JSON.stringify({claimReferralReward:reward})});
     const tentaclesBefore=Number(store.players[0].tentacles||0);
     const poisonBefore=Number(store.players[0].weapon_inventory?.['small-poison']||0);

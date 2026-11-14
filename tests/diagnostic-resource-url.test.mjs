@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {diagnosticResourceUrl} from '../src/lib/diagnosticResourceUrl.js';
+test('SVG image href resolves to its base value rather than object string',()=>{assert.equal(diagnosticResourceUrl({href:{baseVal:'/clan-ship-preview/hammer.webp'}}),'/clan-ship-preview/hammer.webp');assert.equal(diagnosticResourceUrl({href:{}}),'');});
+test('HTML image and link resources keep their actual URLs',()=>{assert.equal(diagnosticResourceUrl({currentSrc:'/optimized.webp',src:'/original.png'}),'/optimized.webp');assert.equal(diagnosticResourceUrl({href:'/style.css'}),'/style.css');assert.equal(diagnosticResourceUrl(null),'');});

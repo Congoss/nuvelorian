@@ -1,3 +1,22 @@
+import { kyivDayKey } from "./kyivDay.js";
+// Per player and boss, reset at midnight UTC. Keys and first-kill bonuses are exempt.
+export function getBossDailyRewardMultiplier(killNumber = 1) {
+  return Math.max(0.1, (10 - Math.floor(Math.max(0, Math.floor(Number(killNumber) || 1) - 1) / 10)) / 10);
+}
+
+export function getBossDailyRewardState(previous, bossId, now = Date.now(), killsBeforeFight = Infinity) {
+  const day = kyivDayKey(now);
+  const counts = previous?.day === day ? { ...previous.counts } : {};
+  // Standard bosses begin counting daily farm only after their gold medal.
+  if (Number(killsBeforeFight) < 100) {
+    delete counts[bossId];
+    return { state: { day, counts }, killNumber: 1, multiplier: 1 };
+  }
+  const killNumber = Math.max(0, Math.floor(Number(counts[bossId]) || 0)) + 1;
+  counts[bossId] = killNumber;
+  return { state: { day, counts }, killNumber, multiplier: getBossDailyRewardMultiplier(killNumber) };
+}
+
 export const DEFAULT_BOSS_REWARD_CONFIG = {
   rewardScale: 0.5,
   multiplierTiers: [
@@ -43,11 +62,44 @@ export const DEFAULT_BOSS_REWARD_CONFIG = {
     boss4: 0.0045,
     boss5: 0.0045,
     boss6: 0.0045,
+    boss7: 0.0045,
   },
   boxIconShareThresholds: [0.001, 0.01, 0.05, 0.1],
 };
 
+export function getBossResourceRewardMultiplier(type) {
+  return type === 'energy' || type === 'tentacles' ? 0.75 : 1;
+}
+
 const RESOURCE_KEYS = ['tentacles', 'xp', 'strength', 'energy', 'premium'];
+const STANDARD_BOSS_IDS = new Set(['heli','tank','chinook','boss4','boss5','boss6','boss7','boss8','boss9']);
+export function getStandardBossRewardFund(maxHp) {
+  const scale = Math.sqrt(Math.max(1, Number(maxHp) || 1) / 2000000);
+  return {
+    tentacles: Math.floor(1540681 * scale) * 3,
+    xp: Math.floor(15416 * scale),
+    strength: Math.floor(3081 * scale),
+    energy: Math.floor(6162 * scale) * 2,
+  };
+}
+
+// Preserve early-boss rewards; above 10k HP the full-fight budget grows
+// with sqrt(HP), instead of flattening to ten units or scaling linearly.
+export function getBossRewardDamageUnits(damage, maxHp) {
+  const hp = Math.max(1, Number(maxHp) || 1);
+  return Math.min(hp, Math.max(0, Number(damage) || 0)) / Math.max(1000, Math.sqrt(hp * 100));
+}
+
+export function migratePendingBossReward(box, directShare = 0) {
+  if (box?.rewardFormula !== 'boss_v2' || Number(box.rewardBalanceVersion || 0) >= 2) return box;
+  const oldUnits = Math.max(0, Number(box.damage) || 0) / 1000;
+  const scale = oldUnits > 0 ? Math.min(1, getBossRewardDamageUnits(box.damage, box.maxHp) / oldUnits) : 1;
+  return { ...box, rewardBalanceVersion: 2, rewardSnapshot: (box.rewardSnapshot || []).map(drop => {
+    if (RESOURCE_KEYS.includes(drop.type)) return { ...drop, qty: Math.floor(Number(drop.qty || 0) * scale) };
+    if (drop.type === 'weapon') return { ...drop, qty: Math.floor(Number(drop.qty || 0) * Math.max(0, Math.min(1, directShare))) };
+    return drop;
+  }).filter(drop => drop.qty === undefined || Number(drop.qty) > 0) };
+}
 
 export function stripRetiredBossFragments(drops = []) {
   return drops.filter((drop) => !drop?.keyFragment && !['gear_fragment', 'boss_gear_fragment', 'boss_key_fragment'].includes(drop?.type));
@@ -76,6 +128,10 @@ export function sanitizeBossRewardConfig(value = {}) {
   const config = merge(DEFAULT_BOSS_REWARD_CONFIG, value);
   config.multiplierTiers.sort((a, b) => a.hp - b.hp);
   config.cashbackTiers.sort((a, b) => (a.maxHp ?? Infinity) - (b.maxHp ?? Infinity));
+  for (const tier of config.cashbackTiers) {
+    tier.min = Math.min(1, tier.min);
+    tier.max = Math.max(tier.min, Math.min(1, tier.max));
+  }
   config.rankMultipliers.sort((a, b) => a.maxRank - b.maxRank);
   config.randomMultiplier.max = Math.max(config.randomMultiplier.min, config.randomMultiplier.max);
   config.participation.maxDamage = Math.max(config.participation.minDamage, config.participation.maxDamage);
@@ -178,6 +234,7 @@ export function calculateBossReward({
   actualDamageTotal,
   poisonRefundUnits = {},
   rank = 101,
+  dailyKillNumber = 1,
   availableSpecials = ['gear', 'pet', 'background'],
   firstKillDrops = [],
   pityDrops = [],
@@ -197,14 +254,25 @@ export function calculateBossReward({
     resources: { ...(carries.resources || {}) },
     poison: { ...(carries.poison || {}) },
   };
+  const dailyMultiplier = getBossDailyRewardMultiplier(dailyKillNumber);
   const drops = [];
 
   if (participationEligible) {
-    const damageUnits = damage / 1000;
+    const damageUnits = getBossRewardDamageUnits(damage, hp);
+    const fund = STANDARD_BOSS_IDS.has(bossId) ? getStandardBossRewardFund(hp) : null;
+    if (fund && bossId === 'heli') fund.energy = 50;
+    if (fund && bossId === 'tank') fund.energy = 300;
+    const fundMultiplier = Math.min(1, randomMultiplier / 1.15) * Math.min(1, rankMultiplier / 1.5)
+      * dailyMultiplier * (config.rewardScale / DEFAULT_BOSS_REWARD_CONFIG.rewardScale);
     for (const key of RESOURCE_KEYS) {
       const participation = Number(config.participation.rewards[key] || 0) * bossMultiplier;
       const variable = damageUnits * Number(config.damagePer1000[key] || 0) * bossMultiplier * randomMultiplier * rankMultiplier;
-      addWholeWithCarry(key, (participation + variable) * config.rewardScale, nextCarries.resources, drops);
+      const preserveStarterTentacles = key === 'tentacles' && ['heli','tank'].includes(bossId);
+      const amount = fund && Object.hasOwn(fund,key) && !preserveStarterTentacles
+        ? fund[key] * (damage / hp) * fundMultiplier
+        : (participation + variable) * config.rewardScale * dailyMultiplier;
+      const energyMultiplier = fund && key === 'energy' ? 0.75 : 1;
+      addWholeWithCarry(key, amount * energyMultiplier * getBossResourceRewardMultiplier(key), nextCarries.resources, drops);
     }
 
     const cashbackTier = config.cashbackTiers.find((tier) => tier.maxHp === null || hp <= tier.maxHp)
@@ -212,7 +280,7 @@ export function calculateBossReward({
     const cashbackRate = cashbackTier.min + rng() * (cashbackTier.max - cashbackTier.min);
     const poisonKeys = { small: 'satchel', medium: 'f4', large: 'c4' };
     for (const [type, weaponId] of Object.entries(poisonKeys)) {
-      const refund = Math.max(0, Number(poisonRefundUnits[type]) || 0) * cashbackRate;
+      const refund = Math.max(0, Number(poisonRefundUnits[type]) || 0) * cashbackRate * dailyMultiplier;
       const total = refund + Math.max(0, Number(nextCarries.poison[type]) || 0);
       const whole = Math.floor(total + 1e-9);
       nextCarries.poison[type] = Number((total - whole).toFixed(9));
@@ -229,7 +297,7 @@ export function calculateBossReward({
   if (hasAnyReward) {
     drops.push(...firstKillDrops.map((drop) => {
       if (!RESOURCE_KEYS.includes(drop?.type)) return drop;
-      return { ...drop, qty: Math.floor(Math.max(0, Number(drop.qty) || 0) * config.rewardScale) };
+      return { ...drop, qty: Math.floor(Math.max(0, Number(drop.qty) || 0) * config.rewardScale * getBossResourceRewardMultiplier(drop.type)) };
     }).filter((drop) => Number(drop?.qty) > 0), ...pityDrops);
   }
 
@@ -238,6 +306,8 @@ export function calculateBossReward({
     participationEligible,
     participationThreshold: threshold,
     actualDamageTotal: damage,
+    dailyMultiplier,
+    dailyKillNumber,
     damageShare: damage / hp,
     bossMultiplier,
     randomMultiplier,
@@ -249,4 +319,11 @@ export function calculateBossReward({
     drops,
     carries: nextCarries,
   };
+}
+
+export function allocateBossPoisonRefundUnits(targets, consumedUses, plannedDamage, attackCount = 1) {
+ const damages = targets.map(target => Math.max(0, Number(target.damage) || 0));
+ const total = damages.reduce((sum, damage) => sum + damage, 0);
+ const budget = Math.min(Math.max(0, Number(consumedUses) || 0), total / Math.max(1, Number(plannedDamage) || 0) * Math.max(1, Number(attackCount) || 1));
+ return targets.map((target, index) => ({ id: target.id, units: total > 0 ? budget * damages[index] / total : 0 }));
 }

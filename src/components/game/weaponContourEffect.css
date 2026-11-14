@@ -1,0 +1,16 @@
+.p4-contour-effect{position:absolute;inset:0;pointer-events:none;overflow:visible;contain:layout style}
+.p4-contour-space{position:absolute;pointer-events:none}
+.p4-contour-original{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center bottom}
+.p4-contour-space>img,.p4-contour-space>svg,.p4-contour-space>canvas{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:fill;pointer-events:none}
+.p4-aura-outer{filter:brightness(0) saturate(100%) drop-shadow(0 0 4px var(--weapon-glow)) drop-shadow(0 0 11px var(--weapon-glow));animation:p4-aura-breathe 2.3s ease-in-out infinite;opacity:.55}
+.p4-aura-inner{filter:brightness(0) invert(1) drop-shadow(0 0 1.5px #efffd1) drop-shadow(0 0 4px var(--weapon-glow));animation:p4-aura-core 1.7s ease-in-out infinite alternate;opacity:.6}
+.p4-contour-lightning{z-index:3;overflow:visible}.p4-contour-fire{z-index:4}
+@keyframes p4-aura-breathe{0%,100%{opacity:.35}50%{opacity:.7}}
+@keyframes p4-aura-core{from{opacity:.3}to{opacity:.7}}
+.p4-axial-bolt{opacity:0;animation:p4-axial-unstable 4.7s linear infinite}
+@keyframes p4-axial-unstable{0%,100%{opacity:.18}13%{opacity:.4}21%{opacity:.25}38%{opacity:.7}47%{opacity:.43}64%{opacity:.6}78%{opacity:.28}89%{opacity:.5}}
+[data-lightning-level="12"] .p4-axial-bolt{animation-name:p4-axial-soft}
+@keyframes p4-axial-soft{0%,100%{opacity:.04}25%{opacity:.16}46%{opacity:.07}67%{opacity:.23}85%{opacity:.1}}
+.p4-contour-effect[data-paused=true] *{animation-play-state:paused!important}
+html[data-game-hidden=true] .p4-contour-effect *{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){.p4-contour-effect *{animation:none!important}.p4-axial-bolt{opacity:0}}

@@ -1,0 +1,4 @@
+Built-in ImageGen. Output: public/ship-soldier-boss/soldier-intact-v3.webp
+The scene now animates an intact sprite with a continuous mesh; previous separated limb assets are unused.
+
+Precise minimal edit of this ORIGINAL full-body transparent alien soldier. Remove ONLY the tiny black pupil dots from BOTH pale cream eyes, filling just those dots with matching pale cream eye color. Preserve the original full-body pose, proportions, ALL edges and anatomy, helmet, mushrooms, rifle, hands, boots, every other detail and transparent background. Do NOT crop, do NOT split body parts, do NOT redraw or restyle. Full original canvas and silhouette preserved. Both eyes blank for pupils animated separately.

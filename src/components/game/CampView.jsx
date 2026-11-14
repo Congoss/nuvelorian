@@ -1,7 +1,37 @@
+import Friday13Pet from './Friday13Pet';
+import { useFriday13Reminder } from '@/lib/useFriday13Reminder';
+import ToasterPet from './ToasterPet';
+import { readLocalDossierView, saveLocalDossierView } from '@/lib/localDossierView';
+import EnhancementBat from './EnhancementBat';
+import { useAchievementLanguage } from '@/lib/useAchievementLanguage';
+import { usePartnerTasks } from '@/lib/usePartnerTasks';
+import PlayerCollectionLauncher from './PlayerCollectionLauncher';
+import PlayerCollection from './PlayerCollection';
+import ChatBeacon from './ChatBeacon';
+import ReferralAffiliateSettings from './ReferralAffiliateSettings';
+import { buildReferralLink } from '@/lib/referralLinks';
+import FishingBeacon from './FishingBeacon';
+import {getEquipmentEnhancementLevels,getFullEquipmentEnhancement} from '@/lib/equipmentEnhancementPresentation';
+import PvpEquipmentStats from './PvpEquipmentStats';
+import {CHEESE_BOSS_MEDALS, SOLDIER_BOSS_MEDALS, KANGAROO_BOSS_MEDALS, GUM_QUEEN_BOSS_MEDALS} from '@/lib/shipBossMedals';
+import {nextResourcePack,RESOURCE_PACKS} from '@/lib/resourcePacks';
+import './resourcePacks.css';
+import JunkSkunkPet from './JunkSkunkPet';
+import BossMedalList from './BossMedalList';
+import PurrgulpPet from './PurrgulpPet';
+import bronzeCleopatraMedal from '@/assets/boss-ui/bronze-cleopatrash.png';
+import silverCleopatraMedal from '@/assets/boss-ui/silver-cleopatrash.png';
+import goldCleopatraMedal from '@/assets/boss-ui/gold-cleopatrash.png';
+import { FEATURE_FLAGS } from '@/lib/featureFlags';
 import EquipmentCatalogCard from './EquipmentCatalogCard';
 import EquipmentSourceInfo from './EquipmentSourceInfo';
 import RaidScarecrowPet from './RaidScarecrowPet';
 import HereEarlyPet from './HereEarlyPet';
+import HalloweenPumpkinPet from './HalloweenPumpkinPet';
+import VoidlingPet from './VoidlingPet';
+import LegionPet from './LegionPet';
+import halloweenInviteBanner from '@/assets/IVENTS/halloween-invite-banner.png';
+import { halloweenActive, halloweenShopOpen } from '@/lib/halloweenEvent';
 import NftPetClaimButton from './NftPetClaimButton';
 import { getCampBackgroundName } from './backgrounds';
 import i18n from '@/i18n';
@@ -14,10 +44,12 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { lazy, Suspense } from 'react';
 import { Crown, Footprints, FlaskConical, Hand, HardHat, PawPrint, Pencil, Shield, Shirt, Skull, Sparkles, Sword, Zap } from 'lucide-react';
-import leaderboardIcon from '@/assets/optimized/all/nav/top-nav.webp';
+import { PLAYER_ACHIEVEMENTS } from '@/lib/playerAchievements';
+import { dossierRewardReady } from '@/lib/bossDossier';
 import dailyIcon from '@/assets/optimized/all/nav/daily-nav.webp';
 import cardGameIcon from '@/assets/optimized/all/nav/roulette-nav.webp';
 import worldBossIcon from '@/assets/optimized/all/nav/events-nav.webp';
+import { isFriday13SaleActive } from '@/lib/friday13Event.js';
 import heroNavIcon from '@/assets/optimized/all/nav/equipment-nav.webp';
 import chatIcon from '@/assets/optimized/all/nav/chat-nav.webp';
 import chatPlusIcon from '@/assets/optimized/camp/nav-chat-plus.webp';
@@ -47,14 +79,19 @@ import bronzeSporgolMedal from '@/assets/optimized/camp/medal-bronze-Sporgol.web
 import silverSporgolMedal from '@/assets/optimized/camp/medal-silver-Sporgol.webp';
 import goldSporgolMedal from '@/assets/optimized/camp/medal-gold-Sporgol.webp';
 import heroBaseAnimated from '@/assets/hero/hero-base1.gif';
+import heroFirstFrame from '@/assets/optimized/first-frame/camp-hero.webp?inline';
+import { isSceneImageReady, warmSceneImage } from '@/lib/sceneAssets';
 import LayeredHero, { LegendaryCapeLayer } from './LayeredHero';
 import NewbieSoulPet from './NewbieSoulPet';
 import AvatarWithFrame from './AvatarWithFrame';
 import MarkerFrame from './MarkerFrame';
 import GameTextureButton from './GameTextureButton';
 const AnimatedCampBackground = lazy(() => import('./AnimatedCampBackground'));
-const BattlePassScene = lazy(() => import('./BattlePassScene'));
-const VoidFlushScene = lazy(() => import('./VoidFlushScene'));
+const BattlePassGiftPreview = lazy(() => import('./BattlePassGiftPreview'));
+const BattlePassScene = lazy(() => import.meta.env.DEV && new URLSearchParams(window.location.search).get('localBattlePass') === '1' ? import('./BattlePassSeasonPreview') : import('./BattlePassScene'));
+const loadHalloweenEventScene = () => import('./HalloweenEventScene');
+const VoidFlushScene = lazy(loadHalloweenEventScene);
+const ResourcePackModal = lazy(() => import('./ResourcePackModal'));
 const NewbiePackModal = lazy(() => import('./NewbiePackModal'));
 import battlePassIcon from '@/assets/ui/battlepass-ico.png';
 import profileLikeIcon from '@/assets/ui/profile-like.png';
@@ -75,7 +112,7 @@ import { CAMP_BACKGROUNDS, getBossBackgroundDropDescription, getCampBackgroundBy
 import { GAME_CONFIG, getCollectionDamageBonus } from '@/lib/gameConfig';
 import { resolveTalentAttack } from '@/lib/talentCombat';
 import { buildEffectiveWeapon } from '@/lib/talents';
-import { claimLikeBox, getPlayerReaction, likePlayer, markPlayerPuddle } from '@/services/gameApi';
+import { claimLikeBox, getHalloweenEvent, getPlayerReaction, likePlayer, markPlayerPuddle } from '@/services/gameApi';
 import {
   EQUIPMENT_SLOTS,
   DEFAULT_EQUIPMENT_ITEMS,
@@ -189,10 +226,11 @@ const BOSS_MEDAL_IMGS = {
   boss4: { bronze: bronzeWormMedal, silver: silverWormMedal, gold: goldWormMedal },
   boss5: { bronze: bronzeSporgolMedal, silver: silverSporgolMedal, gold: goldSporgolMedal },
   boss6: { bronze: bronzeSuckholeMedal, silver: silverSuckholeMedal, gold: goldSuckholeMedal },
+  boss7: { bronze: bronzeCleopatraMedal, silver: silverCleopatraMedal, gold: goldCleopatraMedal },
   boss8: { bronze: bronzeShkrabanMedal, silver: silverShkrabanMedal, gold: goldShkrabanMedal },
 };
 
-function IconButton({ icon, label, onClick, badge, alert = false, locked = false, lockLabel = '', large = false, contain = false, emblemGlow = false, tutorialTarget = undefined, scaleIcon = true, uniformHeight = false }) {
+function IconButton({ icon, label, onClick, badge, beacon = null, alert = false, locked = false, lockLabel = '', large = false, contain = false, emblemGlow = false, tutorialTarget = undefined, scaleIcon = true, uniformHeight = false }) {
   return (
     <button
       type="button"
@@ -201,6 +239,7 @@ function IconButton({ icon, label, onClick, badge, alert = false, locked = false
       disabled={locked}
       className={`relative flex flex-col items-center gap-1 transition ${locked ? 'cursor-not-allowed' : 'hover:brightness-110'}`}
     >
+      {beacon}
       {badge ? (
         <span className="absolute -right-1 -top-1 z-10 rounded-full border border-[#28ee90] bg-[#ff9d3a] px-1.5 py-[1px] font-mono text-[8px] font-bold text-[#3d220c]">
           {badge}
@@ -342,11 +381,9 @@ function getInviteBadgeLabel(friend) {
 }
 
 function FriendInviteRow({ friend, t, onClaim, claiming = false, claimed = false }) {
-  const doneNewbie = Boolean(friend?.newbiePart1Done);
-  const bossDamage = Number(friend?.boss1Damage || 0);
   const status = claimed || friend?.rewardClaimed
     ? 'claimed'
-    : (doneNewbie || bossDamage >= 150 ? 'reward_ready' : (bossDamage > 0 ? 'active' : (friend?.status || 'joined')));
+    : (Number(friend?.level || 0) >= 20 ? 'reward_ready' : (Number(friend?.level || 0) > 1 ? 'active' : (friend?.status || 'joined')));
   const isReady = status === 'reward_ready';
   const isClaimed = status === 'claimed';
 
@@ -654,15 +691,74 @@ function EquipmentCombatStats({ stats, language, onClose }) {
   );
 }
 
-export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProfile, onAddXp = null, onRefreshProfile = null, readonlyProfile = false, onBackToRanking, cleanupRequested = false, onOpenPlayerProfile = null, activeModal = null, onVoidFlushModeChange = null, chatUnread = false }) {
-  const [battlePassMode, setBattlePassMode] = useState(false);
+export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProfile, onSyncProfile = null, onAddXp = null, onRefreshProfile = null, readonlyProfile = false, onBackToRanking, cleanupRequested = false, onOpenPlayerProfile = null, activeModal = null, onVoidFlushModeChange = null, chatUnread = false, patchUnread = false }) {
+  const friday13ReminderVisible = useFriday13Reminder(profile?.id);
+  const [friday13Now, setFriday13Now] = useState(Date.now);
+  useEffect(() => {
+    const timer = window.setInterval(() => setFriday13Now(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const [heroAnimationReady, setHeroAnimationReady] = useState(() => isSceneImageReady(heroBaseAnimated));
+  useEffect(() => {
+    let active = true;
+    warmSceneImage(heroBaseAnimated).then(() => {
+      if (active) setHeroAnimationReady(true);
+    }, () => {});
+    return () => { active = false; };
+  }, []);
+  const collectionViewKey = `p4-collection-open:${profile?.id}`;
+  const [collectionOpen, setCollectionOpenState] = useState(() => readLocalDossierView(collectionViewKey, false) === true);
+  function setCollectionOpen(value) { saveLocalDossierView(collectionViewKey, value); setCollectionOpenState(value); }
+  const awardsReady = !readonlyProfile && PLAYER_ACHIEVEMENTS.some(item => profile?.player_achievements?.[item.id]?.reward_status === 'pending');
+  const [battlePassMode, setBattlePassMode] = useState(() => import.meta.env.DEV && new URLSearchParams(window.location.search).get('localBattlePass') === '1');
   const [voidFlushMode, setVoidFlushModeState] = useState(false);
+  const halloweenVisitKey = `halloween:last-visit:${profile?.id || 'guest'}`;
+  const [showHalloweenReminder, setShowHalloweenReminder] = useState(false);
+  useEffect(() => {
+    if (!halloweenActive() || readonlyProfile) return undefined;
+    const update = () => {
+      const lastVisit = Number(window.localStorage.getItem(halloweenVisitKey) || 0);
+      setShowHalloweenReminder(!lastVisit || Date.now() - lastVisit >= 2 * 60 * 60 * 1000);
+    };
+    update();
+    const timer = window.setInterval(update, 60000);
+    return () => window.clearInterval(timer);
+  }, [halloweenVisitKey, readonlyProfile]);
+  const [halloweenVisible, setHalloweenVisible] = useState(halloweenShopOpen);
+  useEffect(() => {
+    const timer = setInterval(() => setHalloweenVisible(halloweenShopOpen()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const [halloweenPrefetch, setHalloweenPrefetch] = useState(null);
+  useEffect(() => {
+    if (readonlyProfile || !halloweenShopOpen()) return undefined;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void getHalloweenEvent().then(data => { if (!cancelled) setHalloweenPrefetch(data); }).catch(() => {});
+    }, 500);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [profile?.id, readonlyProfile]);
+  const openHalloweenEvent = () => {
+    if (readonlyProfile || !halloweenShopOpen()) return;
+    setVoidFlushMode(true);
+    void getHalloweenEvent().then(setHalloweenPrefetch).catch(() => {});
+  };
   const setVoidFlushMode = (active) => {
-    if (active && !import.meta.env.DEV) return;
+
+    if (active && !FEATURE_FLAGS.halloween) return;
+    if (active) {
+      window.localStorage.setItem(halloweenVisitKey, String(Date.now()));
+      setShowHalloweenReminder(false);
+    }
     setVoidFlushModeState(active);
     onVoidFlushModeChange?.(active);
     if (typeof document !== 'undefined') document.documentElement.dataset.voidFlushScene = active ? 'true' : 'false';
   };
+  useEffect(() => {
+    const openHalloween = () => { if (!readonlyProfile && FEATURE_FLAGS.halloween) openHalloweenEvent(); };
+    window.addEventListener('open-halloween-event', openHalloween);
+    return () => window.removeEventListener('open-halloween-event', openHalloween);
+  }, [readonlyProfile, onVoidFlushModeChange]);
   useEffect(() => () => {
     onVoidFlushModeChange?.(false);
     if (typeof document !== 'undefined') document.documentElement.dataset.voidFlushScene = 'false';
@@ -675,6 +771,8 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
   const [selectedProfileReaction, setSelectedProfileReaction] = useState(null);
   const [reactionCooldownUntil, setReactionCooldownUntil] = useState(0);
   const [reactionCooldownLeft, setReactionCooldownLeft] = useState(0);
+  const likeBoxClaimLock = useRef(false);
+  const [likeBoxClaimError,setLikeBoxClaimError]=useState('');
   const [likeBoxDrop, setLikeBoxDrop] = useState(false);
   const [likeBoxReward, setLikeBoxReward] = useState(null);
   const [likeBoxOpen, setLikeBoxOpen] = useState(false);
@@ -805,6 +903,7 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
       y: `${Math.max(0, Math.min(100, ((clientY - bounds.top) / bounds.height) * 100))}%`,
     });
   };
+  const [resourcePack,setResourcePack]=useState(null);
   const [newbiePackMode, setNewbiePackMode] = useState(false);
   const newbiePackExpiresAt = profile?.newbie_pack_1_purchased_at
     ? profile?.newbie_pack_2_expires_at
@@ -820,8 +919,8 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
     return () => window.clearTimeout(timer);
   }, [newbiePackExpiresAt]);
   const { t } = useTranslation();
-  const currentLanguage = profile?.language === 'en' || profile?.language === 'ru' ? profile.language : 'en';
-  const statsLanguage = profile?.language === 'ru' ? 'ru' : profile?.language === 'en' ? 'en' : 'uk';
+  const statsLanguage = useAchievementLanguage();
+  const currentLanguage = statsLanguage === 'uk' ? 'ua' : statsLanguage;
   const ui = {
     top: t('camp_view.top', { defaultValue: currentLanguage === 'en' ? 'Top' : currentLanguage === 'ru' ? 'Топ' : 'Топ' }),
     gear: t('camp_view.gear', { defaultValue: currentLanguage === 'en' ? 'Gear' : currentLanguage === 'ru' ? 'Экип' : 'Екіп' }),
@@ -836,6 +935,11 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
     cancel: t('camp_view.cancel', { defaultValue: currentLanguage === 'en' ? 'Cancel' : currentLanguage === 'ru' ? 'Отмена' : 'Скасувати' }),
   };
   const [equipmentMode, setEquipmentMode] = useState(false);
+  const [starterHintDismissedFor, setStarterHintDismissedFor] = useState(null);
+  const showStarterEquipmentHint = !readonlyProfile
+    && starterHintDismissedFor !== profile?.id
+    && !profile?.preferences?.starterEquipmentHintSeen
+    && (profile?.inventory_items || []).some(item => item.starterEquipment === true);
   const [combatStatsOpen, setCombatStatsOpen] = useState(false);
   const [equipmentSaving, setEquipmentSaving] = useState(false);
   const [equipmentError, setEquipmentError] = useState('');
@@ -845,6 +949,8 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
   const [draftEquippedItems, setDraftEquippedItems] = useState(null);
   const [previewItemName, setPreviewItemName] = useState('');
   const [selectedItemId, setSelectedItemId] = useState(null);
+  const enhancementPreviewLevels = useMemo(()=>getEquipmentEnhancementLevels(profile),[profile]);
+  const enhancementPreviewLevel = Number(enhancementPreviewLevels[selectedItemId]||0);
   const [openingReferralBox, setOpeningReferralBox] = useState(null);
   const [pendingReferralClaimId, setPendingReferralClaimId] = useState(null);
   const claimedTierKeys = useMemo(() => {
@@ -871,6 +977,7 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
   const rouletteUnlockLevel = unlocks.roulette || 1;
   const dailyLocked = playerLevel < dailyUnlockLevel;
   const rouletteLocked = playerLevel < rouletteUnlockLevel;
+  const { hasNew: hasNewPartners } = usePartnerTasks(profile);
   const questNotifications = getQuestRewardNotifications(profile);
   const rouletteBadge = Number(profile?.roulette_bonus_spins || 0);
   const chatBadge = Number(
@@ -893,6 +1000,8 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
   const activeBackground = activeBackgroundMeta.source;
   const savedEquippedItems = useMemo(() => normalizeEquippedLoadout({ equipped_items: profile?.equipped_items }), [profile?.equipped_items]);
   const equippedItems = draftEquippedItems || savedEquippedItems;
+  const equippedEnhancementLevel = getFullEquipmentEnhancement({...profile,equipped_items:equippedItems});
+  const enhancementButterflyStage = [4,6,8,10,12,15].reduce((stage, threshold, index) => equippedEnhancementLevel >= threshold ? index + 1 : stage, 0);
   const visibleHeroSlots = useMemo(() => buildVisibleHeroSlots(equippedItems), [equippedItems]);
   const ownedEquipment = useMemo(() => normalizeEquipmentInventory({
     inventory_items: profile?.inventory_items,
@@ -902,7 +1011,7 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
 
   const equipmentInventory = useMemo(() => {
     const catalog = new Map(DEFAULT_EQUIPMENT_ITEMS.map((item) => [item.id, item]));
-    const merged = new Map(DEFAULT_EQUIPMENT_ITEMS.map(item => [item.id, { ...item, locked: true }]));
+    const merged = new Map(DEFAULT_EQUIPMENT_ITEMS.filter(item => !item.hiddenFromCatalog).map(item => [item.id, { ...item, locked: true }]));
 
     ownedEquipment.forEach((item) => {
       const catalogItem = catalog.get(item.id);
@@ -940,16 +1049,20 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
     return Array.from(merged.values());
   }, [ownedEquipment, equippedItems]);
 
-  const itemMap = useMemo(() => new Map(equipmentInventory.map((item) => [item.id, item])), [equipmentInventory]);
+  const enhancedEquipmentInventory = useMemo(() => equipmentInventory.map((item) => ({
+    ...item,
+    enhancementLevel: Number(enhancementPreviewLevels[item.id] ?? item.enhancementLevel ?? 0),
+  })), [equipmentInventory, enhancementPreviewLevels]);
+  const itemMap = useMemo(() => new Map(enhancedEquipmentInventory.map((item) => [item.id, item])), [enhancedEquipmentInventory]);
   const seenEquipmentIds = useMemo(() => new Set(Array.isArray(profile?.seen_equipment_item_ids) ? profile.seen_equipment_item_ids.map(String) : []), [profile?.seen_equipment_item_ids]);
   const hasNewEquipment = equipmentInventory.some((item) => !item.locked && item?.id && !seenEquipmentIds.has(String(item.id)));
   const slotHasNewEquipment = (slotId) => equipmentInventory.some((item) => !item.locked && item?.slot === slotId && item?.id && !seenEquipmentIds.has(String(item.id)));
   const equipmentEffects = useMemo(
-    () => calculateEquipmentEffects({ ...profile, equipped_items: equippedItems }, equipmentInventory),
-    [profile, equipmentInventory, equippedItems],
+    () => calculateEquipmentEffects({ ...profile, equipped_items: equippedItems }, enhancedEquipmentInventory),
+    [profile, enhancedEquipmentInventory, equippedItems],
   );
   const equipmentCombatStats = useMemo(() => {
-    const statsProfile = { ...profile, equipped_items: equippedItems, inventory_items: equipmentInventory.filter(item => !item.locked) };
+    const statsProfile = { ...profile, equipped_items: equippedItems, inventory_items: enhancedEquipmentInventory.filter(item => !item.locked) };
     const collectionMultiplier = getCollectionDamageBonus(statsProfile);
     return GAME_CONFIG.WEAPONS.map((baseWeapon) => {
       const weapon = buildEffectiveWeapon(baseWeapon, statsProfile);
@@ -972,16 +1085,19 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
         stock: stockId ? Math.max(0, Number(profile?.weapon_inventory?.[stockId] || 0)) : 0,
       };
     });
-  }, [profile, equippedItems, equipmentInventory]);
+  }, [profile, equippedItems, enhancedEquipmentInventory]);
   const equippedLayerMap = useMemo(() => {
     const map = {};
+    map.weaponEnhancementVariant='charged';
     map.separateLegendaryCape = true;
     map.equippedWeaponId = equippedItems.weapon || null;
+    map.weaponEnhancementLevel=Number(enhancementPreviewLevels[equippedItems.weapon]||0);
     map.equippedHandsId = equippedItems.hands || null;
     ['weapon', 'head', 'hands', 'armor', 'legs', 'boots', 'accessory', 'animation'].forEach((slot) => {
       const item = itemMap.get(equippedItems[slot]);
       if (item?.layerSrc) map[slot] = item.layerSrc;
     });
+    applyAnubisLayerOverrides(map, equippedItems, itemMap);
     map.nightDisinfector = {
       weapon: itemMap.get(equippedItems.weapon)?.setId === NIGHT_DISINFECTOR_SET_ID,
       hands: itemMap.get(equippedItems.hands)?.setId === NIGHT_DISINFECTOR_SET_ID,
@@ -1000,6 +1116,7 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
     };
     map.set5 = Object.fromEntries(['weapon', 'head', 'hands', 'armor', 'legs', 'boots'].map((slot) => [slot, itemMap.get(equippedItems[slot])?.setId === SET5_SET_ID]));
     map.set4 = Object.fromEntries(['weapon', 'head', 'hands', 'armor', 'legs', 'boots'].map((slot) => [slot, itemMap.get(equippedItems[slot])?.setId === SET4_SET_ID]));
+    map.halloween = Object.fromEntries(['weapon', 'head', 'hands', 'armor', 'legs', 'boots'].map((slot) => [slot, itemMap.get(equippedItems[slot])?.setId === 'halloween_2026']));
     map.bpEpicPet = equippedItems.pet === 'bp_epic_pet';
     map.bpEpicAura = equippedItems.animation === 'bp_epic_animation';
     map.bpLegendaryAura = equippedItems.animation === 'bp_legendary_animation';
@@ -1007,7 +1124,7 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
     map.bpEpic = Object.fromEntries(['weapon', 'head', 'hands', 'armor', 'legs', 'boots'].map((slot) => [slot, itemMap.get(equippedItems[slot])?.setId === 'bp_epic']));
     map.newbiePackII = Object.fromEntries(['weapon', 'head', 'hands', 'armor', 'legs', 'boots'].map((slot) => [slot, itemMap.get(equippedItems[slot])?.setId === NEWBIE_PACK_II_SET_ID]));
     return map;
-  }, [itemMap, equippedItems]);
+  }, [itemMap, equippedItems, enhancementPreviewLevels]);
   const itemsForSlot = useMemo(() => {
     if (!selectedSlot) return [];
     const dedup = new Map();
@@ -1048,11 +1165,13 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
     return Array.from(dedup.values());
   }, [equipmentInventory, selectedSlot]);
   const equippedPet = findEquipmentItem(equippedItems.pet, equipmentInventory);
+  const [affiliateUrl, setAffiliateUrl] = useState(profile?.telegram_affiliate_url || '');
+  useEffect(() => { setAffiliateUrl(profile?.telegram_affiliate_url || ''); }, [profile?.id, profile?.telegram_affiliate_url]);
   const referralCode = String(profile?.referral_code || profile?.telegram_id || profile?.id || '');
   const botUsername = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_TELEGRAM_BOT_USERNAME)
     ? String(import.meta.env.VITE_TELEGRAM_BOT_USERNAME)
     : 'planet_4bot';
-  const referralLink = `https://t.me/${botUsername}?startapp=ref_${referralCode}`;
+  const referralLink = buildReferralLink({...profile, telegram_affiliate_url:affiliateUrl}, botUsername);
   const referredFriends = Array.isArray(profile?.referred_friends) ? profile.referred_friends : [];
   const rewardTiers = [
     { key: 'tier_1', needed: 1, boxType: 'invite_box', label: 'Invite Box x1' },
@@ -1060,13 +1179,13 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
     { key: 'tier_5', needed: 5, boxType: 'rare_invite_box', label: 'Rare Invite Box x1' },
     { key: 'tier_10', needed: 10, boxType: 'epic_invite_box', label: 'Epic Invite Box x1' },
   ];
-  const activeFriendsCount = referredFriends.filter((friend) => {
-    const doneNewbie = Boolean(friend?.newbiePart1Done);
-    const bossDamage = Number(friend?.boss1Damage || 0);
-    return doneNewbie || bossDamage >= 150;
-  }).length;
+  const activeFriendsCount = referredFriends.filter((friend) => Number(friend?.level || 0) >= 20).length;
 
   const openEquipmentMode = () => {
+    if (showStarterEquipmentHint) {
+      setStarterHintDismissedFor(profile.id);
+      void Promise.resolve(onUpdateProfile?.({preferences:{...profile.preferences,starterEquipmentHintSeen:true}})).catch(() => {});
+    }
     setCombatStatsOpen(false);
     setEquipmentError('');
     setFriendsMode(false);
@@ -1104,6 +1223,7 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
     { bossId: 'boss4', fallback: 'bronze' },
     { bossId: 'boss5', fallback: 'bronze' },
     { bossId: 'boss6', fallback: 'bronze' },
+    { bossId: 'boss7', fallback: 'bronze' },
     { bossId: 'boss8', fallback: 'bronze' },
   ].map(({ bossId, fallback }) => {
     const kills = getBossKillCount(profile, bossId);
@@ -1113,9 +1233,18 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
     return {
       bossId,
       src: assets[tier || fallback],
+      tier: tier || fallback,
       unlocked: Boolean(tier),
+      rewardReady: !readonlyProfile && dossierRewardReady(profile, bossId),
     };
   }).filter((medal) => medal.unlocked);
+
+  for(const [id,kills] of Object.entries(profile?.ship_boss_kills||{})){
+    const tier=getBossMedalTier(Number(kills)||0);
+    if(!tier)continue;
+    const assets=id==='hull'?CHEESE_BOSS_MEDALS:id==='engine'?SOLDIER_BOSS_MEDALS:id==='hangar'?KANGAROO_BOSS_MEDALS:id==='portal'?GUM_QUEEN_BOSS_MEDALS:DEFAULT_MEDAL_IMGS;
+    bossMedals.push({bossId:'ship-'+id,src:assets[tier],tier,unlocked:true,rewardReady:!readonlyProfile && dossierRewardReady(profile,'ship-'+id)});
+  }
 
   const handleSlotSelect = (slotId) => {
     const newlySeenIds = equipmentInventory.filter((item) => !item.locked && item?.slot === slotId && item?.id && !seenEquipmentIds.has(String(item.id))).map((item) => String(item.id));
@@ -1325,9 +1454,9 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
         }),
       ];
   const localizedSetBonus = (text) => {
-    if (currentLanguage === 'ru') return text.replace('Finger damage', 'Урон пальца').replace('Pencil damage', 'Урон карандаша').replace('Boss damage', 'Урон по боссам');
-    if (currentLanguage !== 'en') return text.replace('Finger damage', 'Шкода пальця').replace('Pencil damage', 'Шкода олівця').replace('Boss damage', 'Шкода босам');
-    return text;
+    if (currentLanguage === 'ru') return text.replace('Finger damage', 'Урон пальца').replace('Pencil damage', 'Урон карандаша').replace('Boss damage', 'Все атаки: урон');
+    if (currentLanguage !== 'en') return text.replace('Finger damage', 'Шкода пальця').replace('Pencil damage', 'Шкода олівця').replace('Boss damage', 'Усі атаки: шкода');
+    return text.replace('Boss damage', 'All attacks: damage');
   };
 
   if (battlePassMode && !readonlyProfile) {
@@ -1343,11 +1472,11 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
     );
   }
 
-  if (voidFlushMode && !readonlyProfile && import.meta.env.DEV) {
+  if (voidFlushMode && halloweenVisible && !readonlyProfile) {
     return (
-      <div className="relative z-40 flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#030504]">
+      <div data-halloween-scene="true" className="relative z-40 flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#030504]">
         <Suspense fallback={<div className="h-full w-full bg-[#0b0d0a]" />}>
-          <VoidFlushScene profile={profile} onClose={() => setVoidFlushMode(false)} />
+          <VoidFlushScene initialData={halloweenPrefetch} profile={profile} onOpenPlayerProfile={onOpenPlayerProfile} onUpdateProfile={onUpdateProfile} onClose={() => setVoidFlushMode(false)} onNavigate={(target) => { setVoidFlushMode(false); if (target === 'friends') { setFriendsMode(true); return; } if (target === 'daily') { onOpenModal?.('daily'); return; } onOpenTab?.(target); }} />
         </Suspense>
       </div>
     );
@@ -1356,14 +1485,16 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
   return (
     <div ref={campRef} className="relative flex h-full min-h-full flex-1 flex-col overflow-hidden bg-[#0b0d0a]">
       {activeBackgroundMeta.animatedScene ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<img src={activeBackground} alt="" fetchpriority="high" className="absolute inset-0 h-full w-full object-cover" />}>
           <AnimatedCampBackground sceneId={activeBackgroundMeta.animatedScene} />
         </Suspense>
       ) : (
-        <img src={activeBackground} alt="camp" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={activeBackground} alt="camp" fetchpriority="high" className="absolute inset-0 h-full w-full object-cover" />
       )}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.1)_0%,rgba(0,0,0,0.04)_42%,rgba(0,0,0,0.22)_100%)]" />
+      {collectionOpen && <PlayerCollection profile={profile} language={currentLanguage} onClose={() => setCollectionOpen(false)} />}
       <ProfileDislikeEffect key={dislikeReplay} active={profileReaction === 'dislike'} />
+      {readonlyProfile && !sceneMode && profile?.battle_pass_gift_season && <Suspense fallback={null}><BattlePassGiftPreview key={profile.id} player={profile} language={currentLanguage} /></Suspense>}
 
       {readonlyProfile ? (
           <button
@@ -1411,32 +1542,16 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
       </div>
 
       {!sceneMode && readonlyProfile ? (
-        bossMedals.length ? (
-          <div className="absolute left-1.5 top-1/2 z-20 flex max-h-[58%] -translate-y-1/2 flex-col overflow-y-auto rounded-[22px] bg-[rgba(7,10,8,0.58)] p-1.5 backdrop-blur-[2px] sm:left-2">
-            {bossMedals.map((medal) => (
-              <img key={medal.bossId} src={medal.src} alt={`${medal.bossId}-medal`} className="h-[clamp(60px,16vw,82px)] w-[clamp(60px,16vw,82px)] object-contain drop-shadow-[0_8px_14px_rgba(0,0,0,0.28)]" />
-            ))}
-          </div>
-        ) : null
+        <div className="absolute left-1.5 top-[20%] z-20 flex flex-col items-center gap-1 sm:left-2">
+          <BossMedalList medals={bossMedals.length ? bossMedals : [{bossId:'collection',src:bronzeMedal,tier:'bronze'}]} key={`public-medals-${profile?.id}`} sceneRef={campRef} readonly onOpenAwards={() => setCollectionOpen(true)} awardsLabel={currentLanguage==='ru'?'Награды':currentLanguage==='en'?'Awards':'Нагороди'} />
+        </div>
       ) : !sceneMode ? (
-        <div className="absolute left-1.5 z-20 flex max-h-[58%] flex-col gap-2.5 overflow-y-auto rounded-[22px] bg-[rgba(7,10,8,0.18)] p-1.5 sm:left-2 sm:gap-3" style={{ top: 'clamp(94px, 17vh, 122px)' }}>
-          <IconButton icon={leaderboardIcon} label={ui.top} onClick={() => onOpenModal?.('leaderboard')} />
-          {bossMedals.length ? (
-            <div className="max-h-[205px] overflow-y-auto rounded-[22px] bg-[rgba(7,10,8,0.58)] p-1.5 backdrop-blur-[2px]">
-              {bossMedals.map((medal) => (
-                <div
-                  key={medal.bossId}
-                  className="block"
-                >
-                  <img
-                    src={medal.src}
-                    alt={`${medal.bossId}-medal`}
-                    className="h-[clamp(60px,16vw,82px)] w-[clamp(60px,16vw,82px)] object-contain drop-shadow-[0_8px_14px_rgba(0,0,0,0.28)]"
-                  />
-                </div>
-              ))}
-            </div>
-          ) : null}
+        <div className="absolute left-0 z-20 flex flex-col items-start gap-1" style={{ top: 'clamp(94px, 17vh, 122px)' }}>
+          <PlayerCollectionLauncher leaderboard language={currentLanguage} onClick={() => onOpenModal?.('leaderboard')} />
+          <PlayerCollectionLauncher pvp language={currentLanguage} onClick={() => onOpenModal?.('pvp')} />
+          <div className="ml-1.5 p-1.5 sm:ml-2">
+          <BossMedalList key={`own-medals-${profile?.id}`} medals={bossMedals.length ? bossMedals : [{bossId:'collection',src:bronzeMedal,tier:'bronze'}]} sceneRef={campRef} onOpenAwards={() => setCollectionOpen(true)} rewardReady={awardsReady} awardsLabel={currentLanguage==='ru'?'Награды':currentLanguage==='en'?'Awards':'Нагороди'} />
+          </div>
         </div>
       ) : equipmentMode ? (
         <div className="absolute left-1 z-40 flex flex-col gap-2 sm:left-2 sm:gap-2.5" style={{ top: 'clamp(98px, 18vh, 128px)' }}>
@@ -1463,13 +1578,18 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
 
       {!sceneMode && !readonlyProfile ? (
         <div className="absolute right-1.5 z-20 flex flex-col gap-2.5 sm:right-2 sm:gap-3" style={{ top: 'clamp(94px, 17vh, 122px)' }}>
-          <IconButton icon={heroNavIcon} label={ui.gear} onClick={openEquipmentMode} alert={hasNewEquipment} />
+          <div className="relative flex justify-center">
+            <IconButton icon={heroNavIcon} label={ui.gear} onClick={openEquipmentMode} alert={hasNewEquipment} contain scaleIcon={false} />
+            {showStarterEquipmentHint && !activeModal && <button type="button" onClick={openEquipmentMode} className="absolute right-full top-1/2 mr-3 w-40 -translate-y-1/2 -rotate-2 rounded-[16px_12px_15px_5px] border-2 border-[#152010] bg-[#f1e4aa] px-3 py-2 text-left font-mono text-[11px] font-black leading-tight text-[#172016] shadow-[3px_4px_0_#0008] after:absolute after:-right-2 after:top-1/2 after:h-3 after:w-3 after:-translate-y-1/2 after:rotate-45 after:border-r-2 after:border-t-2 after:border-[#152010] after:bg-[#f1e4aa]">
+              {currentLanguage === 'ru' ? 'Новая шмотка! Надень здесь →' : currentLanguage === 'en' ? 'New gear! Equip it here →' : 'Нова шмотка! Вдягни тут →'}
+            </button>}
+          </div>
           <IconButton
             icon={dailyIcon}
             label={ui.daily}
             onClick={() => onOpenModal?.('daily')}
             tutorialTarget="daily-nav"
-            alert={questNotifications.daily || questNotifications.newbie}
+            alert={questNotifications.daily || questNotifications.newbie || hasNewPartners}
             locked={dailyLocked}
             lockLabel={`lvl ${dailyUnlockLevel}`}
           />
@@ -1482,7 +1602,10 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
             locked={rouletteLocked}
             lockLabel={`lvl ${rouletteUnlockLevel}`}
           />
-          <IconButton icon={worldBossIcon} label={ui.events} onClick={() => onOpenModal?.('events')} />
+          <div className="relative flex justify-center">
+            <IconButton icon={worldBossIcon} label={ui.events} beacon={<FishingBeacon profile={profile} />} onClick={() => onOpenModal?.('events')} />
+            {friday13ReminderVisible && isFriday13SaleActive(friday13Now) && <div className="friday13-bubble friday13-event-bubble" aria-label="Friday the 13th raid boss"><svg className="friday13-balloon-outline" viewBox="0 0 140 100" preserveAspectRatio="none" aria-hidden="true"><path d="M4 4H120V34L150 23L135 46L152 46L120 70V96H4Z"/></svg><b>{currentLanguage==='en'?'FRIDAY':currentLanguage==='ru'?'ПЯТНИЦА':'П’ЯТНИЦЯ'}</b><strong>13TH</strong><span>{currentLanguage==='en'?'RAID BOSS':currentLanguage==='ru'?'РЕЙДБОСС':'РЕЙДБОС'}</span></div>}
+          </div>
           <IconButton icon={friendsIcon} label={ui.friends} onClick={openFriendsMode} badge={chatBadge > 0 ? chatBadge : undefined} tutorialTarget="tutorial-friends" />
         </div>
       ) : !sceneMode && readonlyProfile ? (
@@ -1510,7 +1633,10 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
                   });
                 }
               }
-              if (result?.player?.energy !== undefined) await onUpdateProfile?.({ energy: result.player.energy });
+              if (result?.player) {
+                if(onSyncProfile)onSyncProfile(result.player);
+                else void Promise.resolve(onRefreshProfile?.()).catch(()=>{});
+              }
             } catch {}
           }} className={`profile-like-button relative h-[70px] w-[70px] transition disabled:cursor-default ${profileReaction === 'like' ? 'profile-like-pop' : ''} ${selectedProfileReaction && selectedProfileReaction !== 'like' ? 'opacity-35 grayscale' : ''} ${selectedProfileReaction === 'like' ? 'profile-reaction-selected opacity-55 grayscale-[0.2]' : ''}`}>
             <img src={profileLikeIcon} alt="Like" className="h-full w-full object-contain" />
@@ -1536,7 +1662,10 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
               }
               if (result?.reward?.granted) {
                 window.setTimeout(() => setDislikeRewardFlight(true), 1800);
-                if (result?.player?.energy !== undefined) await onUpdateProfile?.({ energy: result.player.energy });
+                if (result?.player) {
+                  if(onSyncProfile)onSyncProfile(result.player);
+                  else void Promise.resolve(onRefreshProfile?.()).catch(()=>{});
+                }
               }
             } catch {
               // The visual reaction is intentionally local even if a reward is unavailable.
@@ -1569,43 +1698,38 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
           aria-label="Прибратися"
           onPointerDown={(event) => {
             event.preventDefault();
-            event.currentTarget.setPointerCapture?.(event.pointerId);
+            // Some embedded browsers expose capture but reject it. Native
+            // implicit touch capture/window listeners can still finish the drag.
+            try { event.currentTarget.setPointerCapture?.(event.pointerId); } catch { /* Keep dragging. */ }
             moveSponge(event.clientX, event.clientY);
             setCleaningPuddle(true);
             setSpongeDrag(true);
           }}
-          className={`absolute z-30 touch-none select-none ${cleaningPuddle ? 'profile-sponge-highlight' : ''}`}
-          style={spongePosition ? { left: spongePosition.x, top: spongePosition.y, transform: 'translate(-50%, -50%)' } : { right: '6px', bottom: 'calc(var(--bottom-nav-space, 0px) + 8px)' }}
+          className="absolute z-30 touch-none select-none"
+          style={{ touchAction: 'none', ...(spongePosition ? { left: spongePosition.x, top: spongePosition.y, transform: 'translate(-50%, -50%)' } : { right: '6px', bottom: 'calc(var(--bottom-nav-space, 0px) + 8px)' }) }}
         >
-          <img src={puddleSponge} alt="Прибратися" className="h-[clamp(48px,13vw,64px)] w-[clamp(48px,13vw,64px)] object-contain" />
+          <img src={puddleSponge} alt="Прибратися" draggable={false} className={`h-[clamp(48px,13vw,64px)] w-[clamp(48px,13vw,64px)] object-contain ${cleaningPuddle ? 'profile-sponge-highlight' : ''}`} />
         </button>
       ) : null}
       {!sceneMode && !readonlyProfile && !activeModal ? <div className="pointer-events-none absolute left-1.5 top-2 z-30 flex items-start gap-3 sm:left-2 sm:gap-4">
         {profile?.battle_pass_view ? <div className="pointer-events-auto"><IconButton icon={battlePassIcon} label="BATTLE PASS" contain uniformHeight emblemGlow scaleIcon={false} alert={battlePassHasUnclaimed} onClick={() => setBattlePassMode(true)} /></div> : null}
-        {import.meta.env.DEV ? <div className="pointer-events-auto"><IconButton icon={airdropsIcon} label="AIRDROPS" contain uniformHeight scaleIcon={false} onClick={() => setVoidFlushMode(true)} /></div> : null}
+        {halloweenVisible && <div className="pointer-events-auto relative"><div className="halloween-entry-glow"><IconButton icon={airdropsIcon} label="HALLOWEEN" contain uniformHeight scaleIcon={false} onClick={openHalloweenEvent} /></div>{showHalloweenReminder ? <button type="button" className="halloween-comic-reminder" onClick={openHalloweenEvent}>{profile?.language === 'en' ? 'PUMPKINS ARE WAITING!' : profile?.language === 'ru' ? 'ТЫКВЫ ЖДУТ!' : 'ГАРБУЗИ ЧЕКАЮТ!'}</button> : null}</div>}
       </div> : null}
       {friendsMode && !readonlyProfile ? (
-        <div data-tutorial-target="tutorial-friends-panel" className="absolute inset-0 z-40 bg-[rgba(5,8,5,0.72)] backdrop-blur-[2px]">
-          <div className="flex h-full min-h-0 flex-col p-2 sm:p-3">
-            <MarkerFrame className="flex h-full min-h-0 flex-1 self-stretch overflow-hidden" innerClassName="flex h-full min-h-0 flex-1 flex-col p-2.5 sm:p-3" variant="dark">
-              <div className="relative mb-2 aspect-[16/9] overflow-hidden bg-transparent">
+        <div data-tutorial-target="tutorial-friends-panel" className="absolute inset-0 z-40 min-w-0 overflow-hidden bg-[rgba(5,8,5,0.72)] backdrop-blur-[2px]">
+          <div className="flex h-full min-h-0 min-w-0 flex-col p-2 sm:p-3">
+            <MarkerFrame className="flex h-full min-h-0 min-w-0 flex-1 self-stretch overflow-hidden" innerClassName="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden p-2.5 sm:p-3" variant="dark">
+              <div className="mb-2 flex shrink-0"><button type="button" onClick={closeFriendsMode} className="flex min-h-9 items-center gap-1 rounded-md border border-[#28ee90] bg-[#081008]/90 px-2 font-sans text-[10px] font-black text-[#d8ff84]">← {currentLanguage === 'en' ? 'Back' : 'Назад'}</button></div>
+              <div className="relative mb-2 aspect-[16/9] max-h-[28dvh] w-full shrink-0 overflow-hidden bg-transparent">
                 <img
-                  src="/invite-banner-new.webp"
+                  src={halloweenActive() ? halloweenInviteBanner : '/invite-banner-new.webp'}
                   alt=""
                   aria-hidden="true"
                   className="absolute inset-0 h-full w-full object-contain object-center opacity-100"
                 />
-                <div className="relative flex h-full items-start justify-between p-1.5">
-                  <button type="button" onClick={closeFriendsMode} className="relative z-10 flex h-8 items-center gap-1 rounded-md border border-[#28ee90] bg-[#081008]/90 px-2 font-sans text-[10px] font-black text-[#d8ff84]">
-                    <span aria-hidden="true">←</span> {currentLanguage === 'en' ? 'Back' : 'Назад'}
-                  </button>
-                  <button type="button" onClick={closeFriendsMode} className="relative z-10 h-7 shrink-0 px-2 font-mono text-[10px] text-[#d2e8b7]">
-                    X
-                  </button>
-                </div>
               </div>
 
-              <div className="border border-[#28ee90] bg-[#10170d] px-2 py-2">
+              <div className="min-w-0 w-full shrink-0 overflow-hidden border border-[#28ee90] bg-[#10170d] px-2 py-2">
                 <p className="truncate font-mono text-[9px] text-[#dbeccb]">{referralLink}</p>{inviteError&&<p className="mt-2 text-xs text-red-400">{inviteError}</p>}
                 <div className="mt-2 flex w-full gap-2">
                   <button
@@ -1631,19 +1755,22 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
                 </div>
               </div>
 
+              <ReferralAffiliateSettings profile={profile} affiliateUrl={affiliateUrl} onSaved={value => {
+                setAffiliateUrl(value);
+                void Promise.resolve(onRefreshProfile?.()).catch(() => {});
+              }} />
               <div className="mt-2 h-0 min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain pb-3">
                 <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.1em] text-[#8baa6c]">{t('camp_view.friends_list')}</p>
                 <div className="space-y-1">
                   {referredFriends.length ? referredFriends.map((friend) => {
                     return (
-                      <FriendInviteRow
-                        key={friend?.playerId || friend?.username}
+                      <div key={friend?.playerId || friend?.username}><FriendInviteRow
                         friend={friend}
                         t={t}
                         onClaim={claimFriendReward}
                         claiming={pendingReferralClaimId === friend?.playerId}
                         claimed={claimedReferralKeys.has(`friend:${friend?.playerId}`) || claimedReferralKeys.has(String(friend?.playerId || ''))}
-                      />
+                      /></div>
                     );
                   }) : <p className="font-mono text-[10px] text-[#7f946e]">{t('camp_view.no_friends')}</p>}
                 </div>
@@ -1681,15 +1808,15 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
           onClick={() => onOpenModal?.('chat')}
           aria-label={chatUnread || chatBadge > 0 ? (currentLanguage === 'en' ? 'Chat, new messages' : currentLanguage === 'ru' ? 'Чат, новые сообщения' : 'Чат, нові повідомлення') : 'Chat'}
           className="absolute bottom-[calc(var(--bottom-nav-space,0px)+8px)] left-0 z-20 h-[clamp(44px,13vw,62px)] w-[clamp(60px,17vw,84px)] overflow-hidden transition hover:brightness-110"
+          data-camp-chat-launcher="true"
         >
-          <img src={chatBadge > 0 ? chatPlusIcon : chatIcon} alt="Chat" className="h-full w-full scale-[1.28] object-contain" />
-          {chatBadge > 0 ? (
+          <img src={patchUnread ? chatIcon : chatBadge > 0 ? chatPlusIcon : chatIcon} alt="Chat" className="h-full w-full scale-[1.28] object-contain" style={patchUnread?{clipPath:'polygon(0 0, 59% 0, 59% 36%, 100% 36%, 100% 100%, 0 100%)'}:undefined} />
+          {patchUnread ? <span className="absolute right-0 top-0 z-20"><ChatBeacon patch/></span> : chatBadge > 0 ? (
             <span className="absolute right-1 top-1 z-10 rounded-full border border-[#28ee90] bg-[#ff5a5a] px-1.5 py-[1px] font-mono text-[9px] font-black text-white">
               {chatBadge}
             </span>
           ) : chatUnread ? (
             <span aria-hidden="true" className="pointer-events-none absolute right-2 top-2 z-10 flex h-4 w-4 items-center justify-center">
-              <span className="absolute h-full w-full animate-ping rounded-full bg-[#ff3b3b]/80" />
               <span className="relative h-3 w-3 rounded-full border-2 border-white bg-[#ff3434] shadow-[0_0_10px_4px_rgba(255,52,52,.8)]" />
             </span>
           ) : null}
@@ -1710,6 +1837,8 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
         </button>
       ) : null}
 
+      {!sceneMode&&!readonlyProfile&&nextResourcePack(profile)>=0&&<div className={'resource-pack-launchers '+(playerLevel>=10&&!profile?.newbie_pack_2_purchased_at&&!newbiePackOfferExpired?'with-newbie':'')}>{[nextResourcePack(profile)].map(i=><button type="button" key={i} onClick={()=>setResourcePack(i)} aria-label={RESOURCE_PACKS[i].title}><img src={RESOURCE_PACKS[i].art} alt=""/><span>{RESOURCE_PACKS[i].title}</span></button>)}</div>}
+      {resourcePack!==null&&<Suspense fallback={null}><ResourcePackModal initialPack={resourcePack} language={profile?.language||'uk'} onClose={()=>setResourcePack(null)} onRefreshProfile={onRefreshProfile} onOpenPet={petId=>{setResourcePack(null);openEquipmentMode();setSelectedSlot('pet');setSelectedItemId(petId);}}/></Suspense>}
       {openingReferralBox ? (
         <LootBoxModal
           boxType={openingReferralBox.boxType}
@@ -1722,7 +1851,7 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
       {newbiePackMode ? <Suspense fallback={null}><NewbiePackModal profile={profile} onClose={() => setNewbiePackMode(false)} onRefreshProfile={onRefreshProfile} /></Suspense> : null}
       {dislikeRewardFlight ? <div className="profile-dislike-energy-fly pointer-events-none absolute z-40 font-mono text-[15px] font-black text-[#fff39b]">+25 ⚡</div> : null}
       {likeBoxOpen && likeBoxReward ? <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 p-3 backdrop-blur-[2px]">
-        <MarkerFrame className="w-full max-w-[410px]" innerClassName="p-3" variant="dark">
+        <MarkerFrame className="w-full max-w-[410px]" innerClassName="reaction-modal-background reaction-modal-background--likes p-3" variant="dark">
           <div className="flex items-center justify-between border-b border-[#28ee90]/70 pb-2"><h2 className="font-mono text-[16px] font-black text-[#fff2bd]">{profile?.language === 'ru' ? 'Бокс лайков' : profile?.language === 'en' ? 'Like Box' : 'Бокс вподобайок'}</h2><button type="button" onClick={() => { setLikeBoxOpen(false); setLikeBoxReward(null); }} className="font-mono text-[25px] leading-none text-[#d8f67a]">×</button></div>
           <div className="mt-3 flex flex-wrap justify-center gap-3">
             {['energy', 'tentacles', 'poison', 'spin'].filter(type => Number(likeBoxReward[type]) > 0).map(type => {
@@ -1746,7 +1875,7 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
 
       <div className="relative z-10 flex min-h-0 flex-1 items-end justify-center overflow-hidden px-0.5 pb-0 pt-0 sm:px-1">
         <div className="pointer-events-none relative flex h-full min-h-[300px] w-full items-end justify-center sm:min-h-[360px]">
-          <div className="relative h-full w-[84%] max-w-[390px] min-h-[340px] sm:min-h-[400px]">
+          <div className="relative h-full w-[84%] max-w-[390px] min-h-[340px] -translate-y-[4%] sm:min-h-[400px] sm:-translate-y-[3%]">
             {equippedLayerMap.bpLegendary?.armor && <LegendaryCapeLayer className="absolute inset-0 z-0 h-full w-full scale-[0.84] sm:scale-[0.94]"/>}
             {puddleVisible ? (
               !readonlyProfile ? (
@@ -1761,11 +1890,13 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
                 <img src={profilePuddle} alt="" aria-hidden="true" className={`profile-pee-puddle absolute inset-0 z-[2] h-full w-full scale-[0.84] object-contain sm:scale-[0.94] ${profileReaction === 'dislike' ? 'profile-pee-puddle-arriving' : ''}`} />
               )
             ) : null}
+            {likeBoxClaimError&&<p role="alert" className="absolute bottom-0 z-20 bg-black/80 p-2 text-xs text-amber-200">{likeBoxClaimError}</p>}
             {likeBoxVisible || likeBoxCount > 0 ? (
               <>
                 <img src={likeRewardBox} alt="Like rewards" className={`profile-like-box pointer-events-none absolute inset-0 z-[4] h-full w-full scale-[0.84] object-contain sm:scale-[0.94] ${likeBoxDrop ? 'profile-like-box-drop' : ''}`} />
                 {!readonlyProfile ? <button type="button" aria-label="Open like rewards" onClick={async () => {
-                  const result = await claimLikeBox();
+                  if(likeBoxClaimLock.current)return;likeBoxClaimLock.current=true;setLikeBoxClaimError('');
+                  try{const result = await claimLikeBox();
                   setLikeBoxReward(result?.rewards || null);
                   setLikeBoxContributors(result?.contributions || []);
                   setLikeBoxCount(0);
@@ -1773,10 +1904,11 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
                   likeBoxDropPlayedForProfile.current = null;
                   setLikeBoxOpen(true);
                   await onUpdateProfile?.(result?.player || {});
+                  }catch(error){if(error?.code==='LIKE_BOX_EMPTY'){setLikeBoxCount(0);setLikeBoxVisible(false);}else setLikeBoxClaimError(({uk:'Не вдалося отримати нагороду. Спробуйте ще раз.',ru:'Не удалось получить награду. Повторите попытку.',en:'Could not claim the reward. Try again.'})[profile?.language==='ua'?'uk':profile?.language]||'Could not claim reward.');}finally{likeBoxClaimLock.current=false;}
                 }} className="pointer-events-auto absolute bottom-[7%] left-[60%] right-[9%] z-[10] h-[22%] cursor-pointer" /> : null}
               </>
             ) : null}
-            {equippedPet?.id === 'hereearlypet' ? <HereEarlyPet className="absolute inset-0 z-[4] h-full w-full scale-[0.84] sm:scale-[0.94]" /> : equippedPet?.id === 'raidboss2_pet' ? <RaidScarecrowPet className="absolute inset-0 z-[4] h-full w-full scale-[0.84] sm:scale-[0.94]" /> : equippedPet?.id === 'pet5' ? <AnimatedPet5 /> : equippedPet?.id === 'pet-bot' ? <AnimatedPet1 /> : equippedPet?.id === 'pet-cthulhu' ? <NewbieSoulPet fullCanvas className="absolute inset-0 z-[1] h-full w-full scale-[0.84] object-contain sm:scale-[0.94]" label={equippedPet.name} /> : equippedPet?.renderArt ? (
+            {equippedPet?.id === 'pet-toaster' ? <ToasterPet className="absolute bottom-[5%] right-[8%] z-[4] h-[36%] w-[40%]" /> : equippedPet?.id === 'pet-skunk' ? <JunkSkunkPet className="absolute inset-0 z-[2] h-full w-full scale-[0.84] sm:scale-[0.94]" /> : equippedPet?.id === 'bp_legendary_pet' ? <VoidlingPet className="bottom-[2%] right-[3%] z-[4] h-[38%] w-[38%]" /> : equippedPet?.id === 'pet-purrgulp' ? <PurrgulpPet className="absolute bottom-[5%] right-[4%] z-[4] w-[43%] aspect-square" /> : equippedPet?.id === 'legion_pet' ? <LegionPet className="absolute inset-0 z-[12] h-full w-full scale-[0.84] sm:scale-[0.94]" /> : equippedPet?.id === 'halloween_2026_pet' ? <HalloweenPumpkinPet className="absolute inset-0 z-[12] h-full w-full scale-[0.84] sm:scale-[0.94]" /> : equippedPet?.id === 'hereearlypet' ? <HereEarlyPet className="absolute inset-0 z-[4] h-full w-full scale-[0.84] sm:scale-[0.94]" /> : equippedPet?.id === 'raidboss2_pet' ? <RaidScarecrowPet className="absolute inset-0 z-[4] h-full w-full scale-[0.84] sm:scale-[0.94]" /> : equippedPet?.id === 'pet5' ? <AnimatedPet5 /> : equippedPet?.id === 'pet-bot' ? <AnimatedPet1 /> : equippedPet?.id === 'pet-cthulhu' ? <NewbieSoulPet fullCanvas className="absolute inset-0 z-[1] h-full w-full scale-[0.84] object-contain sm:scale-[0.94]" label={equippedPet.name} /> : equippedPet?.id === 'friday13_doll_pet' ? <Friday13Pet className="friday13-pet-camp" label={equippedPet.name}/> : equippedPet?.renderArt ? (
               <img
                 src={equippedPet.renderArt}
                 alt={equippedPet.name}
@@ -1786,10 +1918,11 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
             <div className="camp-hero-frame absolute left-[8%] top-[8%] z-[3] h-[84%] w-[84%] sm:left-[3%] sm:top-[3%] sm:h-[94%] sm:w-[94%]">
               <LayeredHero
                 className={`h-full w-full object-contain ${Object.values(equippedLayerMap.bpLegendary || {}).some(Boolean) || Object.values(equippedLayerMap.bpEpic || {}).some(Boolean) ? 'bp-hero-stable' : 'drop-shadow-[0_28px_40px_rgba(0,0,0,0.32)]'}`}
-                baseOverride={equipmentMode ? null : heroBaseAnimated}
+                baseOverride={equipmentMode ? null : heroAnimationReady ? heroBaseAnimated : heroFirstFrame}
                 visibleSlots={visibleHeroSlots}
                 layerOverrides={equippedLayerMap}
               />
+              {enhancementButterflyStage>0&&<EnhancementBat level={equippedEnhancementLevel}/>}
             </div>
           </div>
         </div>
@@ -1797,11 +1930,12 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
 
       {equipmentMode ? (
         <div className={`absolute inset-0 ${selectedSlot ? 'z-50 bg-black/60 backdrop-blur-[3px] pointer-events-auto' : 'z-30 pointer-events-none'}`}>
-          <div className="pointer-events-auto flex h-full items-end justify-center px-2 pb-[calc(var(--bottom-nav-space,0px)+8px)] pt-4">
+          <div className="pointer-events-auto flex h-full items-end justify-center px-2 pt-4" style={{paddingBottom:'calc(max(var(--bottom-nav-space, 0px), clamp(82px, 22vw, 112px)) + 14px)'}} data-equipment-controls="true">
             {selectedSlot ? (
               <MarkerFrame
-                className={`relative ${selectedSlot === 'background' ? 'h-fit max-h-full' : 'h-full max-h-full'} w-full max-w-[408px] bg-[#050907]/90 backdrop-blur-[8px] shadow-[0_18px_32px_rgba(0,0,0,0.65)]`}
-                innerClassName={`flex ${selectedSlot === 'background' ? 'h-fit' : 'h-full'} min-h-0 flex-col gap-2 overflow-hidden px-2.5 pb-2.5 pt-2`}
+                showBorder={false}
+                className={`relative ${selectedSlot === 'background' ? 'h-fit max-h-full' : 'h-full max-h-full'} w-full max-w-[408px] equipment-detail-surface backdrop-blur-[8px] shadow-[0_18px_32px_rgba(0,0,0,0.65)]`}
+                innerClassName={`flex ${selectedSlot === 'background' ? 'h-fit' : 'h-full'} min-h-0 flex-col gap-2 overflow-hidden px-3.5 pb-3.5 pt-2`}
                 variant="transparent"
               >
                 <button
@@ -1815,20 +1949,21 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
                 >X</button>
 
                 {selectedEquipment && selectedSlot !== 'background' ? (
-                  <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain touch-pan-y px-1 pb-1 pt-8">
+                  <div className="equipment-detail-content flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain touch-pan-y px-1 pb-1 pt-8">
                     <div className="min-w-0 pr-8">
-                      <h2 className="font-sans text-[19px] font-black uppercase leading-tight text-[#f1f5eb]">{localizeEquipmentItemName(selectedEquipment, currentLanguage) || selectedEquipment.name}</h2>
+                      <h2 className="font-sans text-[19px] font-black uppercase leading-tight text-[#f1f5eb]">{localizeEquipmentItemName(selectedEquipment, currentLanguage) || selectedEquipment.name}{enhancementPreviewLevel>0?` +${enhancementPreviewLevel}`:''}</h2>
                       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                         {selectedEquipmentRarity ? <span className="font-sans text-[11px] font-black uppercase leading-none text-[#42f2b6]">{selectedEquipmentRarity}</span> : null}
                         <p className="font-mono text-[9px] leading-tight text-[#8ca68e]">{getEquipmentSourceLabel(selectedEquipment, currentLanguage)}</p>
+                        {enhancementPreviewLevel > 0 && <p className="w-full font-mono text-[11px] font-bold text-[#d4f08a]">{currentLanguage === 'ru' ? 'Заточка: урон ядов' : currentLanguage === 'en' ? 'Enhancement: poison damage' : 'Заточка: урон отрут'} +{enhancementPreviewLevel}%</p>}
                       </div>
                     </div>
-                    <div className="grid min-h-0 flex-1 grid-cols-[36%_1fr] gap-3">
-                      <div className="flex h-[142px] w-full min-w-0 items-center justify-center rounded-[15px] border border-[#263431] bg-transparent p-2">
+                    <div className="equipment-detail-overview grid shrink-0 grid-cols-[36%_1fr] items-start gap-3">
+                      <div className={`relative flex h-[150px] w-full min-w-0 items-center justify-center rounded-[15px] border border-[#263431] equipment-item-backdrop p-2 ${enhancementPreviewLevel>=6?'enhance-glowing':''}`}>
                         <img src={selectedEquipment.icon} alt={localizeEquipmentItemName(selectedEquipment, currentLanguage) || selectedEquipment.name} className="h-full w-full object-contain" />
                       </div>
                       <div className="flex min-w-0 flex-col gap-1.5">
-                        <div className="grid h-[142px] grid-rows-4 gap-1.5">
+                        <div className="grid auto-rows-[minmax(34px,auto)] gap-1.5">
                           {selectedBuffSlots.map((buff, index) => {
                             const text = localizedSetBonus(buff.text);
                             const BuffIcon = /finger|пале/i.test(text) ? Hand
@@ -1844,10 +1979,23 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
                               </div>
                             );
                           })}
+                          <PvpEquipmentStats profile={profile} item={selectedEquipment} language={currentLanguage} />
                         </div>
                         {selectedStandaloneBonus && <p className={`mt-2 text-[10px] font-bold ${selectedEquipmentActuallyEquipped ? 'text-[#5af0bc]' : 'text-[#a0a5a2]'}`}>{selectedBonusStatus}</p>}
                       </div>
                     </div>
+
+                    <details className="group shrink-0 rounded-lg border border-[#2f3d33] bg-[#0d1510]/80">
+                      <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 font-sans text-[10px] font-black uppercase text-[#9fb2a3] marker:content-none">
+                        <span>{currentLanguage === 'en' ? 'How bonuses work' : currentLanguage === 'ru' ? 'Как работают бонусы' : 'Як працюють бонуси'}</span>
+                        <span className="text-[#42f2b6] transition-transform group-open:rotate-180">⌄</span>
+                      </summary>
+                      <p className="border-t border-[#2b382e] px-3 py-2 font-sans text-[11px] leading-relaxed text-[#a6baae]">{currentLanguage === 'en'
+                        ? '1/1 is the item bonus. 2/4/6 pieces unlock set bonuses. Active bonuses add up. All attacks means finger, pencil and poisons.'
+                        : currentLanguage === 'ru'
+                          ? '1/1 — бонус предмета. 2/4/6 вещей открывают бонусы комплекта. Активные бонусы суммируются. Все атаки — палец, карандаш и яды.'
+                          : '1/1 — бонус предмета. 2/4/6 речей відкривають бонуси комплекту. Активні бонуси додаються. Усі атаки — палець, олівець та отрути.'}</p>
+                    </details>
                     <EquipmentSourceInfo item={selectedEquipment} language={currentLanguage} />
                     {selectedEquipment.locked && selectedEquipment.sourceType === 'holder' && <NftPetClaimButton key={selectedEquipment.id} item={selectedEquipment} language={currentLanguage} onClaimed={onRefreshProfile} />}
                     <div className="mt-auto flex w-full gap-2">
@@ -1915,12 +2063,12 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
                 </>}
               </MarkerFrame>
             ) : (
-              <div className="flex w-full max-w-[408px] flex-col gap-1">
+              <div className="flex w-[58%] max-w-[280px] flex-col gap-1">
                 {equipmentError ? <p role="alert" className="text-center font-mono text-[10px] text-[#ff8978]">{equipmentError}</p> : null}
                 <button
                   type="button"
                   onClick={() => setCombatStatsOpen(true)}
-                  className="relative mx-auto h-[30px] w-fit self-center overflow-hidden rounded-[9px_7px_10px_6px] border border-[#090b04] bg-[#141b06] px-3 py-px shadow-[0_2px_3px_rgba(0,0,0,0.62)] transition hover:brightness-110 active:translate-y-px"
+                  className="relative mx-auto h-7 w-fit max-w-full self-center overflow-hidden rounded-[9px_7px_10px_6px] border border-[#090b04] bg-[#141b06] px-1.5 py-px shadow-[0_2px_3px_rgba(0,0,0,0.62)] transition hover:brightness-110 active:translate-y-px"
                 >
                   <CampButtonTexture tone="daily" />
                   <span className="relative z-10 flex h-full items-center justify-center gap-2 font-mono text-[10px] font-black uppercase tracking-[0.08em] text-[#382308]">
@@ -1966,3 +2114,5 @@ export default function CampView({ profile, onOpenTab, onOpenModal, onUpdateProf
     </div>
   );
 }
+
+import { applyAnubisLayerOverrides } from '@/lib/anubisEquipment';

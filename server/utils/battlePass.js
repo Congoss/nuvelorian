@@ -1,3 +1,6 @@
+import { kyivDayKey } from "../../src/lib/kyivDay.js";
+import skeletonRewards from '../../src/lib/skeletonSeasonRewards.json' with { type: 'json' };
+import { SKELETON_BP_EQUIPMENT } from '../../src/lib/skeletonBattlePassSet.js';
 import { getEpicBattlePassItem } from '../../src/lib/epicBattlePassSet.js';
 import { BP_ANIMATION_ITEMS, inventoryWithBattlePassAnimations } from '../../src/lib/battlePassAnimations.js';
 import { getLegendaryBattlePassItem } from '../../src/lib/legendaryBattlePassSet.js';
@@ -8,7 +11,10 @@ const DAY = 86400000;
 export function battlePassEnabled() {
   return String(process.env.BATTLE_PASS_ENABLED ?? process.env.BATTLE_PASS_TEST_ENABLED ?? 'true').toLowerCase() !== 'false';
 }
-export function getBattlePassSeason() {
+const SKELETON_START = Date.parse('2026-11-03T22:00:00Z');
+const SKELETON_SEASON = { id: 'test-2026-11-04', start: SKELETON_START, end: SKELETON_START + BP_DAYS * DAY };
+export function getBattlePassSeason(now = Date.now()) {
+  if (now >= SKELETON_START) return SKELETON_SEASON;
   const start = Date.parse(process.env.BATTLE_PASS_START || process.env.BATTLE_PASS_TEST_START || '2026-09-14T00:00:00Z');
   const date = new Date(start);
   if (!Number.isFinite(start) || date.getUTCDay() !== 1 || start % DAY !== 0) {
@@ -16,6 +22,15 @@ export function getBattlePassSeason() {
   }
   return { id: `test-${date.toISOString().slice(0, 10)}`, start, end: Date.parse(process.env.BATTLE_PASS_END || (date.toISOString().slice(0, 10) === '2026-09-14' ? '2026-11-04T00:00:00Z' : new Date(start + BP_DAYS * DAY).toISOString())) };
 }
+export function getActiveBattlePassTier(player, now = Date.now()) {
+  if (!player?.battle_pass || !battlePassEnabled()) return 'free';
+  const season = getBattlePassSeason(now);
+  const { seasonId, tier } = player.battle_pass;
+  return seasonId === season.id && now >= season.start && now < season.end
+    && (tier === 'epic' || tier === 'legendary') ? tier : 'free';
+}
+const isSkeletonSeason = season => season.start >= SKELETON_START;
+const rewardsForSeason = season => isSkeletonSeason(season) ? skeletonRewards : BP_REWARDS;
 const bucket = (key) => ({ key, metrics: {}, awarded: [] });
 const positive = (value) => Math.max(0, Number(value) || 0);
 
@@ -76,7 +91,7 @@ function grantLegendaryEquipment(player, state, rewardType) {
   return true;
 }
 function prepare(player, now) {
-  const season = getBattlePassSeason();
+  const season = getBattlePassSeason(now);
   let state = player.battle_pass;
   if (!state || state.seasonId !== season.id) {
     if (state) player.battle_pass_archive = { ...(player.battle_pass_archive || {}), [state.seasonId]: state };
@@ -86,7 +101,7 @@ function prepare(player, now) {
   state = structuredClone(state);
   const previousItems = JSON.stringify(state.items || []);
   // Materialize previously claimed placeholders exactly once; do not repay currencies.
-  for (const row of BP_REWARDS) {
+  for (const row of isSkeletonSeason(season) ? [] : BP_REWARDS) {
     if ((state.claims || []).includes('legendary:' + row.level)) {
       for (const reward of row.legendary) grantLegendaryEquipment(player, state, reward.type);
     }
@@ -97,7 +112,7 @@ function prepare(player, now) {
   player.inventory_items = inventoryWithBattlePassAnimations(player);
   const active = now >= season.start && now < season.end;
   if (active) {
-    const day = Math.floor((now - season.start) / DAY);
+    const day = Math.round((Date.parse(kyivDayKey(now)) - Date.parse(kyivDayKey(season.start))) / DAY);
     const week = Math.floor(day / 7);
     if (state.daily?.key !== day) state.daily = bucket(day);
     if (state.weekly?.key !== week) {
@@ -128,8 +143,8 @@ function evaluate(state) {
 }
 function evaluateDaily(player, state, now) {
   if (Number(player.level || 1) < 3) return;
-  const day = new Date(now).getUTCDay() || 7;
-  const dateKey = new Date(now).toISOString().slice(0, 10);
+  const day = new Date(kyivDayKey(now) + 'T00:00:00Z').getUTCDay() || 7;
+  const dateKey = kyivDayKey(now);
   // Only server-recorded events feed this mirror; generic profile PATCH cannot farm XP.
   const m = state.daily.metrics;
   const profile = {
@@ -207,7 +222,7 @@ export function battlePassView(player, now = Date.now()) {
   const { state, season, active } = prepare(player, now);
   const level = Math.min(BP_LEVELS, Math.floor(state.xp / BP_LEVEL_XP));
   return {
-    ...state, active, start: season.start, end: season.end, level,
+    ...state, active, start: season.start, end: season.end, level, skeletonSeason: isSkeletonSeason(season),
     levelXp: level === BP_LEVELS ? BP_LEVEL_XP : state.xp % BP_LEVEL_XP,
     daysLeft: Math.max(0, Math.ceil((season.end - now) / DAY)),
     tasks: Object.fromEntries(Object.entries(BP_TASKS).map(([scope, tasks]) => [scope, tasks.map((task) => ({
@@ -218,9 +233,10 @@ export function battlePassView(player, now = Date.now()) {
 }
 export function claimBattlePassReward(player, { level, track }, now = Date.now()) {
   if (!battlePassEnabled()) throw new Error('Battle Pass is not available');
-  const { state, active } = prepare(player, now);
-  const row = BP_REWARDS.find((entry) => entry.level === level);
+  const { state, season, active } = prepare(player, now);
+  const row = rewardsForSeason(season).find((entry) => entry.level === level);
   if (!active || !row || level > Math.floor(state.xp / BP_LEVEL_XP) || !bpTrackUnlocked(state.tier, track)) throw new Error('Нагорода ще недоступна');
+  if (row[track].some(reward => reward.type === 'season_pet')) return false;
   const key = `${track}:${level}`;
   if (state.claims.includes(key)) return false;
   for (const reward of row[track]) {
@@ -232,7 +248,17 @@ export function claimBattlePassReward(player, { level, track }, now = Date.now()
     } else if (['large', 'medium'].includes(reward.type)) {
       const id = `${reward.type}-poison`;
       player.weapon_inventory = { ...(player.weapon_inventory || {}), [id]: positive(player.weapon_inventory?.[id]) + reward.amount };
-    } else if (reward.type === 'ticket') state.tickets += reward.amount;
+    } else if (reward.type === 'spin') player.roulette_bonus_spins = positive(player.roulette_bonus_spins) + reward.amount;
+    else if (reward.type === 'ticket') state.tickets += reward.amount;
+    else if (reward.type === 'gum' || reward.type === 'better') {
+      const type = reward.type === 'gum' ? 'normal' : 'improved';
+      player.enhancement_gums = { ...player.enhancement_gums, [type]: positive(player.enhancement_gums?.[type]) + reward.amount };
+    } else if (isSkeletonSeason(season) && track === 'legendary' && SKELETON_BP_EQUIPMENT[reward.type]) {
+      const item = SKELETON_BP_EQUIPMENT[reward.type];
+      if (!(player.inventory_items || []).some(entry => entry.id === item.id)) {
+        player.inventory_items = [...(player.inventory_items || []), { ...item, type: 'equipment', locked: false, count: 1 }];
+      }
+    }
     else if (track === 'epic' && grantEpicEquipment(player, state, reward.type)) {}
     else if (track === 'legendary' && grantLegendaryEquipment(player, state, reward.type)) {}
     else state.items.push({ id: `${state.seasonId}:${track}:${reward.type}`, type: reward.type, track, placeholder: true });
@@ -253,6 +279,24 @@ export function unlockBattlePassTier(player, tier, now = Date.now()) {
   return state.tier;
 }
 
+export function grantBattlePassGift(recipient, product, transaction, now = Date.now()) {
+  const { giftSeasonId, tier } = product;
+  const orderTime = Date.parse(transaction.created_at);
+  if (!Number.isFinite(orderTime) || getBattlePassSeason(orderTime).id !== giftSeasonId || !BP_TRACKS.slice(1).includes(tier)) {
+    throw new Error('Invalid Battle Pass gift season');
+  }
+  const { state } = prepare(recipient, now);
+  const activeSeason = state.seasonId === giftSeasonId;
+  const archive = recipient.battle_pass_archive || {};
+  const target = activeSeason ? state : archive[giftSeasonId] || {
+    seasonId: giftSeasonId, xp: 0, tier: 'free', claims: [], tickets: 0, items: [], season: bucket(giftSeasonId),
+  };
+  if (BP_TRACKS.indexOf(tier) > BP_TRACKS.indexOf(target.tier)) target.tier = tier;
+  if (activeSeason) recipient.battle_pass = target;
+  else recipient.battle_pass_archive = { ...archive, [giftSeasonId]: target };
+  return target.tier;
+}
+
 export function fullyUnlockBattlePass(player, tier, now = Date.now()) {
   unlockBattlePassTier(player, tier, now);
   player.battle_pass = { ...player.battle_pass, xp: Math.max(positive(player.battle_pass.xp), BP_LEVELS * BP_LEVEL_XP) };
@@ -262,7 +306,7 @@ export function fullyUnlockBattlePass(player, tier, now = Date.now()) {
 export function claimAllBattlePassRewards(player, now = Date.now()) {
   const view = battlePassView(player, now);
   if (!view?.active) throw new Error('Battle Pass is not active');
-  const available = BP_REWARDS.flatMap(row => row.level <= view.level
+  const available = rewardsForSeason(getBattlePassSeason(now)).flatMap(row => row.level <= view.level
     ? BP_TRACKS.filter(track => bpTrackUnlocked(view.tier, track) && !view.claims.includes(track + ':' + row.level)).map(track => ({level:row.level, track}))
     : []);
   return available.filter(reward => claimBattlePassReward(player, reward, now));

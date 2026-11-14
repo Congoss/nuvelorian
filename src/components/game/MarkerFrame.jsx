@@ -34,6 +34,8 @@ export default function MarkerFrame({
   className = '',
   innerClassName = '',
   variant = 'dark',
+  backgroundImage,
+  backgroundPosition = 'top',
   showBorder = true,
   borderStartColor,
   borderEndColor,
@@ -51,6 +53,7 @@ export default function MarkerFrame({
       style={{
         boxShadow: shadow,
         ...(background ? { background } : {}),
+        ...(backgroundImage ? { backgroundImage: `url("${backgroundImage}")`, backgroundSize: 'cover', backgroundPosition } : {}),
       }}
       >
       {showBorder ? (

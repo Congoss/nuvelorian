@@ -1,0 +1,19 @@
+.anubis-effects,.anubis-effects-canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.anubis-random-glint { animation:anubis-glint 1.85s ease-in-out both; }
+.anubis-gem-energy { animation:anubis-galaxy 12s linear infinite; }
+.anubis-eye-flame { transform:scaleY(1.25); transform-origin:0 0; filter:blur(.35px) drop-shadow(0 0 2px #d5ffff); opacity:.85; }
+.anubis-eye-glow { filter:blur(.4px) drop-shadow(0 0 3px white); opacity:.65; }
+.anubis-nose-breath { filter:blur(1.2px); transform-origin:0 0; animation:anubis-exhale .85s cubic-bezier(.16,.65,.3,1) both; }
+.anubis-nose-breath-second { animation-delay:.08s; }
+@keyframes anubis-exhale { 0% {transform:translateX(0) scale(.15,.4);opacity:0} 15% {opacity:.85} 45% {opacity:.5} 100% {transform:translateX(28px) scale(1.4,2);opacity:0} }
+@keyframes anubis-glint { 0%,100% {opacity:0} 35%,48% {opacity:1} 75% {opacity:.45} }
+.anubis-gem-pulse { animation:anubis-pulse 7.5s ease-in-out infinite; }
+.anubis-galaxy-spin { transform-origin:428px 64px; animation:anubis-galaxy 14s linear infinite; }
+.anubis-star { animation:anubis-twinkle 3.3s ease-in-out infinite; }
+.anubis-weapon-motion { transform-origin:250px 330px; animation:anubis-sway 6s ease-in-out infinite; }
+.anubis-rear-weapon { transform-origin:50% 36.83%; animation:anubis-sway 6s ease-in-out infinite; }
+@keyframes anubis-pulse { 0%,100% {opacity:.4} 50% {opacity:.75} }
+@keyframes anubis-galaxy { to {transform:rotate(360deg)} }
+@keyframes anubis-twinkle { 0%,25%,75%,100% {opacity:0} 45%,55% {opacity:1} }
+@keyframes anubis-sway { 0%,100% {transform:rotate(-.4deg)} 50% {transform:rotate(.4deg)} }
+@media(prefers-reduced-motion:reduce) { .anubis-effects {display:none} .anubis-rear-weapon {animation:none} }

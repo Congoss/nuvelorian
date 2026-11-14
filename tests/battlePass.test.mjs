@@ -10,16 +10,35 @@ process.env.BATTLE_PASS_END = '2026-10-12T00:00:00Z';
 const start = Date.parse(process.env.BATTLE_PASS_TEST_START);
 const day = 86400000;
 
-test('catalog has a 20% XP buffer, boosted currency tracks, early free poisons and corrected gloves', () => {
+test('XP carries across levels for task awards and boss victories without being paid twice',()=>{
+ const player={level:1};
+ recordBattlePassEvent(player,{type:'login'},start);
+ player.battle_pass.xp=42*150+130;
+ recordBattlePassEvent(player,{type:'missionSpend',energy:100},start);
+ let view=battlePassView(player,start);
+ assert.equal(view.level,43);assert.equal(view.levelXp,40);assert.equal(view.xp,42*150+190);
+ recordBattlePassEvent(player,{type:'missionSpend',energy:1},start);
+ assert.equal(player.battle_pass.xp,view.xp);
+ player.battle_pass.xp=42*150+130;
+ recordBattlePassBossVictory(player,'carry-one',0,start);
+ recordBattlePassBossVictory(player,'carry-two',0,start);
+ view=battlePassView(player,start);assert.equal(view.level,43);assert.equal(view.levelXp,0);
+ recordBattlePassBossVictory(player,'carry-three',8,start);
+ view=battlePassView(player,start);assert.equal(view.level,43);assert.equal(view.levelXp,30);
+ recordBattlePassBossVictory(player,'carry-three',8,start);
+ assert.equal(battlePassView(player,start).levelXp,30);
+});
+
+test('catalog retains original track rewards with expanded XP cap, boosted currency tracks, early free poisons and corrected gloves', () => {
   const sum = (scope) => BP_TASKS[scope].reduce((n, task) => n + task.xp, 0);
-  assert.equal(sum('daily') * 28 + sum('weekly') * 4 + sum('season'), BP_MAX_XP);
-  assert.equal(BP_MAX_XP, 9600);
+  assert.equal(sum('daily') * 28 + sum('weekly') * 4 + sum('season'), 9600);
+  assert.equal(BP_MAX_XP, 12600);
   assert.equal(BP_MAX_XP - BP_LEVELS * BP_LEVEL_XP, 2100);
-  const trackTentacles = (track) => BP_REWARDS.flatMap((row) => row[track]).filter((reward) => reward.type === 'dm').reduce((total, reward) => total + reward.amount, 0);
-  assert.equal(trackTentacles('free'), 18075);
-  assert.equal(trackTentacles('epic'), 15600);
-  assert.equal(trackTentacles('legendary'), 31200);
-  assert.equal(BP_REWARDS.length, 50);
+  const trackTentacles = (track) => BP_REWARDS.slice(0, 50).flatMap((row) => row[track]).filter((reward) => reward.type === 'dm').reduce((total, reward) => total + reward.amount, 0);
+  assert.equal(trackTentacles('free'), 3375000);
+  assert.equal(trackTentacles('epic'), 3210000);
+  assert.equal(trackTentacles('legendary'), 6420000);
+  assert.equal(BP_REWARDS.length, 70);
   assert.equal(BP_REWARDS.slice(0, 10).flatMap((row) => row.free).filter((r) => r.type === 'large').reduce((n, r) => n + r.amount, 0), 4);
   assert.deepEqual(BP_REWARDS[14].legendary, [{ type: 'legendary_hands', amount: 1 }]);
   assert.deepEqual(BP_REWARDS[23].legendary, [{ type: 'energy', amount: 450 }]);
@@ -48,7 +67,7 @@ test('successful mission only; automatic XP, no repeat awards, UTC resets and ex
   assert.equal(battlePassView(player, start + 28 * day).active, false);
 });
 
-test('all 28 days can earn the 9600 XP season cap and level 50 without manual claims', () => {
+test('all 28 days can earn the 9600 XP season cap and level 64 without manual claims', () => {
   const player = { level: 3 };
   for (let d = 0; d < 28; d++) {
     const now = start + d * day;
@@ -58,7 +77,7 @@ test('all 28 days can earn the 9600 XP season cap and level 50 without manual cl
   }
   const view = battlePassView(player, start + 27 * day);
   assert.equal(view.xp, 9600);
-  assert.equal(view.level, 50);
+  assert.equal(view.level, 64);
   assert.equal(view.tasks.season.every((task) => task.done), true);
   assert.equal(view.claims.length, 0);
   assert.equal(player.weapon_inventory, undefined);
@@ -79,7 +98,7 @@ test('claim is level/tier gated, idempotent, tickets separate and premium DM exc
   assert.equal(player.battle_pass.season.metrics.dm, undefined);
   assert.equal(player.battle_pass.xp, xp);
   claimBattlePassReward(player, { level: 2, track: 'free' }, start);
-  assert.equal(player.battle_pass.season.metrics.dm, 750);
+  assert.equal(player.battle_pass.season.metrics.dm, 50000);
   for (const track of ['free', 'epic', 'legendary']) claimBattlePassReward(player, { level: 40, track }, start);
   assert.equal(player.battle_pass.tickets, 1);
   assert.equal(player.roulette_bonus_spins, undefined);
@@ -131,10 +150,10 @@ test('production exposes the active season and honors explicit disable', () => {
   }
 });
 
-test('admin full unlock opens level 50, preserves claims and never downgrades Legendary', () => {
+test('admin full unlock opens level 70, preserves claims and never downgrades Legendary', () => {
  const player = { level:3 };
  fullyUnlockBattlePass(player,'epic',start+day);
- assert.equal(battlePassView(player,start+day).level,50);
+ assert.equal(battlePassView(player,start+day).level,70);
  assert.equal(player.battle_pass.tier,'epic');
  assert.equal(claimBattlePassReward(player,{level:5,track:'epic'},start+day),true);
  const claims = [...player.battle_pass.claims];

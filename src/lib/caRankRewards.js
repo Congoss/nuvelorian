@@ -18,6 +18,10 @@ export const CA_RANK_REWARDS = {
   13: { tentacles: 1500000, energy: 280, largePoison: 75, spins: 45 },
   14: { tentacles: 2500000, energy: 350, largePoison: 100, spins: 60 },
   15: { tentacles: 4000000, energy: 500, largePoison: 150, spins: 80 },
+  16: { tentacles: 6500000, energy: 650, largePoison: 200, spins: 105 },
+  17: { tentacles: 10500000, energy: 850, largePoison: 275, spins: 140 },
+  18: { tentacles: 17000000, energy: 1100, largePoison: 375, spins: 185 },
+  19: { tentacles: 27500000, energy: 1400, largePoison: 500, spins: 245 },
 };
 
 export function getCARankReward(rank) {
@@ -28,7 +32,7 @@ export function getPendingCARankRewards(profile) {
   const currentRank = getCurrentCARank(getPlayerCA(profile));
   const claimed = new Set((profile?.ca_rank_rewards_claimed || []).map(Number));
   return CA_RANKS
-    .filter((rank) => rank.rank > 1 && rank.rank <= currentRank && !claimed.has(rank.rank))
+    .filter((rank) => rank.rank > 1 && rank.rank <= currentRank && getCARankReward(rank.rank) && !claimed.has(rank.rank))
     .map((rank) => rank.rank);
 }
 

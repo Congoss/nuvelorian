@@ -1,4 +1,5 @@
 import { GAME_CONFIG } from './gameConfig.js';
+import { SHKRABAN_ENABLED, SHKRABAN_BACKGROUND_ID } from './shkrabanContent.js';
 
 import { getBossDamageBoxIcon as getConfiguredBossDamageBoxIcon } from './bossRewardSystem.js';
 
@@ -7,12 +8,14 @@ export const FIRST_BOSS_HERO_BACKGROUND_ID = 'boss-fight';
 // Add a boss here whenever it receives a dedicated fight background.
 // The same id is registered in CAMP_BACKGROUNDS for the hero-room picker.
 export const BOSS_BACKGROUND_REWARDS = {
+  ...(SHKRABAN_ENABLED ? { boss8: { backgroundId: SHKRABAN_BACKGROUND_ID, name: 'Дах піратського ефіру', dropChance: 0.01 } } : {}),
   heli: { backgroundId: 'boss-fight', name: 'Сцена бою з Недоважком', dropChance: 0.01 },
   tank: { backgroundId: 'boss-2-fight', name: 'Сцена бою з Міллю', dropChance: 0.01 },
   chinook: { backgroundId: 'boss-3-fight', name: 'Сцена бою з Шорком', dropChance: 0.01 },
   boss4: { backgroundId: 'boss-4-fight', name: 'Сцена бою з Глистою', dropChance: 0.01 },
   boss5: { backgroundId: 'boss-5-fight', name: 'Сцена бою зі Спорголом', dropChance: 0.01 },
   boss6: { backgroundId: 'boss-6-fight', name: 'Сцена бою із Засмоктом', dropChance: 0.01 },
+  boss7: { backgroundId: 'boss-7-fight', name: 'Храм Клеопатреш', dropChance: 0.01 },
 };
 
 const WEAPON_TIERS = [

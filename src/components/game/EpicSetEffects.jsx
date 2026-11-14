@@ -1,3 +1,4 @@
+import WeaponEnhancementEffect from './WeaponEnhancementEffect';
 import RavenGasAura from './RavenGasAura';
 import RavenVortex from './RavenVortex';
 import { useId } from 'react';
@@ -22,8 +23,9 @@ import weaponGlow from '@/assets/hero/bp epic set/setbp1-weap-anim-acid.png';
 import clawRight from '@/assets/hero/bp epic set/setbp1-weap-handanim.png';
 import clawLeft from '@/assets/hero/bp epic set/setbp1-weap-handanimleft.png';
 export const EPIC_SET_ART = { armor, armorGlow, boots, bootsShine, bottle, bottleGlow, hands, head, headSpark, eyes, legs, pet, petEye, weapon, weaponGrip, weaponGlow, clawRight, clawLeft };
-const ImageLayer = ({ src, className = '', style }) => <img src={src} alt="" draggable="false" className={'bp-set-layer ' + className} style={style} />;
-const Canvas = ({ children, className = '', style }) => <div className={'bp-set-canvas ' + className} style={style}>{children}</div>;
+const spriteStyle = {position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain',pointerEvents:'none'};
+const ImageLayer = ({ src, className = '', style }) => <img src={src} alt="" draggable="false" className={'bp-set-layer ' + className} style={{...spriteStyle,...style}} />;
+const Canvas = ({ children, className = '', style }) => <div className={'bp-set-canvas ' + className} style={{position:'absolute',bottom:0,left:'50%',width:'100%',aspectRatio:'500 / 896',maxHeight:'100%',translate:'-50% 0',pointerEvents:'none',...style}}>{children}</div>;
 function Electricity({ head = false }) {
   return <svg viewBox="0 0 500 896" className={'bp-set-layer bp-set-electric ' + (head ? 'bp-set-head-electric' : '')} aria-hidden="true">
     <g fill="none" stroke="#75ecff" strokeWidth="1.3" strokeLinejoin="round">
@@ -56,10 +58,11 @@ export function EpicHeadEffects() {
       <svg viewBox="0 0 500 896" className="bp-set-layer bp-set-eyes" aria-hidden="true"><defs><clipPath id={clipId}><circle cx="235" cy="99" r="10"/><circle cx="282" cy="99" r="10"/></clipPath></defs><image href={eyes} width="500" height="896" clipPath={'url(#' + clipId + ')'}/><g fill="none" stroke="#ff2525" strokeWidth="2"><circle cx="235" cy="99" r="8"/><circle cx="282" cy="99" r="8"/></g></svg><Electricity head /></Canvas>
   </>;
 }
-export function EpicWeapon({ withHands = false }) {
+export function EpicWeapon({ withHands = false, enhancementLevel=0, enhancementPaused=false, enhancementVariant='base' }) {
   return <>
     <Canvas className="bp-set-weapon" style={{ transformOrigin: '33% 59.6%' }}>
       <ImageLayer src={weapon} />
+      <WeaponEnhancementEffect src={weapon} level={enhancementLevel} paused={enhancementPaused} variant={enhancementVariant}/>
       <ImageLayer src={weaponGlow} className="bp-set-glow bp-set-acid" />
       <ImageLayer src={clawRight} className="bp-set-claw-right" />
       <ImageLayer src={clawLeft} className="bp-set-claw-left" />

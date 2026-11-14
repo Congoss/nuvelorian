@@ -1,0 +1,11 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import sharp from 'sharp';
+const [source,name]=process.argv.slice(2);
+if(!/^([a-z][a-z0-9-]*)$/.test(name))throw new Error('Invalid asset name');
+const target=path.resolve('public/skills/advanced');const originals=path.resolve('docs/art/advanced-talents');
+await fs.mkdir(target,{recursive:true});await fs.mkdir(originals,{recursive:true});
+await fs.copyFile(source,path.join(originals,name+'.png'));
+const cutout=['two-fingers','enema','armor-active','armor-broken'].includes(name);
+await sharp(source).resize(name==='armor-intro'?1200:640,cutout?640:name==='armor-intro'?720:384,{fit:cutout?'contain':'cover',background:{r:0,g:0,b:0,alpha:0}}).webp({quality:85}).toFile(path.join(target,name+'.webp'));
+console.log(name);

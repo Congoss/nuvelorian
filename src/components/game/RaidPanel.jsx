@@ -1,10 +1,11 @@
+import CombatLoader from './CombatLoader';
 import { translateUiText } from '@/lib/uiTextTranslations';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { GAME_CONFIG } from '@/lib/gameConfig';
 import { listPlayerProfiles, resolveRaid } from '@/services/gameApi';
-import { Crosshair, Shield, Loader2, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { Crosshair, Shield, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 
 export default function RaidPanel({ profile, user, onAddXp, onRefreshProfile }) {
   const [targets, setTargets] = useState([]);
@@ -27,8 +28,6 @@ export default function RaidPanel({ profile, user, onAddXp, onRefreshProfile }) 
     if (!profile || (profile.energy || 0) < GAME_CONFIG.RAID_ENERGY_COST) return;
     setAttacking(target.id);
     setResult(null);
-
-    await new Promise((r) => setTimeout(r, 1800));
 
     let raidResult;
     try {
@@ -115,7 +114,7 @@ export default function RaidPanel({ profile, user, onAddXp, onRefreshProfile }) 
 
       {loading ? (
         <div className="flex justify-center py-8">
-          <Loader2 className="w-5 h-5 text-primary animate-spin" />
+          <CombatLoader/>
         </div>
       ) : targets.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground font-mono text-xs">{"" + translateUiText("Немає цілей. Грай перший!") + ""}</div>
@@ -157,7 +156,7 @@ export default function RaidPanel({ profile, user, onAddXp, onRefreshProfile }) 
                     className="h-7 px-3 text-[10px] font-mono bg-red-900/30 border border-red-700/40 text-red-400 hover:bg-red-800/30"
                   >
                     {isAttacking ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <CombatLoader compact/>
                     ) : (
                       <>
                         <Crosshair className="w-3 h-3 mr-1" />

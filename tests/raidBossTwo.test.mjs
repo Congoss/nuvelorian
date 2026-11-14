@@ -25,7 +25,7 @@ test('new raid has 30 million HP and exactly seven days with exclusive end bound
   assert.equal(eventPhase('raid-boss', end), 'ended');
 });
 
-test('new raid leaves the fishing event dates unchanged', () => {
+test('fishing remains available without an end date', () => {
   assert.equal(EVENT_SCHEDULE['space-fishing'].startAt, '2026-10-07T15:00:00.000Z');
-  assert.equal(EVENT_SCHEDULE['space-fishing'].endAt, '2026-10-21T15:00:00.000Z');
+  assert.equal(EVENT_SCHEDULE['space-fishing'].endAt, null);
 });

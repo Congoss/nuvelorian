@@ -1,0 +1,16 @@
+.p4-item-duel .p4-lightsaber .lightsaber{background:transparent}
+.p4-lightsaber-frame.p4-loader-compact{width:40px;height:28px;vertical-align:middle}
+.p4-loader-compact .p4-lightsaber{margin:0;transform:translate(-50%,-50%) scale(.4)}
+.p4-item-duel .p4-lightsaber .lightsaber:before,.p4-item-duel .p4-lightsaber .lightsaber:after{display:none}
+.p4-item-duel .p4-lightsaber .lightsaber svg{position:absolute;bottom:0;left:-4px;width:12px;height:44px;overflow:visible}
+[data-game-hidden="true"] .p4-lightsaber *,[data-game-hidden="true"] .p4-lightsaber *:before{animation-play-state:paused!important}
+
+/* Functional loading feedback remains active when decorative game motion is off. */
+@media(prefers-reduced-motion:no-preference){
+html[data-animations-off='true'] .game-app .p4-item-duel .lightsaber.ls-left{animation:p4-fightleft 2s ease-in-out infinite -.65s!important}
+html[data-animations-off='true'] .game-app .p4-item-duel .lightsaber.ls-right{animation:p4-fightright 2s ease-in-out infinite -.65s!important}
+}
+
+html[data-game-hidden='true'] .game-app .p4-item-duel .lightsaber.ls-left,html[data-game-hidden='true'] .game-app .p4-item-duel .lightsaber.ls-right{animation-play-state:paused!important}
+
+@media(prefers-reduced-motion:no-preference){html[data-animations-off='true'] .game-app .p4-item-duel .p4-loader-x-left{animation:p4-left-x 2s ease-in-out infinite -.65s!important}html[data-animations-off='true'] .game-app .p4-item-duel .p4-loader-x-right{animation:p4-right-x 2s ease-in-out infinite -.65s!important}html[data-animations-off='true'] .game-app .p4-item-duel .p4-loader-x-left>.p4-loader-y{animation:p4-left-y 2s ease-in-out infinite -.65s!important}html[data-animations-off='true'] .game-app .p4-item-duel .p4-loader-x-right>.p4-loader-y{animation:p4-right-y 2s ease-in-out infinite -.65s!important}}

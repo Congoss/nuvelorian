@@ -1,4 +1,12 @@
-import { captureDailyTaskProgress, getDayTasks, getTaskState, WEEKLY_BONUSES } from '../../src/lib/questNotifications.js';
+import { kyivDayKey } from "../../src/lib/kyivDay.js";
+import { grantTutorialArtifactStarter } from './tutorialArtifactStarter.js';
+import { applyWorldAction } from './planetWorld.js';
+import { COLLECTION_REWARDS } from '../../src/lib/questCollectionRewards.js';
+import { FEATURE_FLAGS } from '../../src/lib/featureFlags.js';
+import { HALLOWEEN_EQUIPMENT } from '../../src/lib/halloweenEquipment.js';
+import { recordFishingAchievement } from './playerAchievements.js';
+import { earnPumpkin, exchangePumpkins, purchasePumpkinReward, claimHalloweenMilestone, claimHalloweenClanReward } from '../../src/lib/halloweenEvent.js';
+import { captureDailyTaskProgress, getDailyCompletionReward, getDayTasks, getTaskState, WEEKLY_BONUSES } from '../../src/lib/questNotifications.js';
 import { getGlobalWeekMeta } from './globalWeeklyCycle.js';
 import { grantXpToPlayer } from './progression.js';
 import { getNewbieProgress, SURVIVAL_PACK } from '../../src/lib/newbieQuest.js';
@@ -6,6 +14,8 @@ import { dailyShopOffers } from '../../src/lib/dailyShopOffers.js';
 import { claimPassiveReward } from './passiveRewards.js';
 import { TUTORIAL_STEPS } from '../../src/lib/tutorialProgress.js';
 import { eventPhase } from '../../src/lib/eventSchedule.js';
+import { friday13SalePrice, isFriday13SaleActive } from '../../src/lib/friday13Event.js';
+import { SHKRABAN_ENABLED, SHKRABAN_HERO_AVATAR, ownsShkrabanHead } from '../../src/lib/shkrabanContent.js';
 
 const GUIDE_STEPS = {
   'spend-energy': { ready: (p) => Number(p.energy_spent_total || 0) >= 100, reward: { tentacles: 40, energy: 25, smallPoison: 2 } },
@@ -16,16 +26,7 @@ const GUIDE_STEPS = {
   'join-clan': { ready: (p) => Boolean(p.clan_name || p.clan_id), reward: { tentacles: 100, energy: 30 } },
 };
 const GUIDE_FINAL_REWARD = { tentacles: 300, energy: 140, strength: 50, starterSetFragments: 1, smallPoison: 8, mediumPoison: 2, factoryKey: 2, beachBox: 1 };
-const COLLECTION_REWARDS = {
-  'p4-u00': { mediumPoison: 1, tentacles: 2000, energy: 50, weapon: ['small-poison', 1] },
-  'p4-u01': { mediumPoison: 1, tentacles: 2500, strength: 10, energy: 60, weapon: ['small-poison', 2] },
-  'p4-u02': { largePoison: 1, tentacles: 3000, strength: 15, premium: 2, energy: 70, weapon: ['medium-poison', 3] },
-  'p4-u03': { largePoison: 1, tentacles: 4500, strength: 20, premium: 3, energy: 100, freeSpins: 1, weapon: ['small-poison', 3] },
-  'p4-u04': { largePoison: 2, tentacles: 6500, strength: 30, premium: 5, energy: 130, weapon: ['medium-poison', 1] },
-  'p4-u05': { largePoison: 2, tentacles: 8000, strength: 40, premium: 7, energy: 150, freeSpins: 1, weapon: ['large-poison', 1] },
-  'p4-u06': { largePoison: 3, tentacles: 10000, strength: 60, premium: 10, energy: 190, freeSpins: 2, weapon: ['medium-poison', 2] },
-  'p4-u07': { largePoison: 4, tentacles: 13000, strength: 80, premium: 15, energy: 220, freeSpins: 2, weapon: ['large-poison', 1] },
-};
+
 const FISH_SINGLE = {
   trash: { xp: 10 }, common: { xp: 25 }, uncommon: { energy: 20 }, rare: { smallPoison: 3 },
   epic: { mediumPoison: 2 }, mythic: { largePoison: 1 }, legendary: { largePoison: 3 }, black_hole: { smallPoison: 8, mediumPoison: 4, largePoison: 2 },
@@ -75,6 +76,17 @@ function actionError(code, message, statusCode = 409) {
 }
 
 function addReward(player, reward = {}) {
+  if (reward.enhancementGums) {
+    player.enhancement_gums = { ...player.enhancement_gums };
+    for (const [type, amount] of Object.entries(reward.enhancementGums)) {
+      player.enhancement_gums[type] = Number(player.enhancement_gums[type] || 0) + amount;
+    }
+  }
+  if (reward.equipmentItem) {
+    const item = HALLOWEEN_EQUIPMENT.find(entry => entry.id === reward.equipmentItem);
+    if (!item) throw new Error('Unknown Halloween equipment');
+    if (!(player.inventory_items || []).some(entry => entry.id === item.id)) player.inventory_items = [...(player.inventory_items || []), {...item,type:'equipment',locked:false,count:1}];
+  }
   if (reward.xp) grantXpToPlayer(player, Number(reward.xp));
   if (reward.tentacles) player.tentacles = Number(player.tentacles || 0) + Number(reward.tentacles);
   if (reward.premium) player.premium = Number(player.premium || 0) + Number(reward.premium);
@@ -107,10 +119,43 @@ function dailyState(player, weekKey) {
   return player.daily_event_week === weekKey ? player.daily_event || {} : {};
 }
 
-export function applyPlayerAction(player, action = {}) {
+export function applyPlayerAction(player, action = {}, context = {}) {
+  if (['world-move', 'world-build', 'world-rest', 'world-return'].includes(action.type)) return applyWorldAction(player, action);
+  if(action.type==='update-notice-read'){
+    if(!['ship-forge-v1','ca-rank-backfill-v1'].includes(action.noticeId))actionError('NOTICE_INVALID','Unknown announcement',400);
+    player.update_notices={...player.update_notices,[action.noticeId]:player.update_notices?.[action.noticeId]||new Date().toISOString()};
+    return {read:true};
+  }
   const type = String(action.type || '');
+  if (type === 'equip-shkraban-avatar') {
+    if (!SHKRABAN_ENABLED || !ownsShkrabanHead(player)) actionError('AVATAR_NOT_OWNED', 'Shkraban head is required', 403);
+    player.avatar = SHKRABAN_HERO_AVATAR;
+    return { avatar: player.avatar };
+  }
+  if (type.startsWith('halloween-') && !FEATURE_FLAGS.halloween) actionError('EVENT_INACTIVE', 'Event is not available');
+  if (type === 'tutorial-auto-quests') {
+    grantTutorialArtifactStarter(player);
+    return {completed:Boolean(player.tutorial_auto_quests_completed)};
+  }
+  if (type === 'tutorial-skip') {
+    // Player chose to skip the guide: keep the starter artifacts and welcome energy it would have given.
+    if (!player.tutorial_disabled && !player.tutorial_level_eight_reward_claimed) {
+      grantTutorialArtifactStarter(player);
+      if (!player.welcome_energy_granted) {
+        player.energy = Math.max(0, Number(player.energy) || 0) + 131;
+        player.welcome_energy_granted = true;
+        player.last_energy_update = new Date().toISOString();
+      }
+      player.tutorial_disabled = true;
+      player.tutorial_disabled_at = new Date().toISOString();
+      player.tutorial_skipped_by_player = true;
+      player.tutorial_step = 'completed';
+    }
+    return { skipped: true };
+  }
   if (type === 'tutorial-progress') {
     if (!TUTORIAL_STEPS.has(action.step)) actionError('TUTORIAL_STEP_INVALID', 'Invalid tutorial step', 400);
+    if (['artifacts','claim-reward'].includes(action.step)) grantTutorialArtifactStarter(player);
     player.tutorial_step = action.step;
     if (action.step === 'boss-poison' && !player.tutorial_poison_grant_version && !player.tutorial_disabled && !player.tutorial_level_eight_reward_claimed) {
       addReward(player, { largePoison: 5 });
@@ -125,13 +170,14 @@ export function applyPlayerAction(player, action = {}) {
     return { reward };
   }
   if (type === 'shop-daily') {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = kyivDayKey();
     const offer = dailyShopOffers(player, today).find((entry) => entry.id === String(action.itemId || ''));
     if (!offer) actionError('SHOP_ITEM_INVALID', 'Daily offer is unavailable', 400);
     const purchases = player.daily_shop_date === today ? [...(player.daily_shop_purchases || [])] : [];
     if (purchases.includes(offer.id)) actionError('SHOP_DAILY_LIMIT', 'Daily offer already purchased');
     const currency = offer.paymentCurrency === 'tentacles' ? 'tentacles' : 'premium';
-    const cost = offer.kind === 'equipment' ? offer.premium : Number(offer.cost?.[currency] || 0);
+    const baseCost = offer.kind === 'equipment' ? offer.premium : Number(offer.cost?.[currency] || 0);
+    const cost = isFriday13SaleActive() ? friday13SalePrice(baseCost) : baseCost;
     if (!Number.isFinite(cost) || cost <= 0) actionError('SHOP_ITEM_INVALID', 'Daily offer price is invalid', 400);
     if (Number(player[currency] || 0) < cost) actionError('SHOP_INSUFFICIENT_FUNDS', 'Not enough currency');
     player[currency] = Number(player[currency] || 0) - cost;
@@ -179,12 +225,13 @@ export function applyPlayerAction(player, action = {}) {
     const id = String(action.itemId || '');
     const offer = FIXED_SHOP[id];
     if (!offer) actionError('SHOP_ITEM_INVALID', 'Unknown shop item', 400);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = kyivDayKey();
     const counts = player.shop_daily_limits?.day === today ? { ...(player.shop_daily_limits.counts || {}) } : {};
     const limitKey = offer.limitKey || id;
     if (offer.limit && Number(counts[limitKey] || 0) >= offer.limit) actionError('SHOP_DAILY_LIMIT', 'Daily limit reached');
-    if (Number(player[offer.currency] || 0) < offer.cost) actionError('SHOP_INSUFFICIENT_FUNDS', 'Not enough currency');
-    player[offer.currency] = Number(player[offer.currency] || 0) - offer.cost;
+    const cost = isFriday13SaleActive() ? friday13SalePrice(offer.cost) : offer.cost;
+    if (Number(player[offer.currency] || 0) < cost) actionError('SHOP_INSUFFICIENT_FUNDS', 'Not enough currency');
+    player[offer.currency] = Number(player[offer.currency] || 0) - cost;
     if (offer.limit) player.shop_daily_limits = { day: today, counts: { ...counts, [limitKey]: Number(counts[limitKey] || 0) + 1 } };
     if (offer.spins) player.roulette_bonus_spins = Number(player.roulette_bonus_spins || 0) + offer.spins;
     if (offer.box) {
@@ -235,6 +282,21 @@ export function applyPlayerAction(player, action = {}) {
     }
     return { reward: part.partReward };
   }
+  if (type === 'halloween-clan') { const reward = claimHalloweenClanReward(player, Number(context.halloweenClanTotal || 0)); addReward(player, reward); return { reward }; }
+  if (type === 'halloween-milestone') { const reward = claimHalloweenMilestone(player, action.goal); addReward(player, reward); return { reward }; }
+  if (type === 'halloween-exchange' || type === 'halloween-buy') {
+    if (typeof action.requestId !== 'string' || !/^[a-zA-Z0-9_-]{12,80}$/.test(action.requestId)) actionError('HALLOWEEN_REQUEST_INVALID', 'Invalid request id');
+    const previous = player.halloween_requests?.[action.requestId];
+    if (previous) {
+      if (previous.type !== type || (previous.resource || 'tentacles') !== (action.resource || 'tentacles') || previous.quantity !== action.quantity || previous.productId !== action.productId) actionError('HALLOWEEN_REQUEST_REUSED', 'Request id already used');
+      return { ...previous.result, replayed: true };
+    }
+    let result;
+    if (type === 'halloween-exchange') result = exchangePumpkins(player, action.quantity, Date.now(), action.resource || 'tentacles');
+    else { const reward = purchasePumpkinReward(player, action.productId); addReward(player, reward); result = { reward }; }
+    player.halloween_requests = { ...(player.halloween_requests || {}), [action.requestId]: { type, resource: action.resource, quantity: action.quantity, productId: action.productId, result } };
+    return result;
+  }
   if (type === 'daily-task') {
     const meta = getGlobalWeekMeta();
     const day = Number(action.day);
@@ -246,14 +308,14 @@ export function applyPlayerAction(player, action = {}) {
     if (!task) actionError('DAILY_TASK_UNKNOWN', 'Daily task is not available on this server');
     if (claimed.includes(task.id)) return { alreadyClaimed: true };
     const view = { ...player, currentDateKey: meta.currentDateKey, currentWeekKey: meta.currentWeekKey };
-    const catchupCheckin = task.baseId === 'checkin' && day >= 1 && day <= meta.currentDayIndex;
-    if (!catchupCheckin && !getTaskState(view, task, day, meta.currentDayIndex, claimed).claimable) actionError('DAILY_TASK_INCOMPLETE', 'Task is incomplete');
+    if (!getTaskState(view, task, day, meta.currentDayIndex, claimed).claimable) actionError('DAILY_TASK_INCOMPLETE', 'Task is incomplete');
+    const pumpkins = task.baseId !== 'checkin' ? earnPumpkin(player, 'daily') : 0;
     if (task.baseId === 'checkin') player.daily_event_last_claim = meta.currentDateKey;
     addReward(player, { xp: task.xp, tentacles: task.tentacles, energy: task.energyBonus, freeSpins: 1 });
     player.daily_event_week = meta.currentWeekKey;
     player.daily_event_day = meta.currentDayIndex;
     player.daily_event = { ...state, claimedRewards: { ...(state.claimedRewards || {}), [day]: [...claimed, task.id] } };
-    return { reward: { xp: task.xp, tentacles: task.tentacles, energy: task.energyBonus, freeSpins: 1 } };
+    return { reward: { xp: task.xp, tentacles: task.tentacles, energy: task.energyBonus, freeSpins: 1, pumpkins } };
   }
   if (type === 'daily-day' || type === 'daily-bonus') {
     const meta = getGlobalWeekMeta();
@@ -266,8 +328,10 @@ export function applyPlayerAction(player, action = {}) {
       const ready = getDayTasks(day).every((task) => claimed.includes(task.id));
       if (!ready) actionError('DAILY_DAY_INCOMPLETE', 'Not all daily tasks claimed');
       player.daily_event_week = meta.currentWeekKey;
+      const reward = getDailyCompletionReward(day);
+      addReward(player, reward);
       player.daily_event = { ...state, fullDays: [...fullDays, day] };
-      return {};
+      return { reward };
     }
     const bonus = WEEKLY_BONUSES.find((item) => item.fullDays === Number(action.fullDays));
     if (!bonus || fullDays.length < bonus.fullDays || (state.claimedBonuses || []).includes(bonus.fullDays)) actionError('DAILY_BONUS_UNAVAILABLE', 'Bonus unavailable');
@@ -292,21 +356,25 @@ export function applyPlayerAction(player, action = {}) {
     return { reward: step.reward };
   }
   if (type === 'collection-claim') {
+    const count = action.count ?? 1;
+    if (!Number.isSafeInteger(count)||count<1) actionError('COLLECTION_COUNT_INVALID', 'Invalid collection claim count', 400);
+    if(action.requestId){const prior=player.collection_claim_receipts?.[action.requestId];if(prior){if(prior.locationId!==action.locationId||prior.count!==count)actionError('COLLECTION_COUNT_INVALID','Request reused',409);return {reward:COLLECTION_REWARDS[prior.locationId],replayed:true};}}
     const location = String(action.locationId || '');
     const reward = COLLECTION_REWARDS[location];
     if (!reward) actionError('COLLECTION_LOCATION_INVALID', 'Unknown location', 400);
     const counts = { ...(player.collection_item_counts || {}) };
     const items = Array.from({ length: 7 }, (_, i) => `${location}-artifact-${i + 1}`);
-    if (items.some((id) => Number(counts[id] || 0) < 1)) actionError('COLLECTION_INCOMPLETE', 'Collection is incomplete');
-    for (const id of items) counts[id] -= 1;
+    if (items.some((id) => Number(counts[id] || 0) < count)) actionError('COLLECTION_INCOMPLETE', 'Collection is incomplete');
+    for (const id of items) counts[id] -= count;
     player.collection_item_counts = counts;
     player.collection_items = Object.keys(counts).filter((id) => Number(counts[id]) > 0);
     const { weapon, ...resourceReward } = reward;
-    addReward(player, resourceReward);
+    addReward(player, Object.fromEntries(Object.entries(resourceReward).map(([key, value]) => [key, value * count])));
     const inventory = { ...(player.weapon_inventory || {}) };
-    inventory[weapon[0]] = Number(inventory[weapon[0]] || 0) + weapon[1];
+    inventory[weapon[0]] = Number(inventory[weapon[0]] || 0) + weapon[1] * count;
     player.weapon_inventory = inventory;
-    player.collection_rewards_claimed = { ...(player.collection_rewards_claimed || {}), [location]: Number(player.collection_rewards_claimed?.[location] || 0) + 1 };
+    player.collection_rewards_claimed = { ...(player.collection_rewards_claimed || {}), [location]: Number(player.collection_rewards_claimed?.[location] || 0) + count };
+    if(action.requestId)player.collection_claim_receipts={...player.collection_claim_receipts,[action.requestId]:{locationId:location,count}};
     return { reward };
   }
   if (type === 'fishing-cast') {
@@ -327,18 +395,21 @@ export function applyPlayerAction(player, action = {}) {
     if (!hook && now < cycle.finishAt) actionError('FISHING_TOO_EARLY', 'Fish is not ready');
     const caught = Math.random() * 100 < (hook ? 95 : 80);
     const rarity = caught ? pickWeighted(hook ? FISH_RARITY_HOOK : FISH_RARITY_NORMAL) : null;
+    recordFishingAchievement(player, caught, now, rarity);
     const bonusKey = pickWeighted(caught ? FISH_BONUS_CATCH : FISH_BONUS_MISS);
     const bonus = { xp: bonusKey === 'xp50' ? 50 : bonusKey === 'xp100' ? 100 : 0, energy: bonusKey === 'energy5' ? 5 : bonusKey === 'energy15' ? 15 : bonusKey === 'energy25' ? 25 : 0, strength: bonusKey === 'strength1' ? 10 : 0, smallPoison: bonusKey === 'smallPoison' ? 1 : 0, mediumPoison: bonusKey === 'mediumPoison' ? 1 : 0, largePoison: bonusKey === 'largePoison' ? 1 : 0 };
     addReward(player, bonus);
     if (rarity) {
+      player.cosmo_fishing_caught_total = Number(player.cosmo_fishing_caught_total || 0) + 1;
       const inventory = { ...(player.cosmofish_inventory || player.cosmo_fish_inventory || {}) };
       inventory[rarity] = Number(inventory[rarity] || 0) + 1;
       player.cosmofish_inventory = inventory;
       player.cosmo_fish_inventory = inventory;
     }
+    const pumpkins = caught ? earnPumpkin(player, 'fishing') : 0;
     player.cosmo_fishing_cycle = { ...cycle, resolved: true, claimed: true, resolvedAt: now, hookHit: hook };
     const bonusLabel = ({ xp50: 'EXP +50', xp100: 'EXP +100', energy5: 'Energy +5', energy15: 'Energy +15', energy25: 'Energy +25', smallPoison: 'Small poison x1', mediumPoison: 'Medium poison x1', largePoison: 'Poison flask x1', strength1: 'Strength +10', nothing: 'Nothing' })[bonusKey] || 'Nothing';
-    player.cosmo_fishing_last_result = { caught, rarity, bonusKey, bonusLabel, resolvedAt: now };
+    player.cosmo_fishing_last_result = { caught, rarity, bonusKey, bonusLabel, pumpkins, resolvedAt: now };
     player.cosmo_fishing_last_result_seen = false;
     return { result: player.cosmo_fishing_last_result, reward: bonus };
   }

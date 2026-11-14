@@ -1,3 +1,4 @@
+import { kyivDayKey } from "../../src/lib/kyivDay.js";
 import { store } from '../data/store.js';
 import { playerDb } from '../data/player-db.js';
 import { normalizeGiftMailContent, normalizeGiftRewards } from '../utils/giftMail.js';
@@ -74,7 +75,7 @@ export function largePoisonForPl4Balance(rawBalance, decimals = 18) {
   return Number(amount > 1_000_000n ? 1_000_000n : amount);
 }
 
-const utcDay = () => new Date().toISOString().slice(0, 10);
+const utcDay = () => kyivDayKey();
 const hasNft = async (contract, account) => BigInt(await view(contract, 'nft_supply_for_owner', { account_id: account })) > 0n;
 const pl4Poison = async (contract, account, decimals) => largePoisonForPl4Balance(String(await view(contract, 'ft_balance_of', { account_id: account })), decimals);
 
@@ -101,7 +102,7 @@ async function evaluatePlayer(player, config) {
 export async function processNftHolderCampaign({ forcePlayerId = '' } = {}) {
   const config = normalizeNftHolderCampaign(store.nftHolderCampaign || DEFAULT);
   if (!config.enabled) return { skipped: true, reason: 'disabled' };
-  if (!forcePlayerId && config.lastRunAt && config.lastRunAt.slice(0, 10) === utcDay() && Number(config.lastResult?.errors || 0) === 0) return { skipped: true, reason: 'already-checked-today' };
+  if (!forcePlayerId && config.lastRunAt && kyivDayKey(config.lastRunAt) === utcDay() && Number(config.lastResult?.errors || 0) === 0) return { skipped: true, reason: 'already-checked-today' };
   const players = forcePlayerId
     ? (store.players || []).filter((player) => String(player.id) === String(forcePlayerId))
     : (store.players || []).filter((player) => player.near_wallet_verified && !player.is_banned);

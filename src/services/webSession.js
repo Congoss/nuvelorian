@@ -1,4 +1,4 @@
-import { isWebPlatform } from '@/lib/platform/config';
+import { isWebPlatform, platformConfig } from '@/lib/platform/config';
 
 let exchangePromise;
 async function resumeNearPayment() {
@@ -24,7 +24,7 @@ async function resumeNearPayment() {
 }
 
 export function initializeWebSession() {
-  if (!isWebPlatform) return Promise.resolve();
+  if (!isWebPlatform || platformConfig.localMarketTest) return Promise.resolve();
   if (exchangePromise) return exchangePromise;
   const params = new URLSearchParams(window.location.hash.slice(1));
   const token = params.get('web_launch');

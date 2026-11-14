@@ -1,0 +1,24 @@
+{
+  "tool": "built-in ImageGen",
+  "prompts": [
+    {
+      "key": "arena",
+      "transparent": false,
+      "refs": [
+        "E:/testbase44/src/assets/boss/boss_1/boss1_bck/background.png",
+        "C:/Users/admin/Desktop/alien_soldier_transparent-1.png"
+      ],
+      "prompt": "ONE portrait 9:16 boss arena background INSIDE a spaceship's abandoned quarantine ARMORY, unique new room. Reference1 is STYLE ONLY: same fine hand-inked outlines, muted olive teal gray purple palette, flat cel shading and restrained painted texture, adult sci-fi cartoon Rick and Morty/Futurama spirit. Reference2 is thematic infected soldier only; do not draw soldier. Asymmetrical narrow military armory with empty gun mounts on left wall, battered sealed lockers right, loose cables invaded by pink purple mushrooms, overgrown gas filters, dim red emergency lamp in top right, small green lamp near floor left. Back wall is an angled armor bulkhead with triangular vent grille and broken hanging helmet. Broad empty central floor for full-body soldier composited later. No characters, no living eyes, no window, no planets, no portals, no cheese, no glowing tanks, no text or signage. Real drawn interior depth, diffuse light, muted readable detail, full bleed opaque illustration."
+    },
+    {
+      "key": "layers",
+      "transparent": true,
+      "refs": [
+        "C:/Users/admin/Desktop/alien_soldier_transparent-1.png"
+      ],
+      "prompt": "Make ONE production-ready transparent skeletal animation LAYER ATLAS from the supplied full-body infected alien soldier. Preserve exact reference design, colors, proportions, pose, fine scratchy black linework and muted flat cartoon shading. Exact grid THREE columns by TWO rows; each cell is a portrait canvas aspect 1:2, overall atlas aspect 3:4. ALL SIX CELLS use the SAME coordinate system of the FULL original standing character, with 7% margins and identical original positioning. Each cell contains ONLY one isolated body layer positioned where it belongs within that full character canvas. Do NOT center individual parts or change scale. The six cells must reconstruct the original soldier when superimposed on each other. Reconstruct clean hidden overlapping joint areas for animation; eliminate duplicate parts.\nCELL1 row1 col1: BOTH LEGS from belt line downward and boots, no arms, no torso, no gun, no head. Preserve leg fungus.\nCELL2 row1 col2: TORSO vest and backpack, from shoulder base to belt, no head, no arms, no legs, no gun. Preserve straps pouches and shoulder mushrooms except a small cap reserved cell6. Complete shoulder joint areas.\nCELL3 row1 col3: HEAD helmet radio antenna and upper neck only, same original forward-facing tilt. Pale blank cream eyes WITHOUT black pupils, NO eyelids, NO torso. Green slime jaw and thin dripping tendrils intact.\nCELL4 row2 col1: character's arm at IMAGE LEFT plus the rifle held downward, as one connected layer, from shoulder to hand and whole rifle, exactly original position. No torso legs head.\nCELL5 row2 col2: dangling arm at IMAGE RIGHT from shoulder to long fingers, same pose, slime and fungus intact. No torso legs head gun.\nCELL6 row2 col3: ONLY the small purple mushroom cluster sitting at the TOP OF THE HELMET in its original full-character position, no helmet head body. On cell3 omit these particular helmet mushroom caps so they are not duplicated.\nNO borders, NO lines, NO labels, NO text, NO background, no ground shadows. Truly transparent empty canvas between parts. Every cell precisely same full-character scale and alignment."
+    }
+  ],
+  "assets": "public/ship-soldier-boss",
+  "note": "Atlas parts extracted into individual transparent layer images; scene uses standard BossPanel for sector engine."
+}

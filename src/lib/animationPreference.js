@@ -1,9 +1,25 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
+import {observeAutoplayVideos} from './videoVisibility.js';
 
 const key = 'game-animations';
 const event = 'game-animations-change';
+// Low-memory Android WebViews lose GPU surfaces when many hero effects run at
+// once (white screen). Default those devices to static art; a player can still
+// turn animations on in settings, and an explicit choice always wins.
+function lowMemoryAndroid() {
+  try {
+    const android = /Android/i.test(navigator.userAgent) || String(window.Telegram?.WebApp?.platform || '').toLowerCase().includes('android');
+    const memory = Number(navigator.deviceMemory || 0);
+    return android && memory > 0 && memory <= 2;
+  } catch { return false; }
+}
 function enabled() {
-  try { return localStorage.getItem(key) !== 'off'; } catch { return true; }
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored === 'off') return false;
+    if (stored === 'on') return true;
+  } catch { /* storage can be unavailable in private WebViews */ }
+  return !lowMemoryAndroid();
 }
 function subscribe(listener) {
   window.addEventListener(event, listener);
@@ -44,18 +60,7 @@ export function useGlobalAnimations() {
   const active = useAnimationsEnabled();
   useEffect(() => {
     document.documentElement.dataset.animationsOff = String(!active);
-    const syncVideos = () => document.querySelectorAll('video[autoplay]').forEach(video => {
-      if (!active || document.hidden) video.pause();
-      else if (video.paused) video.play().catch(() => {});
-    });
-    syncVideos();
-    const onPlay = e => { if ((!active || document.hidden) && e.target instanceof HTMLVideoElement && e.target.autoplay) e.target.pause(); };
-    document.addEventListener('play', onPlay, true);
-    document.addEventListener('visibilitychange', syncVideos);
-    return () => {
-      document.removeEventListener('play', onPlay, true);
-      document.removeEventListener('visibilitychange', syncVideos);
-    };
+    return observeAutoplayVideos(window,{enabled:active});
   }, [active]);
   return active;
 }

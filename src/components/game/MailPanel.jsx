@@ -1,3 +1,6 @@
+import { warmFirstFrameImages } from '@/lib/sceneAssets';
+import { getBossKeyRewardLabel } from '@/lib/bossKeyRewards';
+import pumpkinRewardIcon from '@/assets/ui/halloween-pumpkin.webp';
 import { bossDefeatNotice } from '@/lib/bossDefeatNotice';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +17,7 @@ import yellowBox from '@/assets/box/yellow-box.png';
 import redBox from '@/assets/box/red-box.png';
 import inviteBoxArt from '@/assets/box/invite-box.png';
 import mailBanner from '@/assets/ui/mail-banner.webp';
+import { getResourceIcon } from '@/lib/resourceIcons';
 
 const BOX_IMAGE_BY_TYPE = {
   standard_boss: grayBox,
@@ -64,7 +68,11 @@ function clanRoleLabel(role, t) {
 }
 
 function giftRewardLabel(field, language) {
+  const keyLabel=getBossKeyRewardLabel(field,language);if(keyLabel)return keyLabel;
   const labels = {
+    enhancement_gum_normal:['Бубс','Boobs','Бубс'],enhancement_gum_improved:['Буба-Шмуба','Booba-Shmooba','Буба-Шмуба'],enhancement_gum_premium:['Космол','Cosmol','Космол'],
+    roulette_bonus_spins: ['Спіни', 'Spins', 'Спины'],
+    halloween_pumpkin: ['Гарбузи', 'Pumpkins', 'Тыквы'],
     tentacles: ['Щупальця', 'Tentacles', 'Щупальца'], xp: ['Досвід', 'XP', 'Опыт'],
     energy: ['Енергія', 'Energy', 'Энергия'], stat_strength: ['CA', 'CA', 'CA'],
     premium: ['T-Pape', 'T-Pape', 'T-Pape'], small_poison: ['Малий яд', 'Small poison', 'Малый яд'],
@@ -91,7 +99,7 @@ function localizedGiftText(value, language, fallback = '', depth = 0) {
 }
 
 function buildMailItems(profile, t) {
-  const lang = profile?.language === 'en' || profile?.language === 'ru' ? profile.language : 'en';
+  const lang = profile?.language === 'en' || profile?.language === 'ru' ? profile.language : 'uk';
   const senderTexts = BOX_SENDER_TEXTS[lang] || BOX_SENDER_TEXTS.ua;
   const boxes = Array.isArray(profile?.pending_boss_boxes) ? profile.pending_boss_boxes : [];
   const boxMails = boxes.map((box, index) => ({
@@ -262,7 +270,10 @@ export default function MailPanel({ profile, onUpdateProfile, onSyncProfile, onR
                     {updatingMailId === mailItem.id ? '…' : t('mail_panel.delete')}
                   </button>
                 </div> : null}
-                {mailItem.type === 'gift' && mailItem.rewards?.length > 0 ? <p className="mt-2 font-mono text-[10px] font-bold text-[#d8ff84]">{mailItem.rewards.map((reward) => `${giftRewardLabel(reward.field, profile?.language)} ×${Number(reward.amount || 0).toLocaleString()}`).join(' · ')}</p> : null}
+                {mailItem.type === 'gift' && mailItem.rewards?.length > 0 ? <div className="mt-2 flex flex-wrap gap-2">{mailItem.rewards.map((reward, index) => {
+                  const label = giftRewardLabel(reward.field, profile?.language);
+                  return <span key={`${reward.field}-${index}`} title={label} className="inline-flex items-center gap-1 rounded-md border border-[#6b8f42]/55 bg-black/30 px-2 py-1 font-mono text-[10px] font-black text-[#d8ff84]">{reward.field.startsWith('enhancement_gum_')?<span className="inline-block h-7 w-7" style={{backgroundImage:"url('/local-enhancement/gums.webp')",backgroundSize:'300% 100%',backgroundPosition:({enhancement_gum_normal:0,enhancement_gum_improved:50,enhancement_gum_premium:100})[reward.field]+'% center',backgroundRepeat:'no-repeat'}}/>:<img src={(['halloween_pumpkin','halloween-pumpkin','pumpkins','pumpkin'].includes(reward.field) ? pumpkinRewardIcon : getResourceIcon(reward.field === 'roulette_bonus_spins' ? 'spin' : reward.field))} alt={label} className="h-7 w-7 object-contain"/>}×{Number(reward.amount || 0).toLocaleString()}</span>;
+                })}</div> : null}
               </div>
             ))
           )}
@@ -270,4 +281,8 @@ export default function MailPanel({ profile, onUpdateProfile, onSyncProfile, onR
       </div>
     </div>
   );
+}
+
+export function warmFirstFrame() {
+  return warmFirstFrameImages([mailBanner, grayBox, greenBox]);
 }

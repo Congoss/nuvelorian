@@ -1,14 +1,27 @@
 import { createReadStream, statSync } from 'node:fs';
 import { extname, resolve, sep } from 'node:path';
 
-const types = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.txt': 'text/plain; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webp': 'image/webp', '.mp4': 'video/mp4', '.webm': 'video/webm', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf' };
+const types = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.txt': 'text/plain; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webp': 'image/webp', '.avif': 'image/avif', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.m4a': 'audio/mp4', '.mp4': 'video/mp4', '.webm': 'video/webm', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf' };
+const immutableSceneAssets = new Set([
+  '/ship-gum-queen/battle-poster-v1.webp',
+  '/ship-gum-queen/character-edge-v6.webp',
+]);
+
+// Media under dist is public. Keep requests for it out of game initialization.
+export function isPublicMediaPath(pathname) {
+  return !/^\/(?:api|auth|admin)(?:\/|$)/i.test(pathname)
+    && /\.(?:webp|avif|png|jpe?g|gif|svg|ico|woff2?|ttf|mp[34]|webm|ogg|wav|m4a)$/i.test(pathname);
+}
 
 export function createStaticHandler(root = resolve(process.cwd(), 'dist')) {
   root = resolve(root);
   const fileStat = (file) => { try { const stat = statSync(file); return stat.isFile() ? stat : null; } catch { return null; } };
   return function serve(urlPath, response, request = { headers: {}, method: 'GET' }) {
     let pathname;
-    try { pathname = decodeURIComponent(urlPath === '/' ? '/index.html' : urlPath); }
+    try {
+      pathname = decodeURIComponent(urlPath === '/' ? '/index.html' : urlPath);
+      if (pathname === '/admin' || pathname === '/admin/') pathname = '/admin-build/index.html';
+    }
     catch { response.writeHead(400); response.end(); return true; }
     let file = resolve(root, '.' + pathname);
     if (!file.startsWith(root + sep)) { response.writeHead(404); response.end(); return true; }
@@ -24,7 +37,10 @@ export function createStaticHandler(root = resolve(process.cwd(), 'dist')) {
     }
     const ext = extname(file).toLowerCase();
     const media = ['.mp4', '.webm'].includes(ext);
-    const headers = { 'Content-Type': types[ext] || 'application/octet-stream', 'Cache-Control': pathname.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache' };
+    const immutable = pathname.startsWith('/assets/') || immutableSceneAssets.has(pathname);
+    const cacheControl = immutable ? 'public, max-age=31536000, immutable'
+      : isPublicMediaPath(pathname) ? 'public, max-age=60' : 'no-cache';
+    const headers = { 'Content-Type': types[ext] || 'application/octet-stream', 'Cache-Control': cacheControl };
     if (media) headers['Accept-Ranges'] = 'bytes';
     if (['.js', '.css', '.html', '.svg', '.json'].includes(ext)) {
       headers.Vary = 'Accept-Encoding';
@@ -35,7 +51,7 @@ export function createStaticHandler(root = resolve(process.cwd(), 'dist')) {
       };
       for (const encoding of ['br', 'gzip'].sort((a, b) => quality(b) - quality(a))) {
         const compressed = fileStat(file + (encoding === 'br' ? '.br' : '.gz'));
-        if (quality(encoding) > 0 && compressed) { file += encoding === 'br' ? '.br' : '.gz'; stat = compressed; headers['Content-Encoding'] = encoding; break; }
+        if (quality(encoding) > 0 && compressed && compressed.mtimeMs >= stat.mtimeMs) { file += encoding === 'br' ? '.br' : '.gz'; stat = compressed; headers['Content-Encoding'] = encoding; break; }
       }
     }
     const etag = `"${stat.size.toString(16)}-${Math.trunc(stat.mtimeMs).toString(16)}-${headers['Content-Encoding'] || 'identity'}"`;

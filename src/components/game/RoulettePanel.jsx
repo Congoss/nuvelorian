@@ -1,38 +1,58 @@
+import { createPortal } from 'react-dom';
+import { kyivDayKey } from "../../lib/kyivDay.js";
+import {gameApi} from '@/services/gameApi';
+import { useAnimationsEnabled } from '@/lib/animationPreference';
 import { translateUiText } from '@/lib/uiTextTranslations';
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Gift, Sparkles, X } from 'lucide-react';
+import energyRewardIcon from '@/assets/optimized/all/ui/energy.webp';
+import freeSpinRewardIcon from '@/assets/optimized/all/ui/spinx1.webp';
+import telegramStarsIcon from '@/assets/optimized/all/ui/star1.webp';
 import paperIcon from '@/assets/optimized/paper.webp';
-import energyRewardIcon from '@/assets/ui/energy+50.png';
-import freeSpinRewardIcon from '@/assets/ui/spinx1.png';
-import largePoisonRewardIcon from '@/assets/skills/large-poison.png';
-import mediumPoisonRewardIcon from '@/assets/skills/medium-poison.png';
-import smallPoisonRewardIcon from '@/assets/skills/small-poison.png';
-import rouletteArrowIcon from '@/assets/roulette/roulette_arrow.png';
-import rewardEnergyArt from '@/assets/roulette/reward_energy_50.png';
-import rewardSmallPoisonArt from '@/assets/roulette/reward_poison_small.png';
-import rewardMediumPoisonArt from '@/assets/roulette/reward_poison_medium.png';
-import rewardLargePoisonArt from '@/assets/roulette/reward_poison_large.png';
-import rewardFreeSpinArt from '@/assets/roulette/reward_free_spin.png';
-import nothingRewardIcon from '@/assets/ui/shit-happens.png';
+import nearIcon from '@/assets/ui/near-logo.svg';
+import { isWebPlatform } from '@/lib/platform/config';
+import largePoisonRewardIcon from '@/assets/optimized/all/skills/large-poison.webp';
+import mediumPoisonRewardIcon from '@/assets/optimized/all/skills/medium-poison.webp';
+import smallPoisonRewardIcon from '@/assets/optimized/all/skills/small-poison.webp';
+import rouletteArrowIcon from '@/assets/optimized/all/roulette/roulette_arrow.webp';
+import rewardEnergyArt from '@/assets/optimized/all/roulette/reward_energy_50.webp';
+import rewardSmallPoisonArt from '@/assets/optimized/all/roulette/reward_poison_small.webp';
+import rewardMediumPoisonArt from '@/assets/optimized/all/roulette/reward_poison_medium.webp';
+import rewardLargePoisonArt from '@/assets/optimized/all/roulette/reward_poison_large.webp';
+import rewardFreeSpinArt from '@/assets/optimized/all/roulette/reward_free_spin.webp';
+import rewardPumpkinArt from '@/assets/optimized/all/roulette/reward_free_spin-pump.webp';
+import wheelArt from '@/assets/optimized/all/roulette/wheel.webp';
+import rouletteBackdrop from '@/assets/optimized/all/roulette/roulette-casino-backdrop.webp';
+import halloweenWheelArt from '@/assets/optimized/all/roulette/wheel-halloween.webp';
+import pumpkinRewardIcon from '@/assets/ui/halloween-pumpkin.webp';
+import nothingRewardIcon from '@/assets/optimized/all/ui/shit-happens.webp';
 import GameTextureButton from './GameTextureButton';
+import CasinoRulesDialog from './CasinoRulesDialog';
 import MarkerFrame from './MarkerFrame';
 import RewardPopup from './RewardPopup';
+import PaymentMethodPicker from './PaymentMethodPicker';
+import { getRouletteSpinPack } from '@/lib/shopCatalog';
 import {
+  ROULETTE_PAPER_SPIN_COST,
   getRouletteRewardLabel,
   getRouletteRewardPopupText,
   getRouletteRewardCenterAngleByIndex,
   getRouletteRewardIndex,
-  ROULETTE_REWARD_BY_ID,
   ROULETTE_REWARD_COUNT,
-  ROULETTE_WHEEL_SECTOR_ORDER,
   ROULETTE_WHEEL_POINTER_ANGLE as WHEEL_POINTER_ANGLE,
   inferRouletteRewardFromState,
   normalizeRouletteRewardId,
   resolveRouletteRewardById,
 } from '@/lib/rouletteRewards';
+import { halloweenActive } from '@/lib/halloweenEvent';
 
-const STAR_SPIN_COST = 5;
+const STAR_SPIN_COST = 10;
+const PAPER_SPIN_COST = ROULETTE_PAPER_SPIN_COST;
+const ROULETTE_PAYMENT_METHODS = isWebPlatform
+  ? [{ id: 'near', title: 'NEAR' }]
+  : [{ id: 'telegram_stars', title: 'STARS' }];
+const paidSpinLabel = (count) => isWebPlatform ? `$${(0.1 * count).toFixed(2)} · NEAR` : `${STAR_SPIN_COST * count} Stars`;
 const SPIN_DURATION_MS = 4200;
 const MIN_FULL_SPINS = 5;
 const ROULETTE_TEXT = {
@@ -46,7 +66,7 @@ const ROULETTE_TEXT = {
     buy: 'Купити',
     spin_bonus: 'Бонусний прокрут',
     spin5: '5',
-    daily_free_spin_description: 'Раз на день доступний один безкоштовний прокрут. Кожне забране щоденне завдання дає +1 бонусний прокрут. Коли бонусні прокрути закінчились, прокрут можна купити за T-Pape.',
+    daily_free_spin_description: `Раз на день доступний один безкоштовний прокрут. Кожне забране щоденне завдання дає +1 бонусний прокрут. Додатковий прокрут: ${PAPER_SPIN_COST} T-Pape або ${paidSpinLabel(1)}.`,
   },
   en: {
     lucky_roll: 'Lucky Roll',
@@ -58,7 +78,7 @@ const ROULETTE_TEXT = {
     buy: 'Buy',
     spin_bonus: 'Spin Bonus',
     spin5: '5',
-    daily_free_spin_description: 'You get one free spin once per day. Each claimed daily task gives +1 bonus spin. When bonus spins run out, you can buy a spin with T-Pape.',
+    daily_free_spin_description: `You get one free spin once per day. Each claimed daily task gives +1 bonus spin. Extra spin: ${PAPER_SPIN_COST} T-Pape or ${paidSpinLabel(1)}.`,
   },
   ru: {
     lucky_roll: 'Счастливый прокрут',
@@ -70,7 +90,7 @@ const ROULETTE_TEXT = {
     buy: 'Купить',
     spin_bonus: 'Бонусный прокрут',
     spin5: '5',
-    daily_free_spin_description: 'Один раз в день доступен один бесплатный прокрут. Каждое забранное ежедневное задание даёт +1 бонусный прокрут. Когда бонусные прокруты заканчиваются, прокрут можно купить за T-Pape.',
+    daily_free_spin_description: `Один раз в день доступен один бесплатный прокрут. Каждое забранное ежедневное задание даёт +1 бонусный прокрут. Дополнительный прокрут: ${PAPER_SPIN_COST} T-Pape или ${paidSpinLabel(1)}.`,
   },
 };
 
@@ -89,22 +109,19 @@ const ROULETTE_WHEEL_ART = {
   reward_poison_medium: rewardMediumPoisonArt,
   reward_poison_large: rewardLargePoisonArt,
   reward_free_spin: rewardFreeSpinArt,
-  reward_nothing: rewardFreeSpinArt,
+  reward_nothing: halloweenActive() ? rewardPumpkinArt : nothingRewardIcon,
 };
 
 function getTodayKey() {
-  return new Date().toISOString().slice(0, 10);
+  return kyivDayKey();
 }
 
 function getSpinSource(profile) {
   const todayKey = getTodayKey();
   const hasFreeSpin = profile?.roulette_last_free_spin !== todayKey;
   const bonusSpins = profile?.roulette_bonus_spins || 0;
-  const premium = profile?.premium || 0;
-
   if (hasFreeSpin) return { type: 'free', label: translateUiText('Безкоштовно'), disabled: false };
   if (bonusSpins > 0) return { type: 'bonus', label: `Bonus x${bonusSpins}`, disabled: false };
-  if (premium >= STAR_SPIN_COST) return { type: 'premium', label: `${profile?.language === "en" ? "For" : profile?.language === "ru" ? "За" : "За"} ${STAR_SPIN_COST} T-Pape`, disabled: false };
   return { type: 'locked', label: translateUiText('Нема спінів'), disabled: true };
 }
 
@@ -113,10 +130,10 @@ function normalizeAngle(angle) {
   return value < 0 ? value + 360 : value;
 }
 
-function DualSpinButtons({ profile, source, spinning, blocked = false, onFreeOrBonusSpin, onPremiumSpin, spinBonusLabel, spinFreeLabel, spin5Label, lang = 'ua', count = 1, tutorialTarget }) {
+function DualSpinButtons({ profile, source, spinning, blocked = false, onFreeOrBonusSpin, onPaperSpin, onBuySpins, lang = 'ua', count = 1, tutorialTarget }) {
   const availableSpins = Number(profile?.roulette_bonus_spins || 0) + (source.type === 'free' ? 1 : 0);
   const canFreeOrBonus = !spinning && !blocked && availableSpins >= count && (source.type === 'free' || source.type === 'bonus');
-  const canPremium = !spinning && !blocked && (profile?.premium || 0) >= STAR_SPIN_COST * count;
+  const canBuy = !spinning && !blocked;
 
   return (
     <div className="grid grid-cols-2 gap-2">
@@ -129,33 +146,64 @@ function DualSpinButtons({ profile, source, spinning, blocked = false, onFreeOrB
         className={`h-12 ${canFreeOrBonus ? '' : 'opacity-70'}`}
       >
         <span className="relative z-10 flex h-full items-center justify-center px-3 font-sans text-[13px] font-black uppercase text-[#13200e]">
-          {spinning ? '...' : `${lang === 'ru' ? 'ПОЕХАЛИ' : lang === 'en' ? 'LET’S GO' : 'ПОЇХАЛИ'} : ${Math.max(0, availableSpins)}`}
+          {spinning ? '...' : `${lang === 'ru' ? 'ПОЕХАЛИ' : lang === 'en' ? 'LET’S GO' : 'ПОЇХАЛИ'} : ${Math.max(0, availableSpins)}${availableSpins < count ? `/${count}` : ''}`}
         </span>
       </GameTextureButton>
       <GameTextureButton
         type="button"
-        onClick={canPremium ? onPremiumSpin : undefined}
-        disabled={!canPremium}
+        onClick={canBuy ? onBuySpins : undefined}
+        disabled={!canBuy}
         tone="yellow"
-        className={`h-12 ${canPremium ? '' : 'opacity-70 grayscale-[0.18]'}`}
+        className={`h-12 ${canBuy ? '' : 'opacity-70 grayscale-[0.18]'}`}
       >
         <span className="relative z-10 flex h-full items-center justify-center gap-1 px-3 font-sans text-[13px] font-black uppercase text-[#1d220e]">
-          Buy
-          <img src={paperIcon} alt="T-Pape" className="h-6 w-6 object-contain drop-shadow-[0_1px_1px_rgba(0,0,0,0.28)]" />
-          {STAR_SPIN_COST * count}
+          <img src={isWebPlatform ? nearIcon : telegramStarsIcon} alt="" className="h-5 w-5 object-contain" />
+          {paidSpinLabel(count)}
+        </span>
+      </GameTextureButton>
+      <GameTextureButton type="button" onClick={onPaperSpin} disabled={!canBuy || Number(profile?.premium || 0) < PAPER_SPIN_COST * count} tone="blue" className="col-span-2 h-12">
+        <span className="relative z-10 flex h-full items-center justify-center gap-1 font-sans text-[13px] font-black">
+          <img src={paperIcon} alt="T-Pape" className="h-6 w-6 object-contain" />
+          {PAPER_SPIN_COST * count} T-Pape
         </span>
       </GameTextureButton>
     </div>
   );
 }
 
-export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspended = false }) {
+const CardGameDemo = lazy(() => import('./CardGamePanel'));
+export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspended = false, initialTab = 'roulette', onSyncProfile }) {
+  const animationsEnabled = useAnimationsEnabled();
+  const animationsEnabledRef = useRef(animationsEnabled);
+  animationsEnabledRef.current = animationsEnabled;
+  const [casinoTab,setCasinoTab]=useState(initialTab);
+  const [cardsVisited,setCardsVisited]=useState(initialTab==='cards');
+  const [cardBusy,setCardBusy]=useState(false);
+  const [freeCards,setFreeCards]=useState(0);
+  useEffect(()=>{let active=true;gameApi.cardGame('state').then(result=>{if(active)setFreeCards(result.free);}).catch(()=>{});return()=>{active=false;};},[]);
   const [rotation, setRotation] = useState(0);
+  const wheelAreaRef = useRef(null);
+  const [wheelSize, setWheelSize] = useState(0);
+  useLayoutEffect(() => {
+    const area = wheelAreaRef.current;
+    if (!area) return undefined;
+    const measure = () => setWheelSize(Math.min(area.clientWidth, area.clientHeight));
+    measure();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', measure);
+      return () => window.removeEventListener('resize', measure);
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(area);
+    return () => observer.disconnect();
+  }, []);
+
   const [spinning, setSpinning] = useState(false);
   const [rewardPopup, setRewardPopup] = useState(null);
   const [toastLabel, setToastLabel] = useState('');
   const [spinCount, setSpinCount] = useState(1);
   const [showBatchHint, setShowBatchHint] = useState(false);
+  const [purchasePack, setPurchasePack] = useState(null);
   const maxBatchSpin = Number(profile?.level || 1) >= 100 ? 100 : Number(profile?.level || 1) >= 30 ? 10 : Number(profile?.level || 1) >= 20 ? 5 : 1;
   const batchSpinOptions = [1, 5, 10, 100].filter((count) => count <= maxBatchSpin);
   const spinBusyRef = useRef(false);
@@ -172,8 +220,8 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
   const hasPendingReward = Boolean(pendingReward);
   const lang = (profile?.language === 'en' || profile?.language === 'ru') ? profile.language : 'ua';
   const tx = ROULETTE_TEXT[lang];
-  const wheelRewards = ROULETTE_WHEEL_SECTOR_ORDER.map((rewardId) => ROULETTE_REWARD_BY_ID[rewardId]).filter(Boolean);
-  const wheelTransition = spinning
+  const wheelImage = halloweenActive() ? halloweenWheelArt : wheelArt;
+  const wheelTransition = spinning && animationsEnabled
     ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.12, 0.82, 0.18, 1)`
     : 'none';
 
@@ -196,8 +244,8 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
     const normalizedId = normalizeRouletteRewardId(reward.id || fallback?.id || '');
     const resolvedReward = resolveRouletteRewardById(normalizedId);
     return {
-      ...reward,
       ...(resolvedReward || {}),
+      ...reward,
       id: normalizedId || reward.id || fallback?.id || '',
       pendingId: reward.pendingId || fallback?.pendingId || null,
     };
@@ -220,12 +268,24 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
       return;
     }
     suppressPendingRewardPopupRef.current = true;
-    setRewardPopup(null);
     setToastLabel('');
     try {
       await onUpdateProfile?.({ claimRouletteReward: { pendingId: reward.pendingId || reward.id } });
+      setRewardPopup(null);
     } catch (error) {
       suppressPendingRewardPopupRef.current = false;
+      if (error?.code === 'ROULETTE_REWARD_MISMATCH') {
+        try {
+          const current = await onUpdateProfile?.({});
+          if (current) onSyncProfile?.({ id: profile.id, roulette_pending_reward: current.roulette_pending_reward ?? null });
+          setRewardPopup(null);
+          if (current?.roulette_pending_reward) showRewardPopup(current.roulette_pending_reward);
+          return;
+        } catch (refreshError) {
+          setToastLabel(refreshError.message || error.message);
+          return;
+        }
+      }
       showRewardPopup(reward);
       setToastLabel(error.message || 'Claim failed');
     } finally {
@@ -244,13 +304,14 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
       groups.set(r.id, group);
     }
     setRewardPopup({
-      title: normalizedReward.spinCount > 1 ? tx.roulette + ' ×' + normalizedReward.spinCount : normalizedReward.id === 'reward_nothing' ? (lang === 'ru' ? 'В следующий раз повезёт. Но это не точно.' : lang === 'en' ? 'Better luck next time. No promises.' : 'Наступного разу пощастить. Але це не точно.') : getRouletteRewardPopupText(normalizedReward, lang),
+      reward: normalizedReward,
+      title: normalizedReward.spinCount > 1 ? tx.roulette + ' ×' + normalizedReward.spinCount : normalizedReward.type === 'nothing' ? (lang === 'ru' ? 'В следующий раз повезёт. Но это не точно.' : lang === 'en' ? 'Better luck next time. No promises.' : 'Наступного разу пощастить. Але це не точно.') : getRouletteRewardPopupText(normalizedReward, lang),
       items: [...groups.values()].map(({ reward: r, count }) => ({
         id: r.id,
-        largeIcon: r.id === 'reward_nothing',
-        icon: ROULETTE_REWARD_ICONS[r.id] || ROULETTE_WHEEL_ART[r.id],
-        label: r.id === 'reward_nothing' ? '' : getRouletteRewardLabel(r, lang),
-        text: r.id === 'reward_nothing' ? (count > 1 ? `×${count}` : '') : getRouletteRewardPopupText(r, lang) + (count > 1 ? ' ×' + count : ''),
+        largeIcon: r.type === 'nothing',
+        icon: r.type === 'halloween_pumpkin' ? pumpkinRewardIcon : ROULETTE_REWARD_ICONS[r.id] || ROULETTE_WHEEL_ART[r.id],
+        label: r.type === 'nothing' ? '' : getRouletteRewardLabel(r, lang),
+        text: r.type === 'nothing' ? (count > 1 ? `×${count}` : '') : getRouletteRewardPopupText(r, lang) + (count > 1 ? ' ×' + count : ''),
         accent: r.accent,
         pendingId: normalizedReward.pendingId,
       })),
@@ -262,9 +323,9 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
     if (spinBusyRef.current || spinning || hasPendingReward || !batchSpinOptions.includes(spinCount)) return;
     if (mode === 'free' && source.type !== 'free') return;
     if (mode === 'bonus' && source.type !== 'bonus') return;
-    if (mode === 'paid' && (profile?.premium || 0) < STAR_SPIN_COST * spinCount) return;
-
-    if (mode !== 'paid' && Number(profile?.roulette_bonus_spins || 0) + (mode === 'free' ? 1 : 0) < spinCount) return;
+    if (mode === 'paid') {
+      if (Number(profile?.premium || 0) < PAPER_SPIN_COST * spinCount) return;
+    } else if (Number(profile?.roulette_bonus_spins || 0) + (mode === 'free' ? 1 : 0) < spinCount) return;
     spinBusyRef.current = true;
     setSpinning(true);
     setToastLabel('');
@@ -273,6 +334,7 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
     cleanupPopupTimer();
     cleanupSpinTimer();
 
+    let spinStarted = false;
     try {
       const result = await onUpdateProfile?.({ spinRoulette: { spinType: mode, count: spinCount } });
       const nextProfile = result?.player || result?.data || result || {};
@@ -298,6 +360,11 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
         rewardId: selectedRewardId,
         pendingId: reward.pendingId || result?.pending_reward?.pendingId || null,
       };
+      if (!animationsEnabledRef.current) {
+        spinRevealReadyRef.current = true;
+        showRewardPopup(reward);
+        return;
+      }
       const fullSpins = MIN_FULL_SPINS;
       const targetAngle = normalizeAngle(selectedAngle - WHEEL_POINTER_ANGLE);
       const currentAngle = normalizeAngle(rotation);
@@ -307,16 +374,31 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
 
       console.log(`[roulette] spin target rewardId=${selectedRewardId} index=${selectedIndex} selectedAngle=${Number(selectedAngle.toFixed(2))} finalAngle=${finalAngle}`);
 
+      spinStarted = true;
       setRotation(totalRotation);
       popupTimerRef.current = window.setTimeout(() => {
         spinRevealReadyRef.current = true;
         showRewardPopup(reward);
       }, SPIN_DURATION_MS + 120);
     } catch (error) {
-      setToastLabel(error.message || 'Spin failed');
-      setRotation((current) => current + 360);
+      if (error?.code === 'ROULETTE_REWARD_PENDING') {
+        try {
+          const current = await onUpdateProfile?.({});
+          lastSpinRewardRef.current = null;
+          spinRevealReadyRef.current = true;
+          suppressPendingRewardPopupRef.current = false;
+          if (current?.roulette_pending_reward) showRewardPopup(current.roulette_pending_reward);
+          setToastLabel('');
+        } catch (refreshError) {
+          setToastLabel(refreshError.message || error.message);
+        }
+      } else if (error?.code === 'NO_BONUS_SPINS' || error?.code === 'FREE_SPIN_USED') {
+        setToastLabel(lang==='ru'?'Недостаточно прокруток. Обновляем остаток…':lang==='en'?'Not enough spins. Updating balance…':'Недостатньо прокрутів. Оновлюємо залишок…');
+        void Promise.resolve(onUpdateProfile?.({})).catch(()=>{});
+      } else setToastLabel(error.message || 'Spin failed');
     } finally {
-      spinTimerRef.current = window.setTimeout(() => { spinBusyRef.current = false; setSpinning(false); }, SPIN_DURATION_MS);
+      if (spinStarted) spinTimerRef.current = window.setTimeout(() => { spinBusyRef.current = false; setSpinning(false); }, SPIN_DURATION_MS);
+      else { spinBusyRef.current = false; setSpinning(false); }
     }
   };
 
@@ -333,20 +415,35 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
     }
   }, [pendingReward, rewardPopup, spinning]);
 
+  const casinoTabs = CardGameDemo ? <div className="casino-tabs" role="tablist" aria-label={lang==='en'?'Games':lang==='ru'?'Игры':'Ігри'}>{[['roulette',tx.roulette],['cards',lang==='en'?'Contraband':lang==='ru'?'Контрабанда':'Контрабанда']].map(([id,label])=><button key={id} className="casino-tab" type="button" role="tab" aria-selected={casinoTab===id} disabled={spinning||cardBusy||hasPendingReward} onClick={()=>{setCasinoTab(id);if(id==='cards')setCardsVisited(true);}}><span>{label}{id==='cards'&&freeCards>0&&<b className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[#bdd36d] px-1 text-[9px] text-[#172515]">{freeCards}</b>}</span></button>)}</div> : null;
   return (
-    <div className="relative flex h-full min-h-0 w-full flex-col px-2 py-2 text-[#142016]">
-      <div className="pointer-events-none absolute inset-0 rounded-[20px] bg-[rgba(7,11,7,0.78)] backdrop-blur-[8px]" />
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        <div className="mb-2 flex items-center justify-between gap-2 rounded-[16px] bg-[linear-gradient(180deg,rgba(12,20,10,0.96)_0%,rgba(4,7,4,0.96)_100%)] px-2 py-2">
-          <div>
+    <div className="relative isolate flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[22px] bg-[#171223] text-[#142016] shadow-[0_18px_70px_rgba(0,0,0,0.65)]">
+      <div
+        className="pointer-events-none absolute inset-0 rounded-[20px] bg-[#080f0c] bg-cover bg-center"
+        style={{ backgroundImage: `linear-gradient(180deg, rgba(15,9,25,0.32), rgba(12,9,20,0.58)), url(${rouletteBackdrop})` }}
+        aria-hidden="true"
+      />
+      <div className="z-10 flex min-h-0 flex-1 flex-col" style={{display:casinoTab==='roulette'?undefined:'none'}}>
+              <button type="button" aria-label={lang === 'ru' ? 'Условия прокрутов' : lang === 'en' ? 'Spin options' : 'Умови прокрутів'} aria-expanded={showBatchHint} onClick={() => setShowBatchHint((value) => !value)} className="absolute right-4 top-[68px] z-30 flex h-10 w-10 items-center justify-center rounded-full bg-[#151020]/65 font-black text-[#dbe9c8] shadow-lg">?</button>
+              {showBatchHint&&<CasinoRulesDialog title={lang==='en'?'Roulette rules':lang==='ru'?'Правила рулетки':'Правила рулетки'} confirmLabel={lang==='en'?'Got it':lang==='ru'?'Понятно':'Зрозуміло'} onClose={()=>setShowBatchHint(false)} items={[
+                tx.daily_free_spin_description,
+                lang==='ru'?'Каждый прокрут выдаёт отдельную случайную награду.':lang==='en'?'Each spin gives a separate random reward.':'Кожен прокрут видає окрему випадкову нагороду.',
+                lang==='ru'?'×5 доступен с 20 уровня, ×10 — с 30, ×100 — со 100.':lang==='en'?'×5 unlocks at level 20, ×10 at level 30, and ×100 at level 100.':'×5 доступний з 20 рівня, ×10 — з 30, ×100 — зі 100.',
+                lang==='ru'?`Стоимость одного дополнительного прокрута: ${paidSpinLabel(1)} или ${PAPER_SPIN_COST} T-Pape.`:lang==='en'?`One extra spin costs ${paidSpinLabel(1)} or ${PAPER_SPIN_COST} T-Pape.`:`Один додатковий прокрут коштує ${paidSpinLabel(1)} або ${PAPER_SPIN_COST} T-Pape.`,
+                lang==='ru'?'Перед следующим прокрутом забери предыдущую награду.':lang==='en'?'Claim your previous reward before spinning again.':'Перед наступним прокрутом забери попередню нагороду.'
+              ]}/>}
+
+        <div className="flex shrink-0 items-center justify-between gap-2 bg-gradient-to-b from-[#100d1d]/80 to-transparent px-4 pb-2 pt-3">
+          {casinoTabs || <div>
             <p className="font-mono text-[10px] font-black uppercase tracking-[0.16em] text-[#9dff43]">{tx.lucky_roll}</p>
             <h2 className="font-sans text-[23px] font-black uppercase leading-none text-[#f8ffe8] [text-shadow:0_2px_0_rgba(0,0,0,0.85)]">{tx.roulette}</h2>
-          </div>
+          </div>}
           <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#182015] text-[#e9ffd0] transition hover:brightness-110"
+              aria-label={lang === 'ru' ? 'Закрыть' : lang === 'en' ? 'Close' : 'Закрити'}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#151020]/65 text-[#f4ebce] transition hover:brightness-110"
             >
               <X className="h-5 w-5" />
             </button>
@@ -354,50 +451,37 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
         </div>
 
         <div
-          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))' }}
+          className="flex min-h-0 flex-1 overflow-hidden px-3 pb-2"
         >
-          <MarkerFrame className="p-3" innerClassName="relative z-10" variant="transparent">
-            <div className="relative mx-auto w-full max-w-[380px]">
-              <div className="relative mx-auto aspect-square w-[calc(100%-36px)] max-w-[340px]">
-              <motion.img
+          <div className="relative z-10 mx-auto flex min-h-0 w-full max-w-[440px] flex-1 flex-col">
+            <div ref={wheelAreaRef} className="pointer-events-none relative mx-auto min-h-0 w-full flex-1 overflow-hidden">
+              <div className="relative mx-auto" style={{ width: wheelSize, height: wheelSize }}>
+              <img
                 src={rouletteArrowIcon}
                 alt=""
                 aria-hidden="true"
-                className="absolute inset-0 z-20 h-full w-full select-none object-fill drop-shadow-[0_8px_18px_rgba(0,0,0,0.4)]"
+                className="pointer-events-none absolute inset-0 z-20 h-full w-full select-none object-fill"
               />
               <div
                 aria-label={tx.roulette_wheel}
-                className="absolute inset-0 z-10 h-full w-full drop-shadow-[0_12px_28px_rgba(0,0,0,0.42)]"
+                className="absolute inset-0 z-10 h-full w-full"
                 style={{
-                  transform: `rotate(${rotation}deg)`,
+                  transform: rotation ? `rotate(${rotation}deg)` : undefined,
                   transformOrigin: '50% 50%',
                   transition: wheelTransition,
-                  willChange: 'transform',
                 }}
               >
-                {wheelRewards.map((reward, index) => (
-                  <img
-                    key={reward.id}
-                    src={ROULETTE_WHEEL_ART[reward.id]}
-                    alt=""
-                    aria-hidden="true"
-                    draggable="false"
-                    className="absolute inset-0 h-full w-full select-none object-fill"
-                    style={{ zIndex: index + 1 }}
-                  />
-                ))}
+                <img src={wheelImage} alt="" aria-hidden="true" draggable="false" decoding="async" width={680} height={680} className="h-full w-full select-none object-fill" />
               </div>
-            </div>
-              <button type="button" aria-label={lang === 'ru' ? 'Условия прокрутов' : lang === 'en' ? 'Spin options' : 'Умови прокрутів'} aria-expanded={showBatchHint} onClick={() => setShowBatchHint((value) => !value)} className="absolute right-0 top-0 z-30 flex h-8 w-8 items-center justify-center rounded-full border border-[#9dff43] bg-[#10170d] font-black text-[#dbe9c8] shadow-lg">?</button>
-              {showBatchHint ? <div className="absolute right-0 top-9 z-40 w-[min(270px,calc(100vw-48px))] rounded-lg border border-[#28ee90] bg-[#10170d] p-2 font-mono text-[10px] text-[#dbe9c8] shadow-xl">{lang === 'ru' ? '×5 доступен с 20 уровня, ×10 — с 30, ×100 — с 100. Каждый прокрут выдаёт отдельную случайную награду; для покупки нужно 5 T-Pape за прокрут. Можно использовать бесплатные и бонусные спины. Сначала забери предыдущую награду.' : lang === 'en' ? '×5 unlocks at level 20, ×10 at level 30, and ×100 at level 100. Each spin gives a separate random reward; paid spins cost 5 T-Pape each. Free and bonus spins can be used. Claim the previous reward first.' : '×5 доступний з 20 рівня, ×10 — з 30, ×100 — зі 100. Кожен прокрут дає окрему випадкову нагороду; ціна платного — 5 T-Pape за прокрут. Можна використати безкоштовні й бонусні прокрути. Спочатку забери попередню нагороду.'}</div> : null}
             </div>
 
-            <div className="mt-3">
-              <div className="mb-2 flex justify-center gap-1.5">
-                {batchSpinOptions.map((count) => <GameTextureButton key={count} type="button" tone={spinCount === count ? 'green' : 'gray'} disabled={spinning || hasPendingReward} onClick={() => setSpinCount(count)} className="h-9 min-w-0 flex-1 max-w-20"><span className="relative z-10 font-black">×{count}</span></GameTextureButton>)}
+            </div>
+
+            <div className="pointer-events-auto relative z-30 mt-1 shrink-0">
+              <div className="mb-1 flex justify-center gap-1.5">
+                {batchSpinOptions.map((count) => <GameTextureButton key={count} type="button" tone={spinCount === count ? 'green' : 'gray'} aria-pressed={spinCount === count} onPointerDown={event=>{if(event.isPrimary&&event.button===0){event.preventDefault();setSpinCount(count);}}} onClick={() => setSpinCount(count)} className="h-11 min-w-0 flex-1 max-w-20 touch-manipulation enabled:active:translate-y-0"><span className="relative z-10 font-black">×{count}</span></GameTextureButton>)}
               </div>
-              {spinCount > 1 ? <p className="mb-2 text-center font-mono text-[9px] text-[#dbe9c8]">{lang === 'ru' ? `${spinCount} отдельных наград · ${spinCount} спинов или ${STAR_SPIN_COST * spinCount} T-Pape` : lang === 'en' ? `${spinCount} separate rewards · ${spinCount} spins or ${STAR_SPIN_COST * spinCount} T-Pape` : `${spinCount} окремих нагород · ${spinCount} прокрутів або ${STAR_SPIN_COST * spinCount} T-Pape`}</p> : null}
+              <p className="mb-2 text-center font-mono text-[9px] text-[#dbe9c8]">{lang === 'ru' ? `${spinCount} отдельных наград · ${paidSpinLabel(spinCount)} / ${PAPER_SPIN_COST * spinCount} T-Pape` : lang === 'en' ? `${spinCount} separate rewards · ${paidSpinLabel(spinCount)} / ${PAPER_SPIN_COST * spinCount} T-Pape` : `${spinCount} окремих нагород · ${paidSpinLabel(spinCount)} / ${PAPER_SPIN_COST * spinCount} T-Pape`}</p>
               <DualSpinButtons
                 lang={lang}
                 profile={profile}
@@ -406,7 +490,8 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
                 count={spinCount}
                 blocked={hasPendingReward}
                 onFreeOrBonusSpin={() => handleSpin(source.type === 'bonus' ? 'bonus' : 'free')}
-                onPremiumSpin={() => handleSpin('paid')}
+                onBuySpins={() => setPurchasePack(getRouletteSpinPack(spinCount))}
+                onPaperSpin={() => handleSpin('paid')}
                 spinBonusLabel={tx.spin_bonus}
                 spinFreeLabel={tx.free}
                 spin5Label={tx.spin5}
@@ -414,14 +499,15 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
               />
             </div>
 
-            <div className="mt-2 flex items-center gap-2 rounded-[14px] border border-[#28ee90] bg-[#10170d] px-3 py-2">
+            <div className="mt-1 flex shrink-0 items-center gap-2 px-2 py-1 [text-shadow:0_1px_3px_rgba(0,0,0,0.95)]">
               <Gift className="h-4 w-4 shrink-0 text-[#9dff43]" />
-              <p className="font-mono text-[10px] leading-relaxed text-[#dbe9c8]">{tx.daily_free_spin_description}</p>
+              <p className="font-mono text-[9px] leading-snug text-[#dbe9c8]">{tx.daily_free_spin_description}</p>
             </div>
-          </MarkerFrame>
+          </div>
         </div>
       </div>
 
+      {CardGameDemo&&cardsVisited&&<div className="absolute inset-0 z-20" style={{display:casinoTab==='cards'?undefined:'none'}}><Suspense fallback={<div className="p-5 text-[#e4eac0]">…</div>}><CardGameDemo embedded live onAvailability={setFreeCards} onBusy={setCardBusy} onRewards={snapshot=>onSyncProfile?.({id:profile.id,...snapshot})} language={lang} onClose={onClose} headerContent={casinoTabs}/></Suspense></div>}
       <RewardPopup
         open={!suspended && Boolean(rewardPopup)}
         title={rewardPopup?.title || ''}
@@ -429,11 +515,13 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
         tutorialClaimTarget
         language={lang}
         confirmLabel={rewardPopup?.items?.every(item => item.id === 'reward_nothing') ? getRouletteRewardPopupText(resolveRouletteRewardById('reward_nothing'), lang) : lang === 'ru' ? 'Забрать награду' : lang === 'en' ? 'Claim reward' : 'Забрати нагороду'}
-        onConfirm={() => acknowledgePendingReward(pendingReward)}
+        onConfirm={() => acknowledgePendingReward(rewardPopup?.reward)}
         onClose={() => { suppressPendingRewardPopupRef.current = true; setRewardPopup(null); }}
       />
 
-      {hasPendingReward && !rewardPopup && !spinning && !suspended ? <button type="button" onClick={() => { suppressPendingRewardPopupRef.current = false; showRewardPopup(pendingReward); }} className="relative z-10 my-2 rounded-lg border border-[#d8ff5a] bg-[#20300f] p-3 font-mono text-sm font-black text-[#d8ff5a]">{lang === 'ru' ? 'Есть награда — забрать' : lang === 'en' ? 'Reward waiting — claim' : 'Є нагорода — забрати'}</button> : null}
+      {purchasePack && !suspended ? createPortal(<PaymentMethodPicker portalLayer pack={purchasePack} paymentMethods={ROULETTE_PAYMENT_METHODS} initialMethodId={ROULETTE_PAYMENT_METHODS[0].id} onClose={() => setPurchasePack(null)} onSuccess={async () => { setPurchasePack(null); await onUpdateProfile?.({}); }} />, document.body) : null}
+
+      {hasPendingReward && !rewardPopup && !spinning && !suspended ? <button type="button" onClick={() => { suppressPendingRewardPopupRef.current = false; showRewardPopup(pendingReward); }} className="relative z-10 my-2 rounded-lg border border-[#d8ff5a] bg-[#20300f] p-3 font-mono text-sm font-black text-[#d8ff5a]">{lang === 'ru' ? 'Сначала забери награду →' : lang === 'en' ? 'Claim your reward first →' : 'Спочатку забери нагороду →'}</button> : null}
       <AnimatePresence>
         {toastLabel ? (
           <motion.div
@@ -441,7 +529,7 @@ export default function RoulettePanel({ profile, onUpdateProfile, onClose, suspe
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 8 }}
             transition={{ duration: 0.22, ease: 'easeOut' }}
-            className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-6"
+            className="pointer-events-none absolute inset-x-3 bottom-3 z-20 flex justify-center"
           >
             <MarkerFrame className="w-full max-w-[280px] shadow-[0_18px_36px_rgba(0,0,0,0.45)]" innerClassName="bg-[linear-gradient(180deg,rgba(12,18,10,0.96)_0%,rgba(6,10,6,0.96)_100%)] px-4 py-4" variant="transparent">
               <div className="flex items-center gap-3">

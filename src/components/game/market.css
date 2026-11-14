@@ -1,0 +1,171 @@
+.p4-market{padding:10px;color:#e7f3d9;font-family:Rubik,sans-serif;min-height:100%;background:linear-gradient(180deg,#0e140c,#060a06)}
+.p4-market .market-button-label{position:relative;z-index:1;display:flex;height:100%;min-height:36px;align-items:center;justify-content:center;gap:5px;padding:6px 8px;color:#17200e;font:900 10px/1.2 monospace;text-transform:uppercase;text-align:center}
+.market-heading-content{position:relative;display:flex;align-items:center;min-height:120px;padding:17px 98px 17px 16px;background:radial-gradient(ellipse at 100% 70%,#7fbb3529,transparent 65%)}
+.market-heading-art{position:absolute;right:3px;bottom:2px;width:105px;height:105px;object-fit:contain;filter:drop-shadow(0 6px 5px #000a);transform:rotate(-7deg)}
+.market-eyebrow{font:900 9px monospace;letter-spacing:3px;color:#8fbc6b}.market-heading h1{margin:3px 0 6px;font:900 28px/1.1 "Rubik Distressed",Rubik,sans-serif;text-transform:uppercase;color:#e8f6cf;text-shadow:2px 3px #030503}.market-heading p{max-width:230px;font-size:10px;line-height:1.5;color:#aabb9e}.market-test-badge{position:absolute;right:9px;top:8px;display:flex;align-items:center;gap:4px;padding:3px 5px;border:1px solid #657839;background:#1a2412;font:900 8px monospace;color:#d8e9a4}.market-test-badge i{width:4px;height:4px;border-radius:50%;background:#b7d853}
+.market-balances{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0 11px}.market-balances-single{grid-template-columns:1fr}.market-balance{padding:9px 10px;display:flex;flex-direction:column;gap:5px}.market-balance>small{color:#9eb591;font:900 8px monospace;letter-spacing:.5px;text-transform:uppercase}.market-currency{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;font-family:monospace;font-weight:900}.market-balance .market-currency{justify-content:flex-start;font-size:17px;color:#eef7d9}.market-currency>img{height:23px;width:23px;object-fit:contain}.market-currency>small{font-size:9px;color:#b4cb94}.market-token{display:inline-grid;place-items:center;height:22px;width:22px;border:1px solid #93b650;border-radius:50%;background:radial-gradient(circle at 30% 25%,#718d36,#243616 65%);box-shadow:inset 0 0 0 2px #17230c;font:900 8px monospace;color:#ddf69f}
+.market-main-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px}.market-subtabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:7px}.market-stock{margin-top:12px}.market-stock-inner{padding:11px 9px 12px}.market-section-heading{display:flex;align-items:center;gap:7px;margin-bottom:10px}.market-section-heading>span{height:2px;width:21px;background:#7fd53e}.market-section-heading h2{color:#d8f7a1;font:900 11px monospace;letter-spacing:1.5px;text-transform:uppercase}.market-section-heading>small{margin-left:auto;padding:2px 6px;border:1px solid #28583d;color:#a3c98e;font:900 9px monospace}
+.market-search{display:flex;align-items:center;gap:7px;border:1px solid #28583d;background:#080e09;padding-left:9px;color:#8fa685}.p4-market input,.p4-market select{min-width:0;color:#e7f3d9;border:1px solid #28583d;border-radius:0;background:#080e09;font:11px Rubik,sans-serif;min-height:37px;padding:8px}.market-search input{flex:1;width:100%;border:0;background:transparent}.market-search input::placeholder{color:#7e9476}.market-filter-toggle{position:relative;display:grid;place-items:center;align-self:stretch;min-width:37px;border-left:1px solid #28583d;color:#b9d9a2}.market-filter-toggle[aria-expanded=true]{background:#18311f;color:#6bffc4}.market-filter-toggle i{position:absolute;right:5px;top:5px;width:4px;height:4px;background:#d8f67a;border-radius:50%}.market-filters{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}.market-filters select:last-child{grid-column:1/-1}.market-status:empty{display:none}.market-status{margin:8px 0;font-size:10px;color:#a9d67e}.market-status-error{color:#e5ac77}.market-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px}.market-grid .market-currency{font-size:11px}.market-grid .market-currency>img{height:18px;width:18px}.market-grid .market-token{height:17px;width:17px;font-size:7px}.market-empty{display:flex;align-items:center;flex-direction:column;gap:13px;padding:40px 12px;color:#748a69}.market-empty p{font-size:11px;text-align:center}.market-help{display:flex;align-items:flex-start;gap:8px;margin:12px 1px;color:#8ca380}.market-help svg{flex-shrink:0;margin-top:2px}.market-help p{font-size:10px;line-height:1.6}.market-fee-strip{display:flex;justify-content:space-between;border-top:1px solid #263b25;padding:9px 2px;color:#adc198;font:900 10px monospace}.market-fee-strip b{color:#d8f7a1}.market-test-details{border-top:1px solid #21341f;padding:10px 2px;color:#718869;font-size:9px;line-height:1.7;text-transform:none}.market-test-details summary{cursor:pointer;font:900 9px monospace;text-transform:uppercase}.market-test-details p{margin-top:8px}.market-test-details code{font-size:9px;overflow-wrap:anywhere}.market-test-details a{display:block;margin-top:7px;color:#9dbc86;text-decoration:underline}
+.p4-market.market-overlay{position:fixed;inset:0;z-index:100;min-height:0;padding:18px;display:grid;place-items:center;background:#000d;backdrop-filter:blur(4px)}.market-dialog{width:min(100%,350px);max-height:calc(100dvh - 36px);overflow:auto!important}.market-dialog-inner{padding:14px}.market-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#a4c18e;font:900 10px monospace;text-transform:uppercase}.market-dialog-header button{padding:4px;color:#d6e4c9}.market-dialog-art{position:relative;display:grid;place-items:center;height:130px;margin:10px 0;background:radial-gradient(ellipse at 50% 70%,#b5bb6d24,transparent 70%);border-bottom:1px solid #28583d}.market-dialog-art img{height:120px;width:100%;object-fit:contain;filter:drop-shadow(0 4px 3px #0008)}.market-dialog-art b{position:absolute;right:8px;top:8px;border:1px solid #d4f08a80;background:#27351b;padding:2px 5px;font:900 12px monospace;color:#d4f08a}.market-dialog h2{font-size:16px;font-weight:900;line-height:1.4;text-align:center;color:#f4f8ed;text-transform:uppercase}.market-dialog-slot{text-align:center;color:#8fa780;font-size:10px;margin-top:3px}.market-item-bonuses{display:grid;gap:4px;margin:13px 0;font-size:10px;line-height:1.5;color:#c4d4b5}.market-price-label{display:block;margin:12px 0;color:#adca95;font:900 10px monospace;text-transform:uppercase}.market-price-label input{display:block;width:100%;margin-top:7px;font:900 16px monospace;color:#e0f4b4}.market-quote-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-top:1px solid #263b25;color:#9ab28a;font-size:10px}.market-quote-row .market-currency{font-size:12px;color:#d8f67a}.market-quote-total{color:#e3efcf;font-weight:700}.market-dialog-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:7px;margin-top:14px}.market-dialog-status{font-size:10px;color:#e5ac77;line-height:1.5}.market-dialog-status:empty{display:none}.p4-market button:focus-visible,.p4-market input:focus-visible,.p4-market select:focus-visible,.p4-market summary:focus-visible{outline:2px solid #28ee90;outline-offset:2px}@media(max-width:350px){.p4-market{padding:7px}.market-button-label{font-size:10px}.market-heading h1{font-size:24px}.market-heading-content{padding-left:12px}.market-grid{gap:5px}.market-balance .market-currency{font-size:14px}}
+/* Match ShopPanel's merchant banner, square marker cards and three-column stock. */
+.p4-market{padding:6px;background:#050805}
+.market-shop-banner{position:relative;overflow:hidden;border:1px solid #28ee90;background:linear-gradient(180deg,#161b12,#0e110b);box-shadow:0 14px 24px #0004}
+.market-shop-banner-art{display:block;width:100%;height:auto;object-fit:cover}
+.market-shop-banner .market-main-tabs{position:absolute;inset:auto 12px 8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px}
+.market-shop-banner .market-button-label{min-height:34px;font-size:10px}
+.market-balances{display:flex;gap:16px;margin:0;padding:10px 3px 8px;border-bottom:1px solid #182815}
+.market-balance{flex:1;min-width:0;padding:0;gap:3px}.market-balance>small{font-size:8px;color:#839d70}.market-balance .market-currency{font-size:12px}.market-balance .market-currency>img{width:19px;height:19px}.market-balance .market-token{width:18px;height:18px;font-size:7px}
+.market-subtabs{margin-top:8px}.market-stock{margin-top:13px}.market-stock-inner{padding:0}.market-section-heading{gap:8px;margin-bottom:8px}.market-section-heading>span{width:24px;height:2px;background:#7fd53e}.market-section-heading h2{color:#d8f7a1;font-size:11px;letter-spacing:.18em}.market-section-heading>small{border:0;background:transparent;color:#9fe75d;font-size:9px}
+.market-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:9px}
+.market-shop-card{min-width:0;box-shadow:0 12px 20px #0004}
+.market-shop-card-inner{display:flex;flex-direction:column;min-height:clamp(150px,42vw,176px);padding:8px}
+.market-shop-item{display:flex;flex:1;min-width:0;flex-direction:column;align-items:center;width:100%;text-align:center}.market-shop-item:disabled{opacity:.5;cursor:wait}
+.market-shop-item-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;width:100%;min-height:24px;padding:4px 2px;background:#0d180abd;color:#f5ffe2;font:900 10px/12px Rubik,sans-serif;text-transform:uppercase}
+.market-shop-item-art{position:relative;display:flex;flex:1;align-items:center;justify-content:center;width:100%;padding:7px 2px}
+.market-shop-item-art>img{height:clamp(60px,18vw,84px);width:clamp(60px,18vw,84px);max-width:100%;object-fit:contain;filter:drop-shadow(0 10px 14px #0005)}
+.market-shop-lock{position:absolute;right:0;top:6px;color:#a3b795}
+.market-shop-item-count{display:block;width:100%;min-height:14px;margin-bottom:4px;color:#d8ffb6;font:900 10px/14px monospace}
+.market-shop-price{width:100%;height:32px;margin-top:auto}.market-shop-price .market-button-label{min-height:30px;padding:3px 2px;font-size:10px}.market-shop-price .market-currency{gap:3px;font-size:10px;color:#173207}.market-shop-price .market-currency>small{font-size:8px;color:#173207}.market-shop-price .market-currency>img{height:19px;width:19px}.market-shop-price .market-token{height:16px;width:16px;font-size:6px}
+@media(max-width:350px){.market-shop-card-inner{padding:6px}.market-shop-item-title{font-size:9px;line-height:11px}.market-shop-price .market-currency{font-size:9px}.market-shop-banner .market-main-tabs{left:8px;right:8px;gap:6px}.market-shop-banner .market-button-label{font-size:9px}}
+/* Compact market illustration keeps both trading controls on the counter. */
+.market-shop-banner-art{width:100%;aspect-ratio:3 / 1;height:auto;object-fit:cover}
+.market-price-usd{display:block;margin-top:7px;color:#a9c392;font:500 11px/1.4 Rubik,sans-serif;text-transform:none}.market-dialog .market-currency{flex-wrap:wrap;justify-content:flex-end;row-gap:3px}.market-dialog .market-currency>.market-usd{flex-basis:100%;text-align:right;color:#9fb78c;font:500 10px/1.3 Rubik,sans-serif}.market-quote-row>span:first-child{flex-shrink:0}
+
+/* AI market players */
+.p4-market .market-ai-badge{display:inline-flex;align-items:center;gap:2px;margin-left:4px;padding:1px 5px;border-radius:999px;background:#2b1d52;color:#d9c8ff;font-size:10px;font-weight:700;line-height:14px;vertical-align:middle}
+.p4-market .market-shop-item .market-ai-badge{position:absolute;top:4px;right:4px;margin:0}
+.p4-market .market-shop-item{position:relative}
+.p4-market .market-agent-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:10px}
+.p4-market .market-agent{padding:8px 10px;border-radius:10px;background:rgba(20,16,40,.72);border:1px solid rgba(180,150,255,.35);color:#f2ecff}
+.p4-market .market-agent-head{display:flex;align-items:center;gap:6px;font-size:13px}
+.p4-market .market-agent p{margin:4px 0 6px;font-size:11px;opacity:.8}
+.p4-market .market-agent dl{display:flex;gap:10px;margin:0;font-size:11px}
+.p4-market .market-agent dt{opacity:.65}
+.p4-market .market-agent dd{margin:0;font-weight:700}
+.p4-market .market-agent code{display:block;margin-top:6px;font-size:10px;opacity:.75;word-break:break-all}
+.p4-market .market-feed{list-style:none;margin:0;padding:0;display:grid;gap:5px;max-height:320px;overflow:auto}
+.p4-market .market-feed li{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.35);color:#f4f0e6;font-size:12px}
+.p4-market .market-feed time{opacity:.6;font-variant-numeric:tabular-nums}
+.p4-market .market-feed em{font-style:normal;color:#ffd77a}
+.p4-market .market-feed small{opacity:.7}
+.p4-market .market-feed q{grid-column:2;font-style:italic;color:#d9c8ff}
+.p4-market .market-feed-empty{display:block!important;text-align:center;opacity:.7}
+.p4-market .market-fair-row small{margin-left:6px;opacity:.75}
+
+.p4-market .market-agent-wallet{display:block;margin-top:4px;font-size:10px;color:#9fe3a1}
+.p4-market .market-agent-wallet-warn{color:#ffb4a8}
+.market-simulation{border:1px solid #28583d;padding:10px;margin:10px 0 15px}.market-simulation h3{font:900 11px monospace;color:#d8f7a1;text-transform:uppercase}.market-simulation p{font-size:10px;line-height:1.5;color:#9bb68a;margin:7px 0;text-transform:none}.market-sim-bars{display:flex;gap:7px;height:125px;padding-top:8px;align-items:end}.market-sim-column{display:flex;flex:1;min-width:0;flex-direction:column;text-align:center;height:100%;color:#9bb68a;font:10px monospace}.market-sim-track{flex:1;display:flex;flex-direction:column;justify-content:flex-end;border-bottom:1px solid #28583d}.market-sim-track b,.market-sim-track i{display:block;width:100%}.market-sim-track b{background:#86b934}.market-sim-track i{background:#3e8194}.market-sim-column>span{padding-top:5px}.market-sim-legend{display:flex;gap:15px;font-size:9px;margin:7px 0}.market-sim-legend span:first-child{color:#a6d75b}.market-sim-legend span:last-child{color:#64a8bc}.market-sim-table{overflow-x:auto}.market-sim-table table{width:100%;font:9px monospace;text-align:right;color:#bed0ac}.market-sim-table td,.market-sim-table th{padding:5px 3px;border-bottom:1px solid #20341c}
+/* AI metadata has its own row; enhancement stays inside the art, away from names. */
+.p4-market .market-shop-item .market-ai-badge{position:static;top:auto;right:auto;flex-shrink:0;margin:0;padding:1px 4px;font-size:8px;line-height:12px}
+.market-shop-item-count{display:flex;align-items:center;justify-content:center;gap:5px;min-height:18px;flex-wrap:wrap}
+.market-enhancement-badge{position:absolute;top:3px;left:0;z-index:1;padding:1px 4px;border:1px solid #d4f08a80;background:#17230bf2;color:#d4f08a;font:900 10px/14px monospace;white-space:nowrap}
+.market-title-enhancement{color:#d4f08a;white-space:nowrap}
+/* Quiet charcoal surfaces keep the illustrated equipment as the focal point. */
+.p4-market:not(.market-overlay){background-color:#1c281b;background-image:linear-gradient(160deg,#253620d9,#1b2a1ddb 55%,#172318eb),var(--market-card-texture);background-size:100% 100%,100% auto;background-position:center top;background-repeat:no-repeat,repeat-y}
+.market-shop-card{display:flex;align-self:stretch;border-color:#28ee90;isolation:isolate;background-color:#1a2119;background-image:linear-gradient(180deg,#060b0780,#070b071a 45%,#05090555),var(--market-card-texture);background-size:cover;background-position:center;box-shadow:inset 0 0 0 3px #070b0755,0 3px 7px #0008}
+.market-shop-card::before{content:none}
+.market-shop-card-inner{display:grid;grid-template-rows:minmax(0,1fr) 32px;gap:6px;flex:1;min-width:0;height:100%;min-height:clamp(188px,47vw,214px);padding:8px}
+.market-shop-item{display:grid;grid-template-rows:40px minmax(70px,1fr) 20px;align-items:stretch;min-height:0;gap:2px;flex:initial;background:transparent}
+.market-shop-item-title{height:40px;min-height:0;padding:4px 2px;box-sizing:border-box;-webkit-line-clamp:3;line-height:11px;background:transparent;border:0;color:#f5f7e9;text-shadow:0 1px 2px #000,0 0 4px #0008}
+.market-shop-item-art{min-height:0;padding:5px 2px;background:transparent}
+.market-shop-item-art>img{height:clamp(60px,18vw,84px);filter:drop-shadow(0 5px 3px #0009)}
+.market-shop-item-count{height:20px;min-height:20px;margin:0;align-self:end;flex-wrap:nowrap;background:transparent;color:#e3efcc;text-shadow:0 1px 2px #000}
+.market-shop-price{height:32px;min-height:32px;max-height:32px;margin:0;align-self:end}
+.market-shop-price .market-button-label{height:30px;min-height:30px;box-sizing:border-box}
+@media(max-width:350px){.market-shop-card-inner{padding:6px;min-height:188px}.market-shop-item-title{font-size:9px;line-height:10px}}
+/* Portalled item details use the same continuous illustrated card surface. */
+.market-dialog::before{content:'';position:absolute;inset:2px;pointer-events:none;background:linear-gradient(180deg,#060d0733,#08110980 55%,#07100755)}
+.market-dialog-art{background:transparent}
+.market-dialog-slot,.market-dialog-header{color:#bed1a6;text-shadow:0 1px 2px #000}
+.market-dialog .market-quote-row,.market-dialog .market-item-bonuses{color:#d2dfbf;text-shadow:0 1px 2px #000}
+/* Clear item hierarchy; one aligned amount column with its USD equivalent below. */
+.market-dialog-inner{padding:16px}
+.market-dialog-art{height:112px;margin:8px 0 12px;border-bottom:0}
+.market-dialog-art img{height:108px}
+.market-dialog h2{font-size:16px;line-height:1.4;margin:0 auto;max-width:100%;overflow-wrap:anywhere}
+.market-dialog-slot{margin-top:5px;font-size:10px}
+.market-dialog-seller{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 7px;margin:9px 0 15px;font-size:10px;line-height:1.4;color:#c5d6b6}
+.market-dialog-seller>span:first-child{color:#a3b793}.market-dialog-seller strong{font-weight:600;color:#e4eed5}.market-dialog-seller .market-ai-badge{margin:0;flex-shrink:0;font-size:8px}
+.market-dialog .market-item-bonuses{margin:16px 0;padding:12px 0;border-top:1px solid #77965b55;line-height:1.6}
+.market-dialog .market-item-bonuses:empty{display:none}
+.market-dialog .market-quote-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:13px 0;border-color:#77965b55}
+.market-dialog .market-currency{display:grid;grid-template-columns:22px max-content max-content;align-items:center;justify-content:end;gap:4px;min-width:0}
+.market-dialog .market-currency>.market-usd{grid-column:2 / -1;text-align:right;font-size:11px;color:#c1d1ac;line-height:1.4;white-space:nowrap}
+.market-dialog .market-quote-total{margin-top:4px}.market-dialog .market-quote-total .market-currency{font-size:16px;color:#e7f6b6}.market-dialog .market-quote-total>span:first-child{font-size:11px;color:#eef4e2}
+.market-dialog-actions{margin-top:16px;gap:9px}
+/* Token amount, ticker and USD estimate stay together on one line. */
+.market-dialog .market-currency{display:inline-flex;flex-wrap:nowrap;gap:5px;white-space:nowrap}
+.market-dialog .market-currency>.market-token{display:none}
+.market-dialog .market-currency>.market-usd{display:inline;flex:0 0 auto;grid-column:auto;font-size:10px;line-height:1.3;white-space:nowrap}
+.market-dialog .market-currency>small:not(.market-usd){font-size:10px;color:inherit}
+.market-dialog .market-quote-total .market-currency{font-size:14px}
+.market-dialog .market-quote-row{gap:8px}
+@media(max-width:360px){.market-dialog .market-quote-total .market-currency{font-size:12px}.market-dialog .market-currency>.market-usd,.market-dialog .market-currency>small:not(.market-usd){font-size:9px}}
+/* Compact item showcase and the real PL4 logo in a single price line. */
+.market-currency>.market-token-logo{border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px #91c54b66;flex-shrink:0}
+.market-dialog-inner{padding:13px}
+.market-dialog-header{min-height:22px}
+.market-dialog-art{height:138px;margin:1px 0 5px;position:relative}
+.market-dialog-art::before{content:'';position:absolute;left:20%;right:20%;bottom:6px;height:13px;border-radius:50%;background:#03090266;filter:blur(3px)}
+.market-dialog-art img{position:relative;z-index:1;height:133px;max-width:82%;filter:drop-shadow(0 7px 4px #0009)}
+.market-dialog h2{font-size:16px;line-height:1.3}
+.market-dialog-slot{display:table;margin:5px auto 0;padding:2px 8px;border:1px solid #a3be7366;border-radius:4px;font-size:9px;color:#dfebca;background:#1a281744}
+.market-dialog-seller{margin:9px 0 10px}
+.market-dialog .market-item-bonuses{margin:9px 0;padding:9px 0;gap:5px;min-height:0;font-size:11px}
+.market-dialog .market-quote-total{margin:0;padding:11px 0 8px}
+.market-dialog .market-quote-total>span:first-child{white-space:nowrap;font-size:10px}
+.market-dialog .market-quote-total>span:first-child b{font-weight:900;color:#e7f6b6}
+.market-dialog .market-currency>.market-token-logo{display:block;width:21px;height:21px}
+.market-dialog-actions{margin-top:10px}
+.market-dialog-status{margin-top:5px}
+@media(max-width:360px){.market-dialog .market-currency>.market-token-logo{width:18px;height:18px}.market-dialog .market-currency{gap:4px}}
+.market-dialog-header+h2{margin-top:7px}.market-dialog-slot+.market-dialog-art{margin-top:5px;margin-bottom:5px}
+
+/* Use the same Rubik typography and detail scale as EquipmentPanel. */
+.p4-market{font-family:Rubik,sans-serif}
+.p4-market .market-button-label{font-family:Rubik,sans-serif;font-size:12px;font-weight:900;line-height:1.25}
+.p4-market .market-currency{font-family:Rubik,sans-serif;font-variant-numeric:tabular-nums}
+.p4-market .market-shop-price .market-button-label{font-size:11px}
+.market-shop-item-title{font-family:Rubik,sans-serif;font-size:11px;line-height:12px}
+.market-shop-item-count{font-family:Rubik,sans-serif;font-size:11px}
+.market-dialog{width:min(100%,380px)}
+.market-dialog h2{font-family:Rubik,sans-serif;font-size:19px;font-weight:900;line-height:1.25}
+.market-dialog-header{font-family:Rubik,sans-serif;font-size:12px;font-weight:900}
+.market-dialog-slot{font-family:Rubik,sans-serif;font-size:11px;font-weight:600;line-height:1.35}
+.market-dialog-seller{font-family:Rubik,sans-serif;font-size:12px;line-height:1.5}
+.market-dialog-seller .market-ai-badge{font-size:10px;line-height:14px}
+.market-dialog .market-item-bonuses{font-family:Rubik,sans-serif;font-size:12px;line-height:1.5}
+.market-dialog .market-quote-row>span:first-child,.market-dialog .market-quote-total>span:first-child{font-size:12px;line-height:1.4}
+.market-dialog .market-currency,.market-dialog .market-quote-total .market-currency{font-size:14px}
+.market-dialog .market-currency>.market-usd,.market-dialog .market-currency>small:not(.market-usd){font-size:11px}
+.market-dialog .market-price-label{font-family:Rubik,sans-serif;font-size:12px;line-height:1.5}
+.market-dialog .market-price-label input{font-family:Rubik,sans-serif;font-size:16px}
+.market-dialog .market-price-usd,.market-dialog-status{font-family:Rubik,sans-serif;font-size:12px;line-height:1.45}
+.market-dialog-actions .market-button-label{min-height:39px;font-size:13px}
+.market-dialog-actions>button{min-height:43px}
+@media(max-width:350px){.market-shop-item-title{font-size:10px}.market-dialog .market-quote-row>span:first-child,.market-dialog .market-quote-total>span:first-child{font-size:11px}.market-dialog .market-quote-total .market-currency{font-size:12px}.market-dialog .market-currency>.market-usd{font-size:10px}}
+/* Rarity is explicit text as well as color; keep its metadata away from art/title. */
+.p4-market .market-shop-card-inner{min-height:clamp(212px,51vw,232px)}
+.p4-market .market-shop-item{grid-template-rows:40px minmax(70px,1fr) 34px}
+.p4-market .market-shop-item-count{height:34px;min-height:34px;flex-wrap:wrap;align-content:center;gap:2px 4px}
+.p4-market .market-shop-card .equipment-rarity-badge{font-size:9px}
+
+/* Public reference value, separate from the seller's actual asking price. */
+.p4-market .market-shop-estimate{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px 7px;color:#d0daba;font-family:Rubik,sans-serif;font-size:11px;line-height:1.25;text-align:center}
+.p4-market .market-shop-estimate b{color:#eef4df;font-size:12px;font-weight:600;overflow-wrap:anywhere}
+.p4-market .market-shop-estimate small{font-size:10px}
+.p4-market .market-reference-price{border-top:1px solid #63794a66;padding:10px 0}
+.p4-market .market-reference-price .market-quote-row{margin:0;padding:0;border:0;gap:10px}
+.p4-market .market-reference-price p{margin:6px 0 0;color:#c2cdae;font-size:12px;line-height:1.4}
+
+.p4-market .market-mainnet-orders{margin:12px 0;padding:12px;border:1px solid #708b46;background:#142019;color:#e8f0d4;font-size:12px;line-height:1.5}.p4-market .market-mainnet-orders>div{display:grid;gap:8px;margin:12px 0;overflow-wrap:anywhere}.p4-market .market-mainnet-orders small{color:#c6d4b5}
+
+/* Reserve separate rows for the reference value and the purchase button. */
+.p4-market .market-shop-card-with-estimate{grid-template-rows:minmax(148px,1fr) auto 32px;min-height:238px;height:auto}
+.p4-market .market-shop-estimate{gap:1px;padding:0 1px;min-width:0;line-height:1.2}
+.p4-market .market-shop-estimate>span{font-size:9px;font-weight:400;color:#b0bd9b;text-transform:none;white-space:nowrap}
+.p4-market .market-shop-estimate b{font-size:10px;font-weight:500;line-height:1.2;white-space:nowrap;overflow-wrap:normal}
+.p4-market .market-shop-estimate small{font-size:8px}
+
+.p4-market .market-npc-hint{margin:0 0 9px;color:#b7c4a4;font:400 11px/1.4 Rubik,sans-serif;text-transform:none}
+.p4-market .market-shop-price .market-button-label:has(>.market-currency):has(>span:not(.market-currency)){gap:3px;font-size:9px}

@@ -17,7 +17,7 @@ export function getQuestMission(id) {
   return {
     id, locationId: `p4-u${match[1]}`, energy: energy + ramp,
     artifactId: `p4-u${match[1]}-artifact-${taskIndex + 1}`,
-    tentacles: tentacles + locationIndex * 12 + taskIndex * locationIndex,
+    tentacles: Math.round((tentacles + locationIndex * 12 + taskIndex * locationIndex) * 0.9),
     strength: Math.max(strength, Math.round(strength * multiplier)),
     xp: Math.max(xp, Math.round(xp * multiplier)),
     target: target + Math.floor(locationIndex / 2), successRate: 1,

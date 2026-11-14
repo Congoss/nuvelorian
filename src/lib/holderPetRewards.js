@@ -1,4 +1,5 @@
 export const HOLDER_PET_OPTIONS = [
+  { id: 'legion_pet', uk: 'Legion Pet', ru: 'Legion Pet', en: 'Legion Pet' },
   { id: 'hereearlypet', uk: 'HERE Early Pet', ru: 'HERE Early Pet', en: 'HERE Early Pet' },
   { id: 'pet-skunk', uk: 'Скунс', ru: 'Скунс', en: 'Junk Skunk' },
   { id: 'pet-raccoon', uk: 'Єнот', ru: 'Енот', en: 'Trash Panda' },

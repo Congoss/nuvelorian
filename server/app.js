@@ -1,5 +1,61 @@
+import {fulfillAdminResourcePack} from './services/admin-resource-packs.js';
+import {createDuelService} from './services/pvp-duel.js';
+import { onlinePvp } from './services/pvp-online-store.js';
+import { claimPvpRankRewardDurable } from './services/pvp-rank-rewards.js';
+import {localMarketEnabled,marketState,marketCommand} from './services/local-market.js';
+import {testnetSetupStatus,localTestnetService} from './services/market-testnet-local.js';
+import {hasMarketAccess} from './services/market-access.js';
+import {createSubaccountReader} from './services/near-subaccount-reader.js';
+import {mainnetMarket} from './services/market-mainnet-store.js';
+import {getMarketSimulation} from './services/market-simulation.js';
+import {withMarketAgents} from './services/market-agents.js';
+import { useBackgroundCombatWrites } from './data/combat-write.js';
+import { executeWorldCombat } from './services/world-combat.js';
+import { getCombatPoisonSlot, countConsumedPoison } from '../src/lib/combatPoison.js';
+import { PROFILE_HEADER_THEMES } from '../src/lib/profileHeaderThemes.js';
+import { getDossierChapters, dossierChapterUnlocked } from '../src/lib/bossDossier.js';
+import { kyivDayKey } from "../src/lib/kyivDay.js";
+import { setAdvancedAttack } from '../src/lib/advancedTalents.js';
+import {gameDebugLog} from './utils/gameDebugLog.js';
+import {findBossFight,findBossDamageLog,activeBossFights} from './utils/combatIndexes.js';
+import {getPostgresPoolStats} from './data/postgres.js';
+import { performance as runtimePerformance, monitorEventLoopDelay } from 'node:perf_hooks';
+import { recordCombatLatency, summarizeCombatLatency } from './utils/combatLatency.js';
+import {resetVictoryWeaponCooldowns} from './utils/victoryWeaponCooldowns.js';
+import {submitBug,supportReports} from './services/support-reports.js';
+import {resolveTelegramProfiles} from './services/admin-telegram-profiles.js';
+import {eventParticipantRows} from './utils/adminEventParticipants.js';
+import {cardGameCommand} from './services/card-game.js';
+import { grantTutorialArtifactStarter } from './utils/tutorialArtifactStarter.js';
+import { hasClanBossInvitation, isJoinableBossFight } from './utils/clanBossInvitation.js';
+import { recordRetention, retentionReport } from './utils/retentionMetrics.js';
+import { createNewsDraft, newsSummary, recordNewsReturn } from './services/telegram-news.js';
+import { claimPlayerAchievement } from './services/player-achievements.js';
+import { reorderPartner } from '../src/lib/partnerTaskOrder.js';
+import { recordAchievementDamage, poisonCount, recordDonationAchievement, reconcilePlayerAchievements } from './utils/playerAchievements.js';
+import {getEquipmentEnhancementLevels} from '../src/lib/equipmentEnhancementPresentation.js';
+import {assertSingleBossFight} from './utils/singleBossFight.js';
+import { releaseAnnouncements } from './services/release-announcements.js';
+import { claimReleaseReward } from './services/release-rewards.js';
+import {assertResourcePackAvailable} from '../src/lib/resourcePacks.js';
+import {grantResourcePack} from './services/resource-packs.js';
+import {createEquipmentForge} from './services/equipment-forge.js';
+import { acquireKeyLock, isKeyLocked } from './utils/keyLock.js';
+import { createClanShipService } from './services/clan-ship-service.js';
+import {publicClanFields,publicClanMember} from './utils/publicClan.js';
+import { grantEnhancementGum } from './utils/enhancementGumRewards.js';
+import { findAvailableRevenge } from './utils/raidRevenge.js';
+import { withPlayerAudit, trackPlayer, readPlayerAudit } from './utils/playerAudit.js';
+import { grantPet } from './utils/grantPet.js';
+import { getPl4Quote } from './services/pl4-quote.js';
+import { isBossReleased } from '../src/lib/bossAvailability.js';
+import { pickAdminPlayerPatch } from './utils/adminPlayerPatch.js';
+import { filterAdminPlayers } from './utils/adminPlayerSearch.js';
+import { FEATURE_FLAGS } from '../src/lib/featureFlags.js';
+import { HALLOWEEN, halloweenActive, halloweenShopOpen, halloweenState, earnPumpkin, grantHalloweenPumpkins, grantReferralPumpkins, isNewHalloweenReferral } from '../src/lib/halloweenEvent.js';
+import { awardHalloweenRankRewards } from './services/halloween-rank-rewards.js';
 import { poisonShopState, purchaseEventPoison } from '../src/lib/eventPoisonShop.js';
-import { grantAllEquipmentSets } from './utils/grantEquipmentSets.js';
+import { grantAllEquipmentSets, grantEquipmentSet } from './utils/grantEquipmentSets.js';
 import { resetPlayerTalents } from './utils/talentReset.js';
 import { compensateTalentPoints } from './utils/talentCompensation.js';
 import { recoverKarma } from './utils/karmaRecovery.js';
@@ -7,21 +63,99 @@ import { normalizePlayerPatch } from './utils/playerPatchCompatibility.js';
 import { redeemPromoCode } from './utils/promoRedemption.js';
 import { getGlobalWeekMeta } from './utils/globalWeeklyCycle.js';
 import { captureDailyTaskProgress } from '../src/lib/questNotifications.js';
-import { refundCombatEnergy } from './utils/energyRefund.js';
-import { adminRole, operatorAllowed } from './utils/adminRoles.js';
+import { refundCriticalEnergy } from './utils/energyRefund.js';
+import { SHKRABAN_ENABLED, SHKRABAN_ITEM_IDS, SHKRABAN_PET_ID } from '../src/lib/shkrabanContent.js';
+import { adminRole, operatorAllowed, diagnosticsReadAllowed } from './utils/adminRoles.js';
 import { APP_VERSION, APP_VERSION_LABEL } from '../src/lib/appVersion.js';
 import { prepareReferralMessage } from './utils/referralMessage.js';
 import { referralPage } from './utils/referralPage.js';
+import { createReadCache } from './utils/readCache.js';
+const clanDirectoryCache=createReadCache({ttl:5000,max:1});
+import { parseAffiliateLink, buildReferralLink } from '../src/lib/referralLinks.js';
 import { buildNearAudience } from './utils/nearAudience.js';
 import { campaignIcon, defaultNftHolderCampaign, loadNearCampaignMetadata, normalizeNftHolderCampaign, processNftHolderCampaign } from './services/nft-holder-campaign.js';
-import { claimNftHolderPet, checkNftPetStatus, deleteHolderDrop, getHolderDrop, getHolderDrops, holderDropIcon, newHolderDrop, processHolderDrop, saveHolderDrop } from './services/holder-drops.js';
+import { claimNftHolderPet, checkNftPetStatus, deleteHolderDrop, getHolderDrop, getHolderDrops, holderDropIcon, holderDropStatus, newHolderDrop, processHolderDrop, saveHolderDrop } from './services/holder-drops.js';
 import { calculateRaidRewardAmounts, getRaidRewardMailCopy } from './services/raid-boss-rewards.js';
-import { awardRaidRankRewards } from './services/raid-rank-rewards.js';
+import { awardRaidRankRewards, repairRaidGuildFrames } from './services/raid-rank-rewards.js';
 import { rankRaidParticipants } from '../src/lib/raidRankRewards.js';
 import { claimGiftMail, normalizeGiftMailContent, normalizeGiftRewards } from './utils/giftMail.js';
 import { EVENT_SCHEDULE, eventPhase } from '../src/lib/eventSchedule.js';
-import { tryServeStatic } from './staticDelivery.js';
+import { isPublicMediaPath, tryServeStatic } from './staticDelivery.js';
 import { webAuth } from './utils/webAuth.js';
+import { createNearWebLogin } from './utils/nearWebLogin.js';
+const nearWebLogin = createNearWebLogin();
+// Ranked PvP against adaptive AI pilots. No stakes, no PL4, no real opponent: a player-progress
+// feature, not part of the market. In-memory only (resets on restart), keyed by player id.
+const pvpDuels = createDuelService();
+// Guest play on the web: no sign-up, progress kept in this browser until a NEAR wallet is linked.
+const guestCreations = new Map();
+function guestClientAddress(request) {
+  const remote = String(request.socket?.remoteAddress || '');
+  const loopback = /^(::1|127\.|::ffff:127\.)/.test(remote);
+  const forwarded = String(request.headers['cf-connecting-ip'] || request.headers['x-real-ip'] || String(request.headers['x-forwarded-for'] || '').split(',')[0] || '').trim();
+  return loopback && forwarded ? forwarded : remote || 'unknown';
+}
+function allowGuestCreation(request, now = Date.now()) {
+  const hour = 3600000;
+  const perAddress = Math.max(1, Number(process.env.GUEST_ACCOUNTS_PER_IP_HOUR) || 3);
+  const total = Math.max(1, Number(process.env.GUEST_ACCOUNTS_PER_HOUR) || 300);
+  for (const [key, list] of guestCreations) { const recent = list.filter(t => now - t < hour); if (recent.length) guestCreations.set(key, recent); else guestCreations.delete(key); }
+  const address = guestClientAddress(request);
+  const mine = guestCreations.get(address) || [];
+  const all = [...guestCreations.values()].reduce((sum, list) => sum + list.length, 0);
+  if (mine.length >= perAddress || all >= total) return false;
+  guestCreations.set(address, [...mine, now]);
+  return true;
+}
+// A guest who proves a NEAR wallet keeps the same player; only the sign-in identity changes.
+function upgradeGuestToWallet(player, accountId) {
+  const previous = { telegram_id: player.telegram_id, created_by: player.created_by };
+  player.near_wallet_id = accountId;
+  player.near_wallet_verified = true;
+  player.near_wallet_verified_at = new Date().toISOString();
+  player.created_by = `near_${accountId}@miniapp.local`;
+  player.guest_account = false;
+  player.guest_upgraded_at = new Date().toISOString();
+  playerDb.rekeyPlayerSession?.(player, previous);
+}
+let publicStatsCache = null;
+async function readPublicStats() {
+  // Market totals come from the shared 15 s book snapshot; the NearBlocks part is cached for 10 minutes.
+  let market = null;
+  try { market = await mainnetMarket.publicStats(); } catch { /* market unavailable: game numbers still show */ }
+  return { ...(await readChainStats()), market };
+}
+async function readChainStats() {
+  if (publicStatsCache && Date.now() - publicStatsCache.at < 600000) return publicStatsCache.data;
+  const players = (store.players || []).filter(p => !p.is_banned && !p.ai_agent && !p.guest_account);
+  const day = Date.now() - 86400000;
+  const accounts = ['tor.nuvelorian.near', 'grym.nuvelorian.near', 'nuvelorian.near'];
+  const headers = process.env.NEARBLOCKS_API_KEY ? { Authorization: `Bearer ${process.env.NEARBLOCKS_API_KEY}` } : {};
+  const recent = [];
+  await Promise.all(accounts.map(async account => {
+    try {
+      const response = await fetch(`https://api.nearblocks.io/v3/accounts/${account}/txns?limit=5`, { headers, signal: AbortSignal.timeout(8000) });
+      const payload = await response.json();
+      for (const tx of Array.isArray(payload?.data) ? payload.data : []) {
+        if (!/^[1-9A-HJ-NP-Za-km-z]{43,44}$/.test(String(tx?.transaction_hash || ''))) continue;
+        const method = (Array.isArray(tx.actions) ? tx.actions : []).map(a => a?.method || a?.action).filter(Boolean)[0] || '';
+        recent.push({ hash: tx.transaction_hash, account, from: String(tx.predecessor_account_id || ''), to: String(tx.receiver_account_id || ''), method: String(method).slice(0, 40), at: Math.floor(Number(tx.block_timestamp || 0) / 1e6) || null, ok: tx.outcomes?.status === true });
+      }
+    } catch { /* Indexer unavailable: stats still show game numbers. */ }
+  }));
+  const unique = [...new Map(recent.map(tx => [tx.hash, tx])).values()].sort((a, b) => (b.at || 0) - (a.at || 0)).slice(0, 8);
+  const data = {
+    players: players.length,
+    walletPlayers: players.filter(p => p.near_wallet_verified === true).length,
+    activeToday: players.filter(p => Date.parse(p.last_seen_at || p.last_login_date || 0) > day).length,
+    token: 'pl4.nearlytrade.near',
+    merchants: [{ name: 'Tor', role: 'smith', account: 'tor.nuvelorian.near' }, { name: 'Grym', role: 'hunter', account: 'grym.nuvelorian.near' }],
+    recent: unique,
+    updatedAt: new Date().toISOString(),
+  };
+  publicStatsCache = { at: Date.now(), data };
+  return data;
+}
 import { verifyNearAccountKey } from './utils/nearWalletProof.js';
 import { createPartnerVisits } from './utils/partnerVisits.js';
 import { checkExtraSubscription, checkPartnerTelegramSubscription, getExtraChannelAvatar, getPublicTelegramAvatar, normalizePublicTelegramUsername, getPlayerTelegramAvatar } from './utils/extraQuests.js';
@@ -31,7 +165,7 @@ import { getQuestMission } from '../src/lib/questMissionCatalog.js';
 import { grantQuestArtifact, reconcileGuaranteedQuestArtifacts } from './utils/questArtifactRewards.js';
 import { applyPlayerAction } from './utils/playerActions.js';
 import { TUTORIAL_STEPS, canSpendTutorialEnergyOnMission } from '../src/lib/tutorialProgress.js';
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID } from 'node:crypto';
 import {
   GAME_CONFIG,
   calculateRaidSuccess,
@@ -44,7 +178,9 @@ import { validateEquipmentLoadout } from './utils/equipmentOwnership.js';
 import { isPromoCodeActive } from '../src/lib/promoCodes.js';
 import { isQuestLocationUnlocked } from '../src/lib/questUnlocks.js';
 import {
+  ROULETTE_PAPER_SPIN_COST,
   applyRouletteReward,
+  getEventRouletteReward,
   normalizeRouletteRewardId,
   resolveRouletteRewardById,
   selectRouletteReward,
@@ -53,9 +189,11 @@ import { serverConfig } from './config.js';
 import { paymentDb } from './data/payment-db.js';
 import { applyTalentUpgrade as calculateTalentUpgrade, buildEffectiveWeapon, TALENT_DEFS } from '../src/lib/talents.js';
 import { awardTalentDamage, migrateTalentTreeState } from '../src/lib/talentTreeState.js';
-import { getBleedTicks, registerHpThresholds, resolveTalentAttack } from '../src/lib/talentCombat.js';
+import { getBleedTicks, registerHpThresholds, applyTalentCooldownResets } from '../src/lib/talentCombat.js';
+import { applyBossEquipmentBleed, clanPoisonMultiplier, resolveBossHit } from './utils/bossHit.js';
+import { parseCombatPresses, runCombatPresses } from './utils/combatPresses.js';
 import { BOSS_BACKGROUND_REWARDS, getBossBoxTables, rollBossDamageReward, openBox, sanitizeBossBoxTables } from '../src/lib/lootBoxes.js';
-import { calculateActualPoisonRefundUnits, calculateBossReward, DEFAULT_BOSS_REWARD_CONFIG, getBossKeyDropChance, sanitizeBossRewardConfig, stripRetiredBossFragments } from '../src/lib/bossRewardSystem.js';
+import { migratePendingBossReward, allocateBossPoisonRefundUnits, calculateActualPoisonRefundUnits, getBossDailyRewardState, calculateBossReward, DEFAULT_BOSS_REWARD_CONFIG, getBossParticipationThreshold, getBossKeyDropChance, sanitizeBossRewardConfig, stripRetiredBossFragments } from '../src/lib/bossRewardSystem.js';
 import {
   SIM_BOT_FLAG,
   SIM_BOT_TYPE,
@@ -70,13 +208,14 @@ import { listDiagnosticEvents, recordDiagnosticEvent } from './data/diagnostics.
 import { playerDb } from './data/player-db.js';
 import { grantXpToPlayer, migrateLegacyResourceFields, normalizePlayerProgression } from './utils/progression.js';
 import { buildPlayerStateSnapshot, hydratePlayerState } from './utils/playerState.js';
-import { expireStaleBossFights, getClanDamageFightTargets, isActiveBossFight, shouldReceiveBossFightDamageReward } from './utils/clanBossDamage.js';
+import { applyBossTimeTalent, expireStaleBossFights, getClanDamageFightTargets, isActiveBossFight, shouldReceiveBossFightDamageReward } from './utils/clanBossDamage.js';
 import { CLAN_ACHIEVEMENT_CONFIG, CLAN_QUEST_DEFINITIONS, createClanAchievements, getClanAchievementState } from '../src/lib/clanAchievements.js';
 import { CLAN_DONATION_WINDOW_MS } from '../src/lib/clanDonationState.js';
 import { applyBossEscapeCooldown, getBossEscapeCooldownRemaining } from '../src/lib/bossEscapeCooldown.js';
-import { battlePassEnabled, recordBattlePassEvent, recordBattlePassBossVictory, claimBattlePassReward, claimAllBattlePassRewards, unlockBattlePassTier, fullyUnlockBattlePass } from './utils/battlePass.js';
-import { getSessionFromHeaders, verifyTelegramInitData } from './utils/telegramAuth.js';
+import { battlePassEnabled, battlePassView, getActiveBattlePassTier, getBattlePassSeason, grantBattlePassGift, recordBattlePassEvent, recordBattlePassBossVictory, claimBattlePassReward, claimAllBattlePassRewards, unlockBattlePassTier, fullyUnlockBattlePass } from './utils/battlePass.js';
+import { getSessionFromHeaders, verifyTelegramInitData, verifyTelegramLoginData } from './utils/telegramAuth.js';
 import { getRequestRatePolicy } from './utils/requestRatePolicy.js';
+import { firstBossSetReward } from '../src/lib/firstBossSet.js';
 import { getQuery, readJsonBody, sendData, sendError, sendJson } from './utils/http.js';
 import { createNearPaymentService } from './services/near-payment.js';
 import { createPaymentRateService } from './services/payment-rate-service.js';
@@ -87,6 +226,8 @@ const nearWalletChallenges = new Map();
 import { assertNewbiePackPurchasable, getNewbiePackOffers, grantNewbiePack, syncNewbiePackOffers } from './utils/newbiePacks.js';
 import { getCARank, getPlayerCA } from '../src/lib/caRankDefinitions.js';
 import { getCARankReward } from '../src/lib/caRankRewards.js';
+import { claimCARankRewardDurable } from './services/ca-rank-rewards.js';
+import {selectCombatRuntime} from './utils/combatReceipt.js';
 
 const simActionLogs = [];
 const simRateMap = new Map();
@@ -137,7 +278,7 @@ function findShopPackById(itemId) {
   return getShopPaymentProduct(itemId, catalog);
 }
 
-function grantShopPurchaseReward({ userId, itemId }) {
+async function grantShopPurchaseReward({ userId, itemId, transaction }) {
   const player = store.players.find((candidate) => String(candidate.id || '') === String(userId || '')) || null;
   if (!player) {
     const error = new Error('Player not found for payment reward');
@@ -150,8 +291,30 @@ function grantShopPurchaseReward({ userId, itemId }) {
     error.code = 'PAYMENT_ITEM_NOT_FOUND';
     throw error;
   }
+  if (item.pvpRefillAttempts) {
+    if (transaction.payment_method !== 'telegram_stars' || transaction.status !== 'success') throw Object.assign(new Error('Confirmed Stars payment required'), {code:'PVP_REFILL_UNPAID'});
+    await onlinePvp.creditRefill(player, transaction.id, item.pvpRefillAttempts);
+    return player;
+  }
+  if (item.cardMode) return cardGameCommand(store,player,'payment',{}, {transaction});
+  if (item.id==='friday13_pack'||item.id==='forge_pack_i'||item.id==='forge_pack_ii'||item.id.startsWith('gum_cosmol_')) return grantResourcePack({store,player,pack:item,transactionId:transaction.id});
+  if (item.constructionUnits) {
+    const clan = ensureClanRecord(item.clanId);
+    if (!clan) throw Object.assign(new Error('Clan not found for construction payment'), {code:'CLAN_NOT_FOUND'});
+    await createClanShipService({store}).creditPayment(clan,player,transaction.id);
+    return player;
+  }
+  if (item.giftSeasonId) {
+    const recipient = item.giftRecipientId ? store.players.find(candidate => String(candidate.id) === item.giftRecipientId) : player;
+    if (!recipient) throw Object.assign(new Error('Gift recipient not found'), { code: 'BP_GIFT_RECIPIENT' });
+    grantBattlePassGift(recipient, item, transaction);
+    await playerDb.flushDirtyPlayers([recipient.id]);
+    await store.persistNow();
+    return player;
+  }
   if (item.tier) {
-    unlockBattlePassTier(player, item.tier);
+    const season = getBattlePassSeason(Date.parse(transaction.created_at));
+    grantBattlePassGift(player, { giftSeasonId: season.id, tier: item.tier }, transaction);
     player.last_paid_purchase_at = new Date().toISOString();
     player.last_paid_purchase_item_id = item.id;
     return player;
@@ -181,6 +344,14 @@ function grantShopPurchaseReward({ userId, itemId }) {
     store.persistSoon();
     return player;
   }
+  if (item.spins) {
+    player.roulette_bonus_spins = Number(player.roulette_bonus_spins || 0) + Number(item.spins);
+    player.last_paid_purchase_at = new Date().toISOString();
+    player.last_paid_purchase_item_id = item.id;
+    player.last_paid_purchase_amount = Number(item.spins);
+    store.persistSoon();
+    return player;
+  }
   const amount = Number(item.cdm || 0);
   if (!Number.isFinite(amount) || amount <= 0) {
     const error = new Error('Invalid reward amount');
@@ -205,7 +376,15 @@ const paymentService = createPaymentService({
     findTransactionByHash: (hash) => paymentDb.findTransactionByHash(hash),
     appendEvent: (event) => paymentDb.appendEvent(event),
   },
-  grantReward: grantShopPurchaseReward,
+  grantReward: async (purchase) => {
+    const result = await grantShopPurchaseReward(purchase);
+    const player = store.players.find(p => String(p.id) === String(purchase.userId));
+    if (player && recordDonationAchievement(player, purchase.transaction)) {
+      store.persistSoon();
+      await playerDb.flushDirtyPlayers([player.id]);
+    }
+    return result;
+  },
   tonReceiver: TON_RECEIVER,
   nearReceiver: NEAR_RECEIVER,
 });
@@ -295,22 +474,25 @@ function sortPlayers(players, sort = '-created_date') {
   });
 }
 
-function getCurrentPlayer(request) {
+function getCurrentPlayer(request, { materialize = true } = {}) {
   const session = getSessionFromHeaders(request.headers);
   if (!session) return null;
 
   const player =
-    playerDb.getPlayerBySession(session) ||
+    (!store.combatDraft && playerDb.getPlayerBySession(session)) ||
     store.players.find(
       (candidate) =>
-        String(candidate.telegram_id || '') === session.telegramId ||
-        candidate.created_by === session.email
+        Boolean(session.telegramId) && String(candidate.telegram_id || '') === session.telegramId ||
+        Boolean(session.email) && candidate.created_by === session.email
     ) ||
     null;
 
   if (!player) return null;
-  captureDailyTaskProgress(player, getGlobalWeekMeta());
   if (player.is_banned) return null;
+  // Lock selection needs only identity; apply regeneration and migrations once,
+  // after the lock is acquired, rather than twice for every mutation.
+  if (!materialize) return player;
+  captureDailyTaskProgress(player, getGlobalWeekMeta());
 
   const pendingBoxes = Array.isArray(player.pending_boss_boxes) ? player.pending_boss_boxes : [];
   if (pendingBoxes.length) {
@@ -378,16 +560,36 @@ function requireAdminToken(request, response) {
 function canAccessPlayer(request, player) {
   const session = getSessionFromHeaders(request.headers);
   if (!session || !player || player.is_banned) return false;
-  if (isAdminSession(session)) return true;
-  return String(player.telegram_id || '') === String(session.telegramId || '') || String(player.created_by || '') === String(session.email || '');
+  const allowed = isAdminSession(session) || Boolean(session.telegramId) && String(player.telegram_id || '') === String(session.telegramId) || Boolean(session.email) && String(player.created_by || '') === String(session.email);
+  if (allowed) trackPlayer(player);
+  return allowed;
 }
 
 function publicPlayerProfile(player, referralCountOverride = null) {
   const normalized = normalizePlayerProgression({ ...player });
-  const fields = ['id', 'username', 'nickname', 'avatar', 'photo_url', 'level', 'hero_tier',
-    'stat_strength', 'clan_id', 'clan_name', 'clan_logo_id', 'boss_kills', 'boss_kills_by_id', 'equipped_items', 'selected_avatar_frame',
+  const fields = ['player_achievements', 'id', 'username', 'nickname', 'avatar', 'photo_url', 'level', 'hero_tier',
+    'stat_strength', 'clan_id', 'clan_name', 'clan_logo_id', 'boss_kills', 'boss_kills_by_id', 'ship_boss_kills', 'equipped_items', 'selected_avatar_frame',
     'selected_banner', 'avatar_frame_id', 'profile_banner_id', 'selected_camp_background', 'created_date', 'likes_received_count', 'dislikes_received_count'];
-  return { ...Object.fromEntries(fields.filter((key) => Object.hasOwn(normalized, key)).map((key) => [key, normalized[key]])), battle_pass_tier: normalized.battle_pass_view?.tier || 'free', referralsCount: referralCountOverride === null ? getPlayerReferralCount(player) : referralCountOverride };
+  return { equipment_enhancement_levels:Object.fromEntries(Object.values(player.equipped_items||{}).filter(Boolean).map(id=>[id,getEquipmentEnhancementLevels(player)[id]||0])), ...Object.fromEntries(fields.filter((key) => Object.hasOwn(normalized, key)).map((key) => [key, normalized[key]])), battle_pass_tier: getActiveBattlePassTier(player), profile_header_theme: normalized.profile_header_theme || null, battle_pass_gift_season: normalized.battle_pass_view?.active ? normalized.battle_pass_view.seasonId : null, referralsCount: referralCountOverride === null ? getPlayerReferralCount(player) : referralCountOverride };
+}
+
+function combatPlayerSnapshot(player, fightKey = null) {
+  const normalized = normalizePlayerProgression(player);
+  const fields = [
+    'player_achievements', 'roulette_bonus_spins', 'enhancement_gums', 'id', 'level', 'xp', 'xp_to_next_level', 'hero_tier', 'energy', 'max_energy',
+    'tentacles', 'premium', 'weapon_inventory', 'weapon_cooldowns', 'keycards',
+    'boss_key_pity', 'boss_hits_today', 'boss_damage_today', 'boss_damage_lifetime',
+    'total_boss_damage', 'boss_kills', 'boss_kills_by_id', 'best_medal',
+    'raid_boss_hits_today', 'pending_boss_boxes', 'newbie_stats', 'battle_pass',
+    'battle_pass_view', 'talent_tree_version', 'talent_levels', 'advanced_attacks', 'talent_combat_state', 'bone_curse',
+    'boss_talent_progress', 'boss_talent_progress_goal', 'boss_talent_level',
+    'talent_points', 'available_talent_points', 'total_talent_points_earned',
+    'total_talent_points_spent', 'talent_damage_progress', 'next_talent_threshold_index',
+  ];
+  const snapshot = Object.fromEntries(fields.filter(key => Object.hasOwn(normalized, key)).map(key => [key, normalized[key]]));
+  if (fightKey) snapshot.talent_combat_state = selectCombatRuntime(normalized.talent_combat_state,
+    [fightKey, ...activeBossFights(store.bossFights).map(fight=>fight.id), `raid:${store.raidBoss?.id || 'active'}`]);
+  return snapshot;
 }
 
 function pickSafePlayerPatch(body = {}) {
@@ -467,6 +669,7 @@ function pickSafePlayerPatch(body = {}) {
     'cosmofish_inventory',
     'cosmo_fish_inventory',
     'cosmo_fishing_cycle',
+    'cosmo_fishing_caught_total',
     'cosmo_fishing_last_result',
     'cosmo_fishing_last_result_seen',
     'selected_camp_background',
@@ -478,6 +681,9 @@ function pickSafePlayerPatch(body = {}) {
     'boss_talent_progress_goal',
     'boss_talent_level',
     'talent_levels',
+    'advanced_attacks',
+    'boss_armor_intro_seen',
+    'profile_header_theme',
     'talent_tree_version',
     'legacy_talent_levels',
     'available_talent_points',
@@ -487,7 +693,7 @@ function pickSafePlayerPatch(body = {}) {
     'talent_damage_progress',
     'next_talent_threshold_index',
     'unlocked_talent_sectors',
-    'talent_combat_state',
+    'talent_combat_state', 'bone_curse',
     'talent_base_max_energy',
     'toxic_marks',
     'toxic_combo_chain',
@@ -545,7 +751,7 @@ function grantEnergyGain(player, amount, source = 'reward') {
   if (!player || !gain) return 0;
   player.energy = Number(player.energy || 0) + gain;
   player.last_energy_update = new Date().toISOString();
-  console.log('[energy] reward gained', {
+  gameDebugLog('[energy] reward gained', {
     source,
     gain,
     currentEnergy: player.energy,
@@ -589,33 +795,28 @@ function resolveReferralCode(player) {
 }
 
 function getPlayerReferralCount(player) {
-  const explicit = Number(
-    player?.referralsCount ||
-    player?.referral_count ||
-    player?.referrals_count ||
-    player?.referred_friends_count ||
-    player?.referrals ||
-    0,
-  ) || 0;
   const aliases = new Set([resolveReferralCode(player), player?.telegram_id, player?.id].filter(Boolean).map(String));
   const friends = Array.isArray(player?.referred_friends) ? player.referred_friends : [];
-  const ids = new Set(friends.map((friend, index) => String(friend?.playerId || friend?.id || `legacy-${index}`)));
+  const ids = new Set(friends.filter((friend) => {
+    const live = store.players.find((candidate) => String(candidate.id) === String(friend?.playerId || friend?.id));
+    return Number(live?.level || friend?.level || 0) >= 20;
+  }).map((friend, index) => String(friend?.playerId || friend?.id || `legacy-${index}`)));
   for (const candidate of store.players) {
-    if (String(candidate.id) !== String(player?.id) && aliases.has(String(candidate.referred_by || ''))) ids.add(String(candidate.id));
+    if (String(candidate.id) !== String(player?.id) && aliases.has(String(candidate.referred_by || '')) && Number(candidate.level || 0) >= 20) ids.add(String(candidate.id));
   }
-  return Math.max(explicit, ids.size);
+  return ids.size;
 }
 
 function getPlayerReferralCounts(players = store.players) {
   const aliasesToPlayerIds = new Map();
   const referredIdsByPlayer = new Map();
-  const explicitCounts = new Map();
   for (const player of players) {
     const playerId = String(player?.id || '');
-    const explicit = Number(player?.referralsCount || player?.referral_count || player?.referrals_count || player?.referred_friends_count || player?.referrals || 0) || 0;
-    const referredIds = new Set((Array.isArray(player?.referred_friends) ? player.referred_friends : []).map((friend, index) => String(friend?.playerId || friend?.id || `legacy-${index}`)));
+    const referredIds = new Set((Array.isArray(player?.referred_friends) ? player.referred_friends : []).filter((friend) => {
+      const live = players.find((candidate) => String(candidate.id) === String(friend?.playerId || friend?.id));
+      return Number(live?.level || friend?.level || 0) >= 20;
+    }).map((friend, index) => String(friend?.playerId || friend?.id || `legacy-${index}`)));
     referredIdsByPlayer.set(playerId, referredIds);
-    explicitCounts.set(playerId, explicit);
     const aliases = new Set([resolveReferralCode(player), player?.telegram_id, player?.id].filter(Boolean).map(String));
     for (const alias of aliases) {
       const owners = aliasesToPlayerIds.get(alias) || new Set();
@@ -626,12 +827,12 @@ function getPlayerReferralCounts(players = store.players) {
   for (const candidate of players) {
     const referredBy = String(candidate?.referred_by || '');
     for (const ownerId of aliasesToPlayerIds.get(referredBy) || []) {
-      if (ownerId !== String(candidate?.id || '')) referredIdsByPlayer.get(ownerId)?.add(String(candidate.id));
+      if (ownerId !== String(candidate?.id || '') && Number(candidate?.level || 0) >= 20) referredIdsByPlayer.get(ownerId)?.add(String(candidate.id));
     }
   }
   return new Map(players.map((player) => {
     const id = String(player?.id || '');
-    return [id, Math.max(explicitCounts.get(id) || 0, referredIdsByPlayer.get(id)?.size || 0)];
+    return [id, referredIdsByPlayer.get(id)?.size || 0];
   }));
 }
 
@@ -675,7 +876,7 @@ function ensureClanRecord(clanKey) {
 function serializeClan(clan) {
   const achievements = Object.fromEntries(Object.keys(CLAN_ACHIEVEMENT_CONFIG).map((type) => [type, getClanAchievementState(type, clan?.achievements?.[type])]));
   return {
-    ...clan,
+    ...publicClanFields(clan),
     achievements,
     max_members: achievements.donations.benefit.maxMembers,
   };
@@ -697,10 +898,7 @@ function addClanAchievementProgress(clan, type, amount) {
 }
 
 function getClanPoisonMultiplier(player) {
-  const clan = getClanForPlayer(player);
-  if (!clan) return 1;
-  const damage = getClanAchievementState('damage', clan.achievements?.damage);
-  return 1 + Number(damage.benefit.poisonPct || 0) / 100;
+  return clanPoisonMultiplier(getClanForPlayer(player));
 }
 
 function addClanBossDamage(player, damage) {
@@ -708,7 +906,7 @@ function addClanBossDamage(player, damage) {
   if (!clan) return null;
   const state = addClanAchievementProgress(clan, 'damage', damage);
   progressClanQuestMetric(clan, player, 'damage', damage);
-  store.persistSoon();
+  if (store.persistClanSoon) store.persistClanSoon(clan.id); else store.persistSoon();
   return state;
 }
 
@@ -751,7 +949,7 @@ function addClanActivity(clan, actor, text, tone = 'blue', restricted = false) {
 
 function clanMemberPayload(player, clan) {
   const role = getClanRole(player, clan);
-  return { ...normalizePlayerProgression(player), clan_role: role, role_label: CLAN_ROLE_META[role].label, role_color: CLAN_ROLE_META[role].color, power: getPowerForLeaderboard(player) };
+  return { ...publicClanMember(player), clan_role: role, role_label: CLAN_ROLE_META[role].label, role_color: CLAN_ROLE_META[role].color, power: getPowerForLeaderboard(player) };
 }
 
 function setClanQuestCooldown(player, clan, quest, now = Date.now()) {
@@ -766,7 +964,7 @@ function setClanQuestCooldown(player, clan, quest, now = Date.now()) {
 }
 
 function getClanQuestOffers(player, clan, maxTier, now = Date.now()) {
-  const byClan = { ...(player.clan_quest_offers || {}) };
+  const previousOffers = player.clan_quest_offers?.[clan.id];
   const activeByOffer = new Set((clan.quests || []).filter((quest) => quest.status === 'ACTIVE' && String(quest.owner_id) === String(player.id)).map((quest) => String(quest.offer_id || '')));
   const finishedByOffer = new Map((clan.quests || []).filter((quest) => ['COMPLETED', 'EXPIRED'].includes(quest.status) && String(quest.owner_id) === String(player.id)).map((quest) => [String(quest.offer_id || ''), quest]));
   const candidates = CLAN_QUEST_DEFINITIONS.filter((definition) => definition.tier <= maxTier);
@@ -774,7 +972,7 @@ function getClanQuestOffers(player, clan, maxTier, now = Date.now()) {
     const choices = candidates.filter((definition) => !excluded.has(definition.id));
     return (choices.length ? choices : candidates)[Math.floor(Math.random() * Math.max(1, (choices.length ? choices : candidates).length))] || null;
   };
-  let offers = Array.isArray(byClan[clan.id]) ? byClan[clan.id] : [];
+  let offers = Array.isArray(previousOffers) ? previousOffers : [];
   const used = new Set();
   offers = offers.slice(0, 5).map((offer) => {
     const definition = CLAN_QUEST_DEFINITIONS.find((entry) => entry.id === offer.definition_id);
@@ -794,8 +992,9 @@ function getClanQuestOffers(player, clan, maxTier, now = Date.now()) {
     used.add(definition.id);
     offers.push({ id: store.generateId('clan-quest-offer'), definition_id: definition.id, tier: definition.tier, available_at: new Date(now).toISOString(), created_at: new Date(now).toISOString() });
   }
-  byClan[clan.id] = offers;
-  player.clan_quest_offers = byClan;
+  if (!Array.isArray(previousOffers) || offers.length !== previousOffers.length || offers.some((offer,index)=>offer!==previousOffers[index])) {
+    player.clan_quest_offers = { ...player.clan_quest_offers, [clan.id]: offers };
+  }
   return offers;
 }
 
@@ -904,12 +1103,12 @@ function parseReferredBy(startParam = '') {
 
 function normalizeReferredFriend(friend = {}) {
   const referredPlayer = store.players.find(player => String(player.id) === String(friend.playerId));
-  friend = { ...friend, battle_pass_tier: referredPlayer ? normalizePlayerProgression(referredPlayer).battle_pass_view?.tier || 'free' : friend.battle_pass_tier || 'free' };
+  friend = { ...friend, level: referredPlayer?.level || 1, halloweenReferralEligible: Boolean(referredPlayer && isNewHalloweenReferral(referredPlayer)), battle_pass_tier: getActiveBattlePassTier(referredPlayer), profile_header_theme: referredPlayer?.profile_header_theme || null };
   if (friend.rewardClaimed) return { ...friend, status: 'claimed' };
-  if (friend.newbiePart1Done || Number(friend.boss1Damage || 0) >= 150) {
+  if (Number(friend.level || 0) >= 20) {
     return { ...friend, status: 'reward_ready' };
   }
-  if (Number(friend.boss1Damage || 0) > 0) return { ...friend, status: 'active' };
+  if (Number(friend.level || 0) > 1) return { ...friend, status: 'active' };
   return { ...friend, status: friend.status || 'joined' };
 }
 
@@ -971,7 +1170,7 @@ function mergePlayerDefaults(payload, session) {
     max_energy: STARTING_ENERGY,
     starter_energy_granted: true,
     welcome_energy_granted: false,
-    energy_regen_rate: 1,
+    energy_regen_rate: GAME_CONFIG.ENERGY_REGEN_PER_MIN,
     last_energy_update: new Date().toISOString(),
     tentacles_per_hour: 10,
     last_income_collect: new Date().toISOString(),
@@ -1104,7 +1303,7 @@ function normalizeChatMessage(message, currentPlayer = null, playerById = null) 
     author: author?.nickname || message.author,
     avatar: message.avatar || author?.avatar || author?.photoUrl || author?.photo_url || '',
     avatar_frame_id: message.avatar_frame_id || author?.avatar_frame_id || author?.selected_avatar_frame || '',
-    battle_pass_tier: author?.battle_pass?.tier || 'free',
+    battle_pass_tier: getActiveBattlePassTier(author),
     own: currentPlayer ? message.player_id === currentPlayer.id : false,
   };
 }
@@ -1161,19 +1360,22 @@ function upsertTonWalletLink(player, { address, network, provider, label, proofS
   };
 }
 
-function ensureCurrentPlayer(request) {
+function ensureCurrentPlayer(request, { syncReferrals = true } = {}) {
   const session = getSessionFromHeaders(request.headers);
   if (!session) return null;
 
   const existingPlayer = store.players.find((candidate) =>
-    String(candidate.telegram_id || '') === String(session.telegramId || '') ||
+    Boolean(session.telegramId) && String(candidate.telegram_id || '') === String(session.telegramId) ||
     Boolean(session.email) && String(candidate.created_by || '').toLowerCase() === String(session.email).toLowerCase()
   );
   if (existingPlayer?.is_banned) return null;
+  trackPlayer(existingPlayer);
 
   let player = getCurrentPlayer(request);
   if (!player) {
     player = mergePlayerDefaults({}, session);
+    // A valid guest cookie whose player record is gone (lost save) must come back as a guest, not as a regular account.
+    if (session.guest) { player.guest_account = true; player.nickname = `Guest ${String(session.guestId || '').slice(-4).toUpperCase()}`; }
     if (player.referred_by) {
       grantEnergyGain(player, 100, 'referral_starter');
       player.tentacles = Number(player.tentacles || 0) + 300;
@@ -1188,6 +1390,21 @@ function ensureCurrentPlayer(request) {
   }
   if (!player.referral_code) {
     player.referral_code = resolveReferralCode(player);
+  }
+  if (session.isMock && String(session.telegramId) === '777000') {
+    player.level = 100;
+    player.xp = 0;
+    player.xp_to_next_level = 1;
+    player.tentacles = 10000000;
+    player.premium = 10000000;
+    player.energy = 10000000;
+    player.max_energy = 10000000;
+    player.weapon_inventory = {
+      ...(player.weapon_inventory || {}),
+      'small-poison': 9999,
+      'medium-poison': 9999,
+      'large-poison': 9999,
+    };
   }
   consolidatePendingBossBoxes(player);
   const telegramPhotoUrl = String(session.photoUrl || session.avatar || '').trim();
@@ -1205,9 +1422,13 @@ function ensureCurrentPlayer(request) {
     player.roulette_bonus_spins = Number(player.roulette_bonus_spins || 0) + 1;
     player.referral_starter_claimed = true;
   }
-  player.referred_friends = Array.isArray(player.referred_friends) ? player.referred_friends.map(normalizeReferredFriend) : [];
-  syncInviterReferrals(player);
-  syncReferredFriendStatuses(player);
+  // The profile refresh handles social maintenance. A combat click must not
+  // rescan all players and normalize every referral's profile before its hit.
+  if (syncReferrals) {
+    player.referred_friends = Array.isArray(player.referred_friends) ? player.referred_friends.map(normalizeReferredFriend) : [];
+    syncInviterReferrals(player);
+    syncReferredFriendStatuses(player);
+  }
   const now = Date.now();
   const previousSeenAt = Date.parse(player.last_seen_at || '');
   if (!Number.isFinite(previousSeenAt) || now - previousSeenAt >= 5 * 60 * 1000) {
@@ -1218,6 +1439,9 @@ function ensureCurrentPlayer(request) {
       player.telegram_reminder_attempts = reminders;
     }
   }
+  if(player.tutorial_artifact_starter_granted && !player.tutorial_auto_quests_completed) grantTutorialArtifactStarter(player);
+  recordRetention(player);
+  recordNewsReturn(store,player,session?.startParam);
   player.last_login_date = getTodayKey();
   recordBattlePassEvent(player, { type: 'login' });
   syncNewbiePackOffers(player);
@@ -1300,13 +1524,14 @@ function getSimMissionList(player) {
 
 function getAvailableBosses(player) {
   const level = Math.max(1, Number(player?.level || 1));
-  const availableBosses = GAME_CONFIG.BOSSES.slice(0, Math.max(0, GAME_CONFIG.BOSSES.length - 3));
+  const availableBosses = GAME_CONFIG.BOSSES.filter(boss => isBossReleased(boss.id));
   return availableBosses.filter((boss) => level >= Number(boss.minLevel || 1));
 }
 
 function isComingSoonBoss(bossId) {
   const bossIndex = GAME_CONFIG.BOSSES.findIndex((boss) => boss.id === bossId);
-  return bossIndex >= 0 && bossIndex >= GAME_CONFIG.BOSSES.length - 3;
+
+  return bossIndex >= 0 && !isBossReleased(bossId);
 }
 
 function getAvailableSkillIds() {
@@ -1314,7 +1539,7 @@ function getAvailableSkillIds() {
 }
 
 function getTodayKey() {
-  return new Date().toISOString().slice(0, 10);
+  return kyivDayKey();
 }
 
 function getSimPlayerState(player) {
@@ -1386,7 +1611,7 @@ function applyMission(player, missionId) {
     player.energy = Math.max(0, (player.energy || 0) - mission.energyCost);
     player.last_energy_update = new Date().toISOString();
   }
-  console.log('[energy] updated', {
+  gameDebugLog('[energy] updated', {
     source: 'mission_spend',
     playerId: player.id,
     currentEnergy: player.energy,
@@ -1427,7 +1652,7 @@ function pickSkillId(skillId) {
 }
 
 function getOrCreateBossFight(bossId) {
-  const existing = store.bossFights.find((fight) => fight.boss_id === bossId && fight.status === 'active');
+  const existing = activeBossFights(store.bossFights).find((fight) => fight.boss_id === bossId && fight.status === 'active');
   if (existing) return existing;
   const boss = getBossById(bossId);
   if (!boss) return null;
@@ -1443,7 +1668,31 @@ function getOrCreateBossFight(bossId) {
     started_at: new Date().toISOString(),
   };
   store.bossFights.push(fight);
+  checkpointWorldRow('bossFights', fight);
   return fight;
+}
+
+function checkpointWorldRow(entityType, row, entityId = row?.id) {
+  if (entityType === 'bossDamageLogs' && row?.fight_id && row?.player_email) {
+    entityId = JSON.stringify([row.fight_id, row.player_email]);
+  }
+  if (!row || entityId == null) return;
+  store.persistWorldEntities?.([{ entity_type: entityType, entity_id: String(entityId), state: row }]);
+}
+
+function expireBossFightsAndCheckpoint() {
+  const before = new Map(activeBossFights(store.bossFights).map(fight => [String(fight.id), {
+    status: fight.status, current_hp: fight.current_hp, ended_at: fight.ended_at,
+  }]));
+  if (!expireStaleBossFights(store.bossFights, Date.now(), store.players)) return false;
+  const changes = [];
+  for (const [id, previous] of before) {
+    const fight = findBossFight(store.bossFights, id);
+    if (!fight || previous.status === fight.status && previous.current_hp === fight.current_hp && previous.ended_at === fight.ended_at) continue;
+    changes.push({ entity_type: 'bossFights', entity_id: id, state: fight });
+  }
+  store.persistWorldEntities?.(changes);
+  return true;
 }
 
 function applyBossAttack(player, bossId, rawSkillId) {
@@ -1473,7 +1722,7 @@ function applyBossAttack(player, bossId, rawSkillId) {
     error.code = 'SKILL_COOLDOWN_ACTIVE';
     throw error;
   }
-  const poisonInventoryId = { satchel: 'small-poison', f4: 'medium-poison', c4: 'large-poison' }[effective.id];
+  const poisonInventoryId = getCombatPoisonSlot(effective.id);
   if (poisonInventoryId && Number((player.weapon_inventory || {})[poisonInventoryId] || 0) <= 0) {
     const error = new Error('No poison in inventory');
     error.code = 'NO_POISON_INVENTORY';
@@ -1490,10 +1739,10 @@ function applyBossAttack(player, bossId, rawSkillId) {
   const damage = Math.max(1, Math.floor((effective.damage || 1) * variance * getCollectionDamageBonus(player)));
   const damageBefore = Math.max(0, Number(fight.current_hp || 0));
   const actualDamage = Math.min(damageBefore, damage);
-  fight.current_hp = Math.max(0, damageBefore - actualDamage);
+  fight.current_hp = Math.max(0, damageBefore - actualDamage); fight.combat_revision = (Number(fight.combat_revision) || 0) + 1;
   fight.status = fight.current_hp <= 0 ? 'dead' : 'active';
   if (fight.current_hp <= 0) fight.ended_at = new Date().toISOString();
-  let damageLog = store.bossDamageLogs.find((log) => log.fight_id === fight.id && log.player_email === player.created_by);
+  let damageLog = findBossDamageLog(store.bossDamageLogs,fight.id,player.created_by);
   if (!damageLog) {
     damageLog = {
       id: store.generateId('damage'),
@@ -1522,7 +1771,7 @@ function applyBossAttack(player, bossId, rawSkillId) {
   player.boss_damage_today = Number(player.boss_damage_today || 0) + actualDamage;
   player.boss_damage_lifetime = Number(player.boss_damage_lifetime || 0) + actualDamage;
   player.total_boss_damage = Number(player.total_boss_damage || 0) + actualDamage;
-  awardTalentProgressV2(player, actualDamage);
+  if (poisonInventoryId) awardTalentProgressV2(player, actualDamage);
   if (fight.status === 'dead') {
     fight.last_hit_player_id = player.id;
     fight.last_hit_player_name = player.nickname || player.username || 'Player';
@@ -1559,17 +1808,21 @@ function distributeBossBoxesForFinishedFight(fight, extrasByEmail = {}) {
     if (!log?.player_email) continue;
     // Ordinary personal fights keep rewards with the owner. Once clan members
     // join an invitation fight, distribute damage-based boxes to contributors.
-    if (!shouldReceiveBossFightDamageReward(fight, log)) continue;
+    if (!shouldReceiveBossFightDamageReward(fight, log, store.players.find(p => String(p.created_by || '').toLowerCase() === String(log.player_email || '').toLowerCase())?.id)) continue;
     const participant = store.players.find((p) => p.created_by === log.player_email);
     if (!participant) continue;
 
     const box = queueBossDamageRewardBox(participant, {
       bossId: fight.boss_id, fightId: fight.id, maxHp, damage: log.damage,
-      poisonRefundUnits: log.poison_refund_units || {}, rank: idx + 1,
+      poisonRefundUnits: log.cashback_poison_refund_units || log.direct_poison_refund_units || (Number(log.direct_damage || 0) >= Number(log.damage || 0) ? log.poison_refund_units : {}) || {}, rank: idx + 1,
       lastHitPlayerName: fight.last_hit_player_name || '',
       ...(extrasByEmail[String(log.player_email).toLowerCase()] || {}),
     });
     if (box) {
+      if (Number(log.direct_damage || 0) >= getBossParticipationThreshold(maxHp, getBossRewardRuntimeConfig())) {
+        box.pumpkins = earnPumpkin(participant, 'boss');
+        if (box.pumpkins > 0) box.rewardSnapshot.push({ type: 'pumpkin', qty: box.pumpkins, alreadyGranted: true });
+      }
       boxes.push(box);
       playersUpdated += 1;
     }
@@ -1640,6 +1893,7 @@ function applyQuestMission(player, rawTask = {}) {
     player.stat_strength = Number(player.stat_strength || 1) + strengthReward;
     grantXpToPlayer(player, xpReward);
   }
+  const pumpkins = success && missionId.endsWith('-final') && player.task_completions[missionId] % mission.target === 0 ? earnPumpkin(player, 'quest') : 0;
   const collectionDrop = grantQuestArtifact(player, mission, success);
   let keyDrop = null;
   let poisonDrop = null;
@@ -1667,6 +1921,7 @@ function applyQuestMission(player, rawTask = {}) {
     spentEnergy: energyCost,
     gainedTentacles: success ? tentaclesReward : 0,
     gainedXp: success ? xpReward : 0,
+    pumpkins,
     questProgress: player.task_completions[missionId],
     collectionDrop,
     keyDrop,
@@ -1709,7 +1964,11 @@ function queueBossDamageRewardBox(player, {
   const bossIndex = GAME_CONFIG.BOSSES.findIndex((boss) => boss.id === bossId);
   const nextBoss = GAME_CONFIG.BOSSES[bossIndex + 1] || null;
   const config = getBossRewardRuntimeConfig();
+  // Personal medal progression has already credited this victory.
+  const killsBeforeFight = Math.max(0, Number(player.boss_kills_by_id?.[bossId] || 0) - 1);
+  const dailyReward = getBossDailyRewardState(player.boss_daily_rewards, bossId, Date.now(), killsBeforeFight);
   const reward = calculateBossReward({
+    dailyKillNumber: dailyReward.killNumber,
     bossId, maxHp, actualDamageTotal: damage, poisonRefundUnits, rank,
     availableSpecials: getBossSpecialKinds(player, bossId), firstKillDrops, pityDrops,
     carries: { resources: player.boss_reward_carries, poison: player.poison_refund_progress },
@@ -1717,9 +1976,11 @@ function queueBossDamageRewardBox(player, {
   });
   if (!reward.eligible) return null;
 
+  if (reward.participationEligible) player.boss_daily_rewards = dailyReward.state;
   player.boss_reward_carries = reward.carries.resources;
   player.poison_refund_progress = reward.carries.poison;
-  const rewardSnapshot = reward.drops.map((drop) => {
+  const setDrops = firstBossSetReward(player, {bossId, firstBossId:GAME_CONFIG.BOSSES[0].id, fightId, kills:killsBeforeFight+1, drops:reward.drops});
+  const rewardSnapshot = setDrops.map((drop) => {
     if (drop.type === 'boss_gear_piece') return resolveBossEquipmentDrop(player, bossId);
     if (drop.type === 'boss_pet') return resolveBossPetDrop(player, bossId);
     if (drop.type === 'boss_background') return resolveBossBackgroundDrop(player, bossId);
@@ -1731,6 +1992,7 @@ function queueBossDamageRewardBox(player, {
     bossId,
     fightId,
     rewardFormula: 'boss_v2',
+    rewardBalanceVersion: 2,
     bossDefeated: true,
     lastHitPlayerName,
     rewardSnapshot: limitBossBoxEquipment(rewardSnapshot),
@@ -1740,6 +2002,8 @@ function queueBossDamageRewardBox(player, {
     maxHp: Math.max(1, Number(maxHp) || 1),
     damageShare: reward.damageShare,
     rewardMeta: {
+      dailyKillNumber: reward.dailyKillNumber,
+      dailyMultiplier: reward.dailyMultiplier,
       participationThreshold: reward.participationThreshold,
       bossMultiplier: reward.bossMultiplier,
       randomMultiplier: reward.randomMultiplier,
@@ -1793,11 +2057,16 @@ function getBossFightOwner(fight) {
 }
 
 function addBossFightDamageLog(fight, player, damage, hits, combatMeta = {}) {
-  let damageLog = store.bossDamageLogs.find(
-    (item) => item.fight_id === fight.id && item.player_email === player.created_by
-  );
+  let damageLog = findBossDamageLog(store.bossDamageLogs,fight.id,player.created_by);
 
   if (damageLog) {
+    const cashbackUnits = { ...(damageLog.cashback_poison_refund_units || damageLog.direct_poison_refund_units || (Number(damageLog.direct_damage || 0) >= Number(damageLog.damage || 0) ? damageLog.poison_refund_units : {}) || {}) };
+    for (const [type, amount] of Object.entries(combatMeta.poisonRefundUnits || {})) cashbackUnits[type] = Number(cashbackUnits[type] || 0) + Number(amount || 0);
+    damageLog.cashback_poison_refund_units = cashbackUnits;
+    const directUnits = { ...(damageLog.direct_poison_refund_units || (Number(damageLog.direct_damage || 0) >= Number(damageLog.damage || 0) ? damageLog.poison_refund_units : {}) || {}) };
+    if (combatMeta.directAttack) for (const [type, amount] of Object.entries(combatMeta.poisonRefundUnits || {})) directUnits[type] = Number(directUnits[type] || 0) + Number(amount || 0);
+    damageLog.direct_poison_refund_units = directUnits;
+    if (combatMeta.directAttack) damageLog.direct_damage = Number(damageLog.direct_damage || 0) + damage;
     damageLog.damage = Number(damageLog.damage || 0) + damage;
     damageLog.hits = Number(damageLog.hits || 0) + hits;
     damageLog.poison_damage = Number(damageLog.poison_damage || 0) + Number(combatMeta.poisonDamage || 0);
@@ -1818,7 +2087,10 @@ function addBossFightDamageLog(fight, player, damage, hits, combatMeta = {}) {
     avatar_frame_id: player.avatar_frame_id || 'frame1',
     damage,
     hits,
+    direct_damage: combatMeta.directAttack ? damage : 0,
     poison_damage: Number(combatMeta.poisonDamage || 0),
+    cashback_poison_refund_units: { ...(combatMeta.poisonRefundUnits || {}) },
+    direct_poison_refund_units: combatMeta.directAttack ? { ...(combatMeta.poisonRefundUnits || {}) } : {},
     poison_refund_units: { ...(combatMeta.poisonRefundUnits || {}) },
   };
   store.bossDamageLogs.push(damageLog);
@@ -1835,7 +2107,7 @@ function applyDamageToPersonalBossFight(fight, player, damage, hits, endedAt, co
     actualDamage: appliedDamage,
     poisonDamage: combatMeta.poisonDamage,
     plannedPoisonDamage: combatMeta.plannedPoisonDamage,
-    consumedUses: combatMeta.consumedPoisonUses,
+    consumedUses: combatMeta.refundBudget ?? (combatMeta.directAttack ? combatMeta.consumedPoisonUses : 0),
     attackCount: combatMeta.attackCount,
   });
   const poisonRefundUnits = {};
@@ -1843,8 +2115,9 @@ function applyDamageToPersonalBossFight(fight, player, damage, hits, endedAt, co
     poisonRefundUnits[combatMeta.poisonType] = poison.refundUnits;
   }
 
-  fight.current_hp = currentHp;
+  fight.current_hp = currentHp; fight.combat_revision = (Number(fight.combat_revision) || 0) + 1;
   fight.status = defeated ? 'dead' : 'active';
+  recordAchievementDamage({ fight, player, players: store.players, hpBefore, damage: appliedDamage, weaponId: combatMeta.weaponId, bleed: combatMeta.bleed === true, lastPoisonSaved: combatMeta.lastPoisonSaved === true });
   if (defeated) {
     fight.ended_at = endedAt;
     fight.last_hit_player_id = player.id;
@@ -1853,7 +2126,7 @@ function applyDamageToPersonalBossFight(fight, player, damage, hits, endedAt, co
 
   return {
     fight,
-    damageLog: addBossFightDamageLog(fight, player, appliedDamage, hits, { poisonDamage: poison.actualPoisonDamage, poisonRefundUnits }),
+    damageLog: addBossFightDamageLog(fight, player, appliedDamage, hits, { poisonDamage: poison.actualPoisonDamage, poisonRefundUnits, directAttack: combatMeta.directAttack }),
     appliedDamage,
     hpBefore,
     defeated,
@@ -1862,21 +2135,66 @@ function applyDamageToPersonalBossFight(fight, player, damage, hits, endedAt, co
 
 // Passive bleed is processed independently of the next player action. Runtime state
 // is scoped to a concrete fight id, so a new boss never inherits old marks or bleed.
+const activeBleedPlayers = new Set();
+let activeBleedPlayersInitialized = false;
+let activeBleedPlayersSource = null;
+
+function trackActiveBleedPlayer(player, now = Date.now()) {
+  if (store.combatDraft) return;
+  const hasActiveBleed = Object.values(player?.talent_combat_state || {})
+    .some((state) => Number(state?.bleed?.expiresAt || 0) > now);
+  if (hasActiveBleed) activeBleedPlayers.add(player);
+  else activeBleedPlayers.delete(player);
+}
+
 export function processTalentBleedTicks(now = Date.now()) {
   let processed = 0;
   let fightsById;
   const changedPlayerIds = new Set();
-  for (const player of store.players || []) {
+  const lockedOwnerEmails=new Set(store.players.filter(p=>!store.combatDraft && isKeyLocked('action-player:'+p.id)).map(p=>String(p.created_by||'').toLowerCase()));
+  if (!store.combatDraft && (!activeBleedPlayersInitialized || activeBleedPlayersSource !== store.players)) {
+    activeBleedPlayers.clear();
+    for (const player of store.players || []) trackActiveBleedPlayer(player, now);
+    activeBleedPlayersInitialized = true;
+    activeBleedPlayersSource = store.players;
+  }
+  for (const player of store.combatDraft ? store.players : [...activeBleedPlayers]) {
+    if(!store.combatDraft && isKeyLocked('action-player:'+player.id))continue;
     const states = player?.talent_combat_state;
     if (!states || typeof states !== 'object') continue;
     let nextStates = states;
     for (const [fightId, rawState] of Object.entries(states)) {
+      if(lockedOwnerEmails.size && !fightId.startsWith('raid:')) {
+        if(!fightsById)fightsById=new Map(store.bossFights.map(f=>[f.id,f]));
+        if(lockedOwnerEmails.has(String(fightsById.get(fightId)?.opened_by_email||'').toLowerCase()))continue;
+      }
       const tick = getBleedTicks(rawState, now);
       if (tick.state !== rawState) {
         if (nextStates === states) nextStates = { ...states };
         nextStates[fightId] = tick.state;
       }
       if (!tick.damage) continue;
+      if (fightId.startsWith('raid:')) {
+        const raid = store.raidBoss;
+        const contribution = raid?.participants?.[player.id];
+        if (fightId !== 'raid:' + (raid?.id || 'active') || raid?.status !== 'active' || Number(raid.current_hp || 0) <= 0 || eventPhase('raid-boss', now) !== 'active' || !contribution) continue;
+        const hpBefore = Number(raid.current_hp);
+        const damage = Math.min(hpBefore, tick.damage);
+        raid.current_hp = hpBefore - damage; raid.combat_revision = (Number(raid.combat_revision) || 0) + 1;
+        recordAchievementDamage({ fight: raid, player, players: store.players, hpBefore, damage, bleed: true, now });
+        contribution.damage = Number(contribution.damage || 0) + damage;
+        raid.participants = { ...raid.participants, [player.id]: contribution };
+        raid.last_bleed_tick = { at: now, damage, playerId: player.id };
+        if (nextStates === states) nextStates = { ...states };
+        nextStates[fightId] = registerHpThresholds(tick.state, hpBefore, raid.current_hp, Number(raid.max_hp || 1));
+        player.boss_damage_today = Number(player.boss_damage_today || 0) + damage;
+        player.boss_damage_lifetime = Number(player.boss_damage_lifetime || 0) + damage;
+        addClanBossDamage(player, damage);
+        // Bleeding never earns talent points.
+        if (raid.current_hp <= 0) { raid.status = 'defeated'; raid.defeated_at = new Date(now).toISOString(); }
+        processed += 1;
+        continue;
+      }
       if (!fightsById) {
         fightsById = new Map();
         for (const fight of store.bossFights) {
@@ -1886,13 +2204,14 @@ export function processTalentBleedTicks(now = Date.now()) {
       const fight = fightsById.get(fightId);
       if (!fight || !isActiveBossFight(fight)) continue;
       const hpBefore = Number(fight.current_hp || 0);
-      const impact = applyDamageToPersonalBossFight(fight, player, tick.damage, 0, new Date(now).toISOString());
+      const impact = applyDamageToPersonalBossFight(fight, player, tick.damage, 0, new Date(now).toISOString(), { bleed: true });
       if (impact.appliedDamage > 0) fight.last_bleed_tick = { at: now, damage: impact.appliedDamage, playerId: player.id };
       if (nextStates === states) nextStates = { ...states };
       nextStates[fightId] = registerHpThresholds(tick.state, hpBefore, Number(fight.current_hp || 0), Number(fight.max_hp || 1));
       player.boss_damage_today = Number(player.boss_damage_today || 0) + impact.appliedDamage;
       player.boss_damage_lifetime = Number(player.boss_damage_lifetime || 0) + impact.appliedDamage;
-      awardTalentProgressV2(player, impact.appliedDamage);
+      addClanBossDamage(player, impact.appliedDamage);
+      // Bleeding never earns talent points.
       processed += 1;
       if (impact.defeated) settlePersonalBossFightDefeat({ fight, owner: player, ownerDamageLog: impact.damageLog, includeOwnerDamage: true });
     }
@@ -1900,12 +2219,39 @@ export function processTalentBleedTicks(now = Date.now()) {
       player.talent_combat_state = nextStates;
       changedPlayerIds.add(player.id);
     }
+    trackActiveBleedPlayer(player, now);
   }
-  if (processed) {
+  if (processed && !store.combatDraft) {
     store.persistSoon(50);
     void playerDb.flushDirtyPlayers([...changedPlayerIds]).catch(() => {});
   }
   return processed;
+}
+
+let durableBleedPending = false;
+export async function processDurableTalentBleedTicks(now = Date.now()) {
+  if (durableBleedPending) return 0;
+  const actor = store.players.find(player => Object.values(player.talent_combat_state || {}).some(state => state?.bleed && (now >= Number(state.bleed.expiresAt) || Math.min(now, Number(state.bleed.expiresAt)) - Number(state.bleed.lastTickAt) >= 1000)));
+  if (!actor) return 0;
+  durableBleedPending = true;
+  try {
+    const result = await executeWorldCombat({ store, playerDb, actorId: actor.id, body: {}, scope: 'bleed',
+      calculate(response) { sendData(response, 200, processTalentBleedTicks(now)); },
+      onPlayerCommitted: trackActiveBleedPlayer });
+    if (!result || result.statusCode >= 400) return 0;
+    try { return Number(JSON.parse(result.body).data) || 0; } catch { return 0; }
+  } finally { durableBleedPending = false; }
+}
+
+function getBossFightLeaderboard(fightId, limit = 100) {
+  return store.bossDamageLogs
+    .filter((item) => item.fight_id === fightId)
+    .sort((a, b) => (b.damage || 0) - (a.damage || 0))
+    .slice(0, limit)
+    .map((item) => {
+      const player = store.players.find((entry) => entry.created_by === item.player_email);
+      return { ...item, player_id: player?.id || item.player_id || null, username: player?.username || '', nickname: player?.nickname || '', player_name: player?.nickname || item.player_name, clan_name: player?.clan_name || '', clan_logo_id: player?.clan_logo_id || '', profile_header_theme: player?.profile_header_theme || null, battle_pass_tier: getActiveBattlePassTier(player) };
+    });
 }
 
 function settlePersonalBossFightDefeat({ fight }) {
@@ -1934,13 +2280,14 @@ function settlePersonalBossFightDefeat({ fight }) {
   const creditedPlayers = new Map([[String(owner.id), owner]]);
   if (Array.isArray(fight.invited_player_ids) && fight.invited_player_ids.length) {
     for (const log of logs) {
-      if (!shouldReceiveBossFightDamageReward(fight, log)) continue;
+      if (!shouldReceiveBossFightDamageReward(fight, log, store.players.find(p => String(p.created_by || '').trim().toLowerCase() === String(log.player_email || '').trim().toLowerCase())?.id)) continue;
       const contributor = store.players.find((player) => String(player.id) !== String(owner.id)
         && String(player.created_by || '').trim().toLowerCase() === String(log.player_email || '').trim().toLowerCase());
       if (contributor) creditedPlayers.set(String(contributor.id), contributor);
     }
   }
   for (const credited of creditedPlayers.values()) {
+    resetVictoryWeaponCooldowns(credited);
     const totalKills = Number(credited.boss_kills || 0) + 1;
     credited.boss_kills = totalKills;
     credited.boss_kills_by_id = {
@@ -2030,6 +2377,7 @@ function randInt(min, max) {
 }
 
 function getBossEquipmentSetItemIds(bossId) {
+  if (bossId === 'boss8' && SHKRABAN_ENABLED) return SHKRABAN_ITEM_IDS;
   const firstBossId = GAME_CONFIG.BOSSES?.[0]?.id || 'heli';
     const secondBossId = GAME_CONFIG.BOSSES?.[1]?.id || 'tank';
     const thirdBossId = GAME_CONFIG.BOSSES?.[2]?.id || 'chinook';
@@ -2038,7 +2386,9 @@ function getBossEquipmentSetItemIds(bossId) {
     [firstBossId]: ['cardboard_weapon', 'cardboard_head', 'cardboard_armor', 'cardboard_hands', 'cardboard_legs', 'cardboard_boots'],
       [secondBossId]: ['night_disinfector_weapon', 'night_disinfector_head', 'night_disinfector_armor', 'night_disinfector_hands', 'night_disinfector_legs', 'night_disinfector_boots'],
       [thirdBossId]: ['nuvelor_weapon', 'nuvelor_head', 'nuvelor_armor', 'nuvelor_hands', 'nuvelor_legs', 'nuvelor_boots'],
+      boss4: ['set4_weapon', 'set4_head', 'set4_armor', 'set4_hands', 'set4_legs', 'set4_boots'],
       [suckholeBossId]: ['set5_weapon', 'set5_head', 'set5_armor', 'set5_hands', 'set5_legs', 'set5_boots'],
+      boss7: ['anubis_weapon', 'anubis_head', 'anubis_armor', 'anubis_hands', 'anubis_legs', 'anubis_boots'],
     };
   return sets[bossId] || [];
 }
@@ -2067,7 +2417,11 @@ function resolveBossEquipmentDrop(player, bossId) {
 }
 
 function getBossPetPool(bossId) {
+  if (bossId === 'boss8' && SHKRABAN_ENABLED) return [SHKRABAN_PET_ID];
   const firstBossId = GAME_CONFIG.BOSSES?.[0]?.id || 'heli';
+  if (bossId === 'boss7') return ['pet-purrgulp'];
+  if (bossId === 'boss4') return ['pet5'];
+  if (bossId === 'chinook') return ['pet-skunk'];
   return bossId === firstBossId ? ['pet-bot'] : [];
 }
 
@@ -2172,15 +2526,16 @@ function spinRoulette(player, spinType, count = 1) {
   if (type === 'free' && player.roulette_last_free_spin === today) throw Object.assign(new Error('Free spin already used'), { code: 'FREE_SPIN_USED', statusCode: 400 });
   const bonusCost = type === 'free' ? count - 1 : type === 'bonus' ? count : 0;
   if (Number(player.roulette_bonus_spins || 0) < bonusCost) throw Object.assign(new Error('Not enough bonus spins'), { code: 'NO_BONUS_SPINS', statusCode: 400 });
-  if (type === 'paid' && Number(player.premium || 0) < 5 * count) throw Object.assign(new Error('Not enough T-Pape'), { code: 'NO_PREMIUM', statusCode: 400 });
+  if (type === 'paid' && Number(player.premium || 0) < ROULETTE_PAPER_SPIN_COST * count) throw Object.assign(new Error('Not enough T-Pape'), { code: 'NO_PREMIUM', statusCode: 400 });
   const selections = Array.from({ length: count }, () => selectRouletteReward());
   const rewards = selections.map(selection => {
-    const r = resolveRouletteRewardById(normalizeRouletteRewardId(selection.reward?.id)) || selection.reward;
+    const base = resolveRouletteRewardById(normalizeRouletteRewardId(selection.reward?.id)) || selection.reward;
+    const r = getEventRouletteReward(base, halloweenActive());
     return { id: r.id, type: r.type, amount: r.amount, label: r.label, popupText: r.popupText, iconKey: r.iconKey, accent: r.accent };
   });
   if (type === 'free') player.roulette_last_free_spin = today;
   player.roulette_bonus_spins = Number(player.roulette_bonus_spins || 0) - bonusCost;
-  if (type === 'paid') player.premium = Number(player.premium || 0) - 5 * count;
+  if (type === 'paid') player.premium = Number(player.premium || 0) - ROULETTE_PAPER_SPIN_COST * count;
   const selection = selections[0];
   const reward = rewards[0];
   const pendingReward = { ...reward, rewards, spinCount: count, pendingId: store.generateId('roulette-reward') };
@@ -2223,7 +2578,7 @@ function openLootBox(player, boxId) {
   const customBoxTables = Object.fromEntries((store.customLootBoxes || []).map((entry) => [entry.id, entry.table]));
   const activeBoxTables = { ...(store.lootBoxTables || {}), ...customBoxTables };
   const drops = stripRetiredBossFragments(limitBossBoxEquipment([
-    ...((box.rewardFormula === 'boss_v2' || box.rewardFormula === 'raid_rank_v1')
+    ...((box.rewardFormula === 'boss_v2' || box.rewardFormula === 'raid_rank_v1' || box.rewardFormula === 'halloween_rank_v1')
       ? (Array.isArray(box.rewardSnapshot) ? box.rewardSnapshot : [])
       : box.rewardFormula === 'damage_v1'
       ? rollBossDamageReward({ damage: box.damage, bossId: box.bossId, maxHp: box.maxHp })
@@ -2236,6 +2591,7 @@ function openLootBox(player, boxId) {
     if (drop.type === 'tentacles') player.tentacles = Number(player.tentacles || 0) + Number(drop.qty || 0);
     if (drop.type === 'xp') grantXpToPlayer(player, Number(drop.qty || 0));
     if (drop.type === 'energy') grantEnergyGain(player, Number(drop.qty || 0), 'open_loot_box');
+    if (drop.type === 'enhancement_gum') grantEnhancementGum(player, drop);
     if (drop.type === 'spin') player.roulette_bonus_spins = Number(player.roulette_bonus_spins || 0) + Number(drop.qty || 0);
     if (drop.type === 'premium') player.premium = Number(player.premium || 0) + Number(drop.qty || 0);
     if (drop.type === 'strength') player.stat_strength = Number(player.stat_strength || 1) + Number(drop.qty || 0);
@@ -2251,7 +2607,7 @@ function openLootBox(player, boxId) {
       player.weapon_inventory = { ...(player.weapon_inventory || {}), [weaponKey]: Number((player.weapon_inventory || {})[weaponKey] || 0) + Number(drop.qty || 0) };
     }
     if (drop.type === 'equipment' && drop.itemId) {
-      player.inventory_items = [...(player.inventory_items || []), { id: drop.itemId, type: 'equipment', slot: String(drop.itemId).split('_').pop() || 'weapon', bossId: drop.bossId || box.bossId, quality: drop.quality || 'boss_gear_piece', count: 1 }];
+      player.inventory_items = [...(player.inventory_items || []), { id: drop.itemId, type: 'equipment', slot: String(drop.itemId).split('_').pop() || 'weapon', bossId: drop.bossId || box.bossId, quality: drop.quality || 'boss_gear_piece', count: 1, ...(drop.starterEquipment ? {starterEquipment:true} : {}) }];
     }
     if (drop.type === 'pet' && drop.petId) {
       player.inventory_items = [...(player.inventory_items || []), { id: drop.petId, type: 'equipment', slot: 'pet', bossId: drop.bossId || box.bossId, count: 1 }];
@@ -2269,6 +2625,7 @@ function upgradeTalent(player, talentId) {
   const updates = calculateTalentUpgrade(player, talentId);
   if (!updates) throw Object.assign(new Error('Talent is locked, maxed, or has no points'), { code: 'TALENT_UPGRADE_DENIED' });
   Object.assign(player, updates);
+  if (talentId === 't47') for (const fight of store.bossFights) applyBossTimeTalent(fight, player);
   const levels = player.talent_levels;
   console.log('[talent] updated', {
     playerId: player.id,
@@ -2292,10 +2649,10 @@ function limitBossBoxEquipment(drops = []) {
 function getReferralRewardConfig(kind, rewardId) {
   const key = String(rewardId || '').trim();
   if (!key) return null;
-  if (kind === 'friend') {
+  if (kind === 'friend' || kind === 'friend20') {
     return {
       kind,
-      claimKey: `friend:${key}`,
+      claimKey: `${kind}:${key}`,
       boxType: 'invite_box',
       requiredFriends: 0,
       friendId: key,
@@ -2346,11 +2703,7 @@ function claimReferralRewardForPlayer(player, { kind, rewardId }) {
   const friends = Array.isArray(player.referred_friends)
     ? player.referred_friends.map(normalizeReferredFriend)
     : [];
-  const activeFriends = friends.filter((friend) => {
-    const doneNewbie = Boolean(friend?.newbiePart1Done);
-    const bossDamage = Number(friend?.boss1Damage || 0);
-    return doneNewbie || bossDamage >= 150;
-  });
+  const activeFriends = friends.filter((friend) => Number(friend?.level || 0) >= 20);
 
   if (config.kind === 'friend') {
     const friendIndex = friends.findIndex((friend) => String(friend?.playerId || '') === config.friendId);
@@ -2367,7 +2720,7 @@ function claimReferralRewardForPlayer(player, { kind, rewardId }) {
         player: normalizePlayerProgression(player),
       };
     }
-    const isFriendActive = Boolean(friend.newbiePart1Done) || Number(friend.boss1Damage || 0) >= 150;
+    const isFriendActive = Number(friend.level || 0) >= 20;
     if (!isFriendActive) {
       const error = new Error('Referred friend has not completed the activation requirement');
       error.code = 'REFERRAL_FRIEND_NOT_READY';
@@ -2384,7 +2737,12 @@ function claimReferralRewardForPlayer(player, { kind, rewardId }) {
     throw error;
   }
 
-  const drops = openBox(config.boxType, undefined, store.lootBoxTables);
+  const liveFriend = config.friendId ? store.players.find(entry => String(entry.id) === String(config.friendId)) : null;
+  if (config.kind === 'friend20' && (!halloweenActive() || !friends.some(entry => String(entry.playerId) === config.friendId) || !liveFriend || !isNewHalloweenReferral(liveFriend) || Number(liveFriend.level || 0) < 20)) throw Object.assign(new Error('Referral level 20 reward is not available'), {code:'REFERRAL_FRIEND_NOT_READY'});
+  const pumpkins = liveFriend && (config.kind === 'friend' || config.kind === 'friend20') ? grantReferralPumpkins(player, liveFriend) : 0;
+  if (config.kind === 'friend20' && !pumpkins) return {status:'already_claimed',rewardId:config.claimKey,player:normalizePlayerProgression(player)};
+  const drops = config.kind === 'friend20' ? [] : openBox(config.boxType, undefined, store.lootBoxTables);
+  if (pumpkins) { drops.push({type:'pumpkin',qty:pumpkins,alreadyGranted:true}); claimed.add('friend20:'+config.friendId); }
   for (const drop of drops) {
     if (drop.type === 'tentacles') {
       player.tentacles = (player.tentacles || 0) + drop.qty;
@@ -2446,11 +2804,11 @@ function claimReferralRewardForPlayer(player, { kind, rewardId }) {
 function enforceRequestRate(request, response, url) {
   if (process.env.NODE_ENV !== 'production') return true;
   const session = getSessionFromHeaders(request.headers);
-  const policy = getRequestRatePolicy(request.method, url.pathname, Boolean(session?.telegramId));
+  const policy = getRequestRatePolicy(request.method, url.pathname, Boolean(session?.telegramId || session?.email));
   if (!policy) return true;
   const { bucket, limit } = policy;
   const address = String(request.socket?.remoteAddress || 'unknown');
-  const key = `${session?.telegramId ? `telegram:${session.telegramId}` : `ip:${address}`}:${bucket}`;
+  const key = `${session?.telegramId || session?.email ? `player:${session.telegramId || session.email}` : `ip:${address}`}:${bucket}`;
   const now = Date.now();
   const current = requestRateMap.get(key) || { start: now, count: 0 };
   if (now - current.start >= 60000) { current.start = now; current.count = 0; }
@@ -2474,20 +2832,157 @@ export async function processRaidRankRewards(now = Date.now()) {
   raidRankSettlement = (async () => {
     await Promise.all([store.init(), playerDb.init(store)]);
     const raid = store.raidBoss;
+    const repair = repairRaidGuildFrames(raid, store.players, store.clans);
+    if (repair.changed.length) await playerDb.flushDirtyPlayers(repair.changed);
+    if (repair.changed.length || repair.clanChanged) await store.persistNow();
     if (!raid || raid.rank_rewards_completed_at || (!['dead', 'defeated'].includes(raid.status) && now < Date.parse(raid.ends_at || EVENT_SCHEDULE['raid-boss'].endAt))) return;
     await store.refreshRaidBoss();
-    const changed = awardRaidRankRewards(store.raidBoss, store.players, { now, endAt: EVENT_SCHEDULE['raid-boss'].endAt });
-    if (changed.length) await playerDb.flushDirtyPlayers(changed);
+    const changed = awardRaidRankRewards(store.raidBoss, store.players, { now, endAt: EVENT_SCHEDULE['raid-boss'].endAt, clans: store.clans });
+    if (changed.length) await playerDb.flushDirtyPlayers([...new Set(changed)]);
     await store.persistNow();
   })();
   try { await raidRankSettlement; } finally { raidRankSettlement = null; }
 }
 
+// Historical migrations scan the entire store; share one startup pass across requests.
+let startupMigrationPromise = null;
+function ensureStartupMigrations() {
+  if (!startupMigrationPromise) {
+    startupMigrationPromise = (async () => {
+  if (recoverKarma(store.players || [])) {
+    store.persistSoon(0);
+    void playerDb.flushDirtyPlayers().catch(error => console.error('[startup] karma save failed', error));
+  }
+  let economyMigrationChanged = false;
+  for (const player of store.players || []) {
+    const before = player.player_achievements;
+    reconcilePlayerAchievements(player);
+    economyMigrationChanged = player.player_achievements !== before || economyMigrationChanged;
+  }
+  for (const player of store.players || []) economyMigrationChanged = migrateLegacyResourceFields(player) || economyMigrationChanged;
+  for (const collection of [store.bossFights, store.attackLogs, store.lootBoxTables, store.bossRewardConfig, store.promoCodes, store.customLootBoxes, store.partners]) {
+    economyMigrationChanged = migrateLegacyResourceFields(collection) || economyMigrationChanged;
+  }
+  if (economyMigrationChanged) {
+    store.persistSoon(0);
+    void playerDb.flushDirtyPlayers().catch(error => console.error('[startup] migration save failed', error));
+  }
+    })().catch(error => {
+      startupMigrationPromise = null;
+      throw error;
+    });
+  }
+  return startupMigrationPromise;
+}
+
+export async function prepareGameState(mark = () => {}) {
+  await store.init();
+  mark('http_world_ready');
+  await Promise.all([playerDb.init(store), paymentDb.init()]);
+  mark('http_players_ready');
+  await ensureStartupMigrations();
+  mark('http_state_ready');
+  if(process.env.MARKET_MAINNET_PILOT==='1')void mainnetMarket.initialize().then(()=>mainnetMarket.startAgents(()=>store.players)).catch(error=>console.error('[market-mainnet] DB_SELF_CHECK_FAILED',error.code||'DATABASE_CHECK_FAILED'));
+}
+
+const combatLoopDelay = monitorEventLoopDelay({ resolution: 20 });
+combatLoopDelay.enable();
+let recentCombatLoopMaxMs = 0;
+setInterval(() => {
+  recentCombatLoopMaxMs = combatLoopDelay.max / 1e6;
+  combatLoopDelay.reset();
+}, 1000).unref();
+
+let combatProfileStarted = false;
+function captureCombatProfileOnce() {
+  if (combatProfileStarted || process.env.NODE_ENV !== 'production') return;
+  combatProfileStarted = true;
+  void (async () => {
+    const { unlink, writeFile } = await import('node:fs/promises');
+    const trigger = 'tmp/combat-cpu-profile.once';
+    try { await unlink(trigger); }
+    catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      return;
+    }
+    const { Session } = await import('node:inspector');
+    const session = new Session();
+    session.connect();
+    const post = method => new Promise((resolve, reject) =>
+      session.post(method, (error, result) => error ? reject(error) : resolve(result)));
+    try {
+      await post('Profiler.enable');
+      await post('Profiler.start');
+      console.info('[combat-cpu-start]', { pid: process.pid, at: Date.now() });
+      await new Promise(resolve => setTimeout(resolve, 15000));
+      const { profile } = await post('Profiler.stop');
+      await post('Profiler.disable');
+      await writeFile('tmp/combat-' + process.pid + '.cpuprofile', JSON.stringify(profile), { mode: 0o600 });
+      console.info('[combat-cpu-finish]', { pid: process.pid, at: Date.now() });
+    } finally { session.disconnect(); }
+  })().catch(error => console.warn('[combat-cpu-error]', error.message));
+}
+
 export async function handleRequest(request, response) {
+  const started = runtimePerformance.now();
+  const isAttack = request.method === 'POST' && /^(?:\/api)?\/(?:boss-fights\/[^/?]+|raid-boss|clans\/[^/?]+\/ship)\/attack(?:[?]|$)/.test(request.url);
+  if (isAttack) {
+    captureCombatProfileOnce();
+    const proxyId = request.headers['x-p4-proxy-request-id'];
+    response.combatRequestId = typeof proxyId === 'string' && /^[a-f0-9]{32}$/.test(proxyId) ? proxyId : randomUUID();
+    console.info('[combat-http-start]', { request_id: response.combatRequestId, pid: process.pid });
+    response.once('close', () => {
+      if (!response.writableFinished) console.warn('[combat-http-abort]', {
+        request_id: response.combatRequestId, pid: process.pid, duration_ms: runtimePerformance.now() - started,
+      });
+    });
+    const timings = [];
+    let previous = started;
+    response.markCombatHttp = name => {
+      const now = runtimePerformance.now();
+      timings.push(name + ';dur=' + (now - previous).toFixed(1));
+      previous = now;
+    };
+    const writeHead = response.writeHead;
+    response.writeHead = function (...args) {
+      response.markCombatHttp('response_headers');
+      const inner = response.getHeader('Server-Timing');
+      response.setHeader('Server-Timing', [...timings, ...(inner ? [inner] : [])].join(', '));
+      return writeHead.apply(this, args);
+    };
+    const end = response.end;
+    response.end = function (...args) {
+      response.markCombatHttp('response_encode');
+      return end.apply(this, args);
+    };
+    response.once('finish', () => {
+      response.markCombatHttp('response_flush');
+      response.combatHttpTiming = timings.join(', ');
+      console.info('[combat-http-finish]', {
+        request_id: response.combatRequestId,
+        pid: process.pid,
+        status: response.statusCode,
+        duration_ms: Math.round(runtimePerformance.now() - started),
+        timing: response.combatHttpTiming,
+        server_timing: response.getHeader('Server-Timing'),
+        event_loop_max_ms: Math.max(recentCombatLoopMaxMs, combatLoopDelay.max / 1e6),
+        combat: response.combatSnapshotInfo,
+      });
+    });
+  }
+  response.httpStarted = started;
+  return withPlayerAudit(request,response,()=>handleAuditedRequest(request,response));
+}
+async function handleAuditedRequest(request, response) {
   const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
   if (['GET','HEAD'].includes(request.method) && url.pathname.startsWith('/invite/')) {
-    const html = referralPage(url.pathname.slice(8), url.searchParams.get('lang'));
-    response.writeHead(html ? 200 : 404, {'Content-Type':'text/html; charset=utf-8','Cache-Control':'public, max-age=300'});
+    const code = url.pathname.slice(8);
+    if (!/^[A-Za-z0-9_-]{1,60}$/.test(code)) { response.writeHead(404); response.end(); return; }
+    await store.init();
+    await playerDb.init(store);
+    const inviter = store.players.find(player => resolveReferralCode(player) === code);
+    const html = referralPage(code, url.searchParams.get('lang'), inviter?.telegram_affiliate_url || '');
+    response.writeHead(html ? 200 : 404, {'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});
     response.end(request.method === 'HEAD' ? undefined : html || 'Invitation not found');
     return;
   }
@@ -2511,13 +3006,23 @@ export async function handleRequest(request, response) {
     response.end(Buffer.from(icon.data, 'base64'));
     return;
   }
+  const diagnosticIdentity = () => {
+    const telegramId=String(getSessionFromHeaders(request.headers)?.telegramId || '');
+    const player=telegramId ? store.players.find(p=>String(p.telegram_id)===telegramId) : null;
+    return {player_db_id:player?.id || '',player_name:player?.nickname || player?.username || ''};
+  };
+  response.markCombatHttp?.('http_enter');
   const originalPath = url.pathname;
-  const startedAt = Date.now();
-  const diagnosticRoute = originalPath === '/api/diagnostics/client' || originalPath === '/api/admin/diagnostics';
+  const startedAt = response.httpStarted ?? runtimePerformance.now();
+  const requestLoopStart = runtimePerformance.eventLoopUtilization();
+  const diagnosticRoute = /^(?:\/api)?\/(?:diagnostics\/client|admin\/diagnostics)$/.test(originalPath);
+  const diagnosticRequestId = response.combatRequestId || randomUUID();
+  response.setHeader('X-Request-Id', diagnosticRequestId);
   if (!diagnosticRoute) {
     response.once('finish', () => {
       const status = response.statusCode;
-      const duration = Date.now() - startedAt;
+      const duration = runtimePerformance.now() - startedAt;
+      recordCombatLatency(request.method, originalPath, status, duration);
       if (status < 400 && (duration < 1500 || !originalPath.startsWith('/api/'))) return;
       console.warn('[request-diagnostic]', {
         method: request.method,
@@ -2525,10 +3030,18 @@ export async function handleRequest(request, response) {
         status,
         code: status >= 400 ? response.diagnosticCode || `HTTP_${status}` : 'SLOW_REQUEST',
         duration_ms: duration,
+        request_id: diagnosticRequestId,
+        http_timing: response.combatHttpTiming,
+        pid: process.pid,
+        event_loop_max_ms: Math.max(recentCombatLoopMaxMs, combatLoopDelay.max / 1e6),
+        combat: response.combatSnapshotInfo,
+        rss_mb: process.memoryUsage().rss / 1048576,
         message: response.diagnosticMessage || '',
       });
       void recordDiagnosticEvent({
         source: 'api',
+        player_id: String(getSessionFromHeaders(request.headers)?.telegramId || ''),
+        details: {...diagnosticIdentity(),...Object.fromEntries(Object.entries(getPostgresPoolStats()).map(([key,value])=>["db_pool_"+key,value])),version:APP_VERSION,server_event_loop_utilization:runtimePerformance.eventLoopUtilization(requestLoopStart).utilization,request_id:diagnosticRequestId,http_timing:response.combatHttpTiming,server_rss_mb:process.memoryUsage().rss/1048576,server_heap_mb:process.memoryUsage().heapUsed/1048576,server_uptime_s:process.uptime(),server_timing:response.getHeader('Server-Timing') || response.diagnosticMessage || ''},
         method: request.method,
         path: originalPath,
         message: response.diagnosticMessage || '',
@@ -2556,6 +3069,7 @@ export async function handleRequest(request, response) {
       if (!sameOrigin) { sendError(response, 403, 'Same-origin web request required', 'WEB_ORIGIN_INVALID'); return; }
     }
   }
+  let releasePlayerAction = null;
   let storeReady = false;
   let shouldPersistImmediately = false;
   let shouldPersistGlobalState = true;
@@ -2565,6 +3079,35 @@ export async function handleRequest(request, response) {
     void playerDb.flushDirtyPlayers(playerId ? [playerId] : undefined).catch((error) => {
       console.error('[sql] background player flush failed', { playerId: playerId || null, message: error?.message || 'unknown_error' });
     });
+  };
+  const atomicAttack = async (body, scope, calculate) => {
+    const actor = getCurrentPlayer(request, { materialize: false });
+    response.markCombatHttp?.('http_actor');
+    if (!actor) { sendError(response, 401, 'Player session not found', 'AUTH_REQUIRED'); return; }
+    releasePlayerAction?.(); releasePlayerAction = null;
+    dirtyPlayerFlushQueued = true;
+    shouldPersistGlobalState = false;
+    const timings = new Map();
+    let result;
+    try {
+      result = await executeWorldCombat({ store, playerDb, actorId: actor.id, body, scope,
+        calculate, onPlayerCommitted: trackActiveBleedPlayer,
+        onTiming: (name, duration) => timings.set(name, (timings.get(name) || 0) + duration) });
+    } finally {
+      response.markCombatHttp?.('http_combat');
+      if (timings.size) response.setHeader('Server-Timing', [...timings].map(([name, duration]) => `${name};dur=${duration.toFixed(1)}`).join(', '));
+    }
+    response.combatSnapshotInfo = result.combatSnapshotInfo;
+    if (!response.combatSnapshotInfo && result.statusCode < 400) {
+      try {
+        const data = JSON.parse(result.body).data;
+        if (data?.fight) response.combatSnapshotInfo = {fight_id:data.fight.id,revision:data.fight.combat_revision,hp:data.fight.current_hp,player_id:data.player?.id,poison:data.player?.weapon_inventory};
+      } catch { /* Responses without a combat snapshot keep status-only tracing. */ }
+    }
+    if (result.diagnosticCode) response.diagnosticCode = result.diagnosticCode;
+    if (result.diagnosticMessage) response.diagnosticMessage = result.diagnosticMessage;
+    response.writeHead(result.statusCode, result.headers);
+    response.end(result.body);
   };
   try {
   if (url.pathname === '/diagnostics/client' && request.method === 'POST') {
@@ -2591,6 +3134,9 @@ export async function handleRequest(request, response) {
     const body = await readJsonBody(request);
     await recordDiagnosticEvent({
       source: 'client',
+      player_id: String(session.telegramId),
+      duration_ms: body.duration_ms,
+      details: {...body.details,...diagnosticIdentity()},
       path: body.path,
       code: body.kind,
       message: `[client ${/^\d+\.\d+$/.test(body.version || '') ? body.version : 'unknown'} / server ${APP_VERSION}] ${body.message || ''}`,
@@ -2600,8 +3146,11 @@ export async function handleRequest(request, response) {
   }
 
   if ((url.pathname === '/api/admin/diagnostics' || url.pathname === '/admin/diagnostics') && request.method === 'GET') {
-    if (!requireAdminToken(request, response)) return;
-    sendData(response, 200, await listDiagnosticEvents(url.searchParams.get('limit')));
+    if (!diagnosticsReadAllowed(request.headers['x-diagnostics-token']) && !requireAdminToken(request, response)) return;
+    response.setHeader('Cache-Control','no-store');
+    const performanceOnly=url.searchParams.get('view')==='performance';
+    const events=await listDiagnosticEvents(url.searchParams.get('limit'),performanceOnly,{q:url.searchParams.get('q'),source:url.searchParams.get('source'),since:url.searchParams.get('since')});
+    sendData(response, 200, performanceOnly ? {events,related_errors:await listDiagnosticEvents(100,false,{q:url.searchParams.get('q'),source:url.searchParams.get('source'),since:url.searchParams.get('since')}),server:{db_pool:getPostgresPoolStats(),version:APP_VERSION,uptime_s:process.uptime(),rss_mb:process.memoryUsage().rss/1048576,heap_mb:process.memoryUsage().heapUsed/1048576,event_loop_utilization:runtimePerformance.eventLoopUtilization().utilization,combat_latency_5m:summarizeCombatLatency()}} : events);
     return;
   }
 
@@ -2612,27 +3161,178 @@ export async function handleRequest(request, response) {
     return;
   }
 
+  if (url.pathname === '/public/pl4-quote' && request.method === 'GET') {
+    if (!enforceRequestRate(request, response, url)) return;
+    response.setHeader('Cache-Control', 'no-store');
+    try { sendData(response, 200, await getPl4Quote()); }
+    catch { sendError(response, 503, 'PL4 quote temporarily unavailable', 'PL4_QUOTE_UNAVAILABLE'); }
+    return;
+  }
   // The web shell and scene files must not wait for database initialization.
-  const frontendPath = ['/', '/web', '/index.html'].includes(url.pathname)
-    || url.pathname.startsWith('/assets/') || url.pathname.startsWith('/skills/');
+  const frontendPath = ['/', '/web', '/demo', '/portal', '/nft', '/index.html'].includes(url.pathname)
+    || (!originalPath.startsWith('/api/') && isPublicMediaPath(url.pathname))
+    || url.pathname.startsWith('/assets/') || url.pathname.startsWith('/skills/')
+    || /^\/ship-(?:gum-queen|cheese-boss|soldier-boss|kangaroo-boss)\//.test(url.pathname);
   if (['GET', 'HEAD'].includes(request.method) && frontendPath && tryServeStatic(url.pathname, response, request)) return;
 
-  await Promise.all([store.init(), playerDb.init(store), paymentDb.init()]);
-  await processRaidRankRewards();
-  if (recoverKarma(store.players || [])) {
-    store.persistSoon(0);
-    await playerDb.flushDirtyPlayers();
-  }
-  let economyMigrationChanged = false;
-  for (const player of store.players || []) economyMigrationChanged = migrateLegacyResourceFields(player) || economyMigrationChanged;
-  for (const collection of [store.bossFights, store.attackLogs, store.lootBoxTables, store.bossRewardConfig, store.promoCodes, store.customLootBoxes, store.partners]) {
-    economyMigrationChanged = migrateLegacyResourceFields(collection) || economyMigrationChanged;
-  }
-  if (economyMigrationChanged) {
-    store.persistSoon(0);
-    await playerDb.flushDirtyPlayers();
-  }
+  // The player registry depends on the loaded global state. Running both
+  // initializers together can replace the registry during a cold start.
+  response.markCombatHttp?.('http_middleware');
+  await prepareGameState(response.markCombatHttp);
   storeReady = true;
+  if (browserSession?.nearAccountId && !url.pathname.startsWith('/auth/web/')) {
+    const linked = store.players.filter(p => p.near_wallet_id === browserSession.nearAccountId && p.near_wallet_verified === true);
+    if (linked.length !== 1 || (browserSession.telegramId ? String(linked[0].telegram_id) !== browserSession.telegramId : linked[0].created_by !== browserSession.email) || linked[0].is_banned) {
+      response.setHeader('Set-Cookie', webAuth.clearCookie());
+      sendError(response, 401, 'Sign in again', 'AUTH_REQUIRED'); return;
+    }
+  }
+  if (url.pathname === '/public/stats' && request.method === 'GET') {
+    if (!enforceRequestRate(request, response, url)) return;
+    response.setHeader('Cache-Control', 'public, max-age=60');
+    try { sendData(response, 200, await readPublicStats()); }
+    catch { sendError(response, 503, 'Stats temporarily unavailable', 'STATS_UNAVAILABLE'); }
+    return;
+  }
+  const releaseClaimMatch=url.pathname.match(/^\/releases\/(\d+\.\d+)\/claim$/);
+  if(releaseClaimMatch && request.method==='POST'){
+    const player=ensureCurrentPlayer(request);
+    if(!player){sendError(response,401,'Sign in again','AUTH_REQUIRED');return;}
+    const result=await claimReleaseReward(player,releaseClaimMatch[1]);
+    releaseAnnouncements.invalidateClaims(player.id,releaseClaimMatch[1]);
+    sendData(response,200,{...result,player:normalizePlayerProgression(player)});return;
+  }
+  if(['/market-pilot','/market-pilot/access','/market-pilot/instruction','/market-pilot/registration'].includes(url.pathname)&&['GET','POST'].includes(request.method)){
+    response.setHeader('Cache-Control','no-store');
+    const session=getSessionFromHeaders(request.headers),player=getCurrentPlayer(request,{materialize:false});
+    // Open pilot: any player with a verified NEAR wallet may trade, not only the original invited
+    // testers (hasMarketAccess). Every listing/purchase still independently requires
+    // near_wallet_verified via verifiedMarketWallet() in market-mainnet-book.js, is web-only, and
+    // stays inside the existing per-seller/day, per-item/day and $5 total budget caps — none of
+    // those limits changed. A guest account has no verified wallet, so it still cannot trade.
+    const allowed=process.env.MARKET_MAINNET_PILOT==='1'&&Boolean(session&&!session.isMock&&player&&!player.is_banned&&!player.ai_agent?.key&&player.near_wallet_verified===true&&!request.headers['x-telegram-init-data']);
+    // Anyone signed in on the web (guests included) may look at the market even without a wallet.
+    const viewOnly=!allowed&&process.env.MARKET_MAINNET_PILOT==='1'&&Boolean(session&&!session.isMock&&player&&!player.is_banned&&!player.ai_agent?.key&&!request.headers['x-telegram-init-data']);
+    if(url.pathname==='/market-pilot/access'&&request.method==='GET'){sendData(response,200,{allowed:allowed&&mainnetMarket.isReady(),view:(allowed||viewOnly)&&mainnetMarket.isReady(),ready:mainnetMarket.isReady(),mode:'mainnet-pilot'});return;}
+    if(viewOnly&&url.pathname==='/market-pilot'&&request.method==='GET'){
+      if(!enforceRequestRate(request,response,url))return;
+      try{sendData(response,200,await mainnetMarket.readPublic(player));}
+      catch(error){sendError(response,error.statusCode||503,error.message,error.code||error.message);}
+      return;
+    }
+    if(!allowed){sendError(response,403,'Closed pilot access required','MARKET_ACCESS_DENIED');return;}
+    const origin=request.headers.origin;
+    if(origin&&new URL(origin).host!==request.headers.host&&origin!==process.env.MARKET_MAINNET_ORIGIN){sendError(response,403,'Invalid origin','INVALID_ORIGIN');return;}
+    if(!enforceRequestRate(request,response,url))return;
+    try{
+      const web=!request.headers['x-telegram-init-data']&&request.headers['x-local-market-platform']==='web';
+      if(url.pathname==='/market-pilot/registration'){
+        if(request.method!=='POST'){sendError(response,405,'POST required','METHOD_NOT_ALLOWED');return;}
+        sendData(response,200,await mainnetMarket.registration(player));return;
+      }
+      if(url.pathname==='/market-pilot/instruction'){
+        if(request.method!=='POST'){sendError(response,405,'POST required','METHOD_NOT_ALLOWED');return;}
+        if(!web){sendError(response,403,'Web market only','WEB_ONLY');return;}
+        const body=await readJsonBody(request);sendData(response,200,await mainnetMarket.instruction(player,body.orderId));return;
+      }
+      if(request.method==='GET'){const state=await mainnetMarket.read(player);if(!web){state.lots=[];state.orders=[];}sendData(response,200,state);}
+      else{const body=await readJsonBody(request);if(!web&&body.action!=='npc'){sendError(response,403,'Web market only','WEB_ONLY');return;}sendData(response,200,await mainnetMarket.command(player,body));}
+    }catch(error){sendError(response,error.statusCode||503,error.message,error.code||error.message);}
+    return;
+  }
+  if(url.pathname==='/local-near/account'&&request.method==='GET'){
+    if(!localMarketEnabled(request)){sendError(response,404,'Local tool disabled','LOCAL_ONLY');return;}
+    response.setHeader('Cache-Control','no-store');
+    if(!enforceRequestRate(request,response,url))return;
+    try{sendData(response,200,await createSubaccountReader()(url.searchParams.get('account')||'',url.searchParams.get('publicKey')||''));}
+    catch(error){sendError(response,503,error.message,error.message);}
+    return;
+  }
+  if (['/local-market','/local-market/access','/local-market/simulation','/local-market/testnet'].includes(url.pathname) && ['GET','POST'].includes(request.method)) {
+    if(!localMarketEnabled(request)){sendError(response,404,'Local market disabled','LOCAL_MARKET_DISABLED');return;}
+    const origin=request.headers.origin;
+    if(origin && new URL(origin).host!==request.headers.host && origin!==process.env.LOCAL_MARKET_ORIGIN){sendError(response,403,'Invalid origin','INVALID_ORIGIN');return;}
+    const player=getCurrentPlayer(request);
+    if(!player || player.is_banned){sendError(response,401,'Sign in again','AUTH_REQUIRED');return;}
+    if(player.ai_agent?.key){sendError(response,403,'Agents are controlled by the local market service','AGENT_INTERNAL_ONLY');return;}
+    response.setHeader('Cache-Control','no-store');
+    const allowed=hasMarketAccess(player);
+    if(url.pathname==='/local-market/access'&&request.method==='GET'){sendData(response,200,{allowed,mode:'closed-local-pilot'});return;}
+    if(!allowed){sendError(response,403,'Market is restricted to invited testers','MARKET_ACCESS_DENIED');return;}
+    const web=!request.headers['x-telegram-init-data'] && request.headers['x-local-market-platform']==='web';
+    if(url.pathname==='/local-market/testnet'){
+      if(!web){sendError(response,403,'Web testnet rehearsal only','WEB_ONLY');return;}
+      if(!enforceRequestRate(request,response,url))return;
+      try{
+        const setup=testnetSetupStatus();
+        if(request.method==='GET'){sendData(response,200,setup.ready?{...setup,...localTestnetService().read()}:setup);return;}
+        if(!setup.ready){sendError(response,409,'Testnet account configuration is incomplete','TESTNET_SETUP_REQUIRED');return;}
+        const body=await readJsonBody(request),book=localTestnetService();let result;
+        if(body.action==='reserve')result=await book.reserve({requestId:body.requestId});
+        else if(body.action==='instruction')result=book.instruction(body.orderId,body.leg);
+        else if(body.action==='confirm')result=await book.confirm({orderId:body.orderId,leg:body.leg,txHash:body.txHash});
+        else if(body.action==='expire')result=await book.expire(body.orderId);
+        else throw Object.assign(new Error('UNKNOWN_ACTION'),{statusCode:400});
+        sendData(response,200,{result,state:book.read()});
+      }catch(error){sendError(response,error.statusCode||500,error.message,error.code||error.message);}
+      return;
+    }
+    if(url.pathname==='/local-market/simulation'){
+      if(!web || request.method!=='GET'){sendError(response,403,'Web simulation only','WEB_ONLY');return;}
+      if(!enforceRequestRate(request,response,url))return;
+      sendData(response,200,await getMarketSimulation());return;
+    }
+    try{sendData(response,200,withMarketAgents(store,player,web,request.method==='GET'?marketState(store,player,web):await marketCommand(store,player,await readJsonBody(request),web)));}
+    catch(error){sendError(response,error.statusCode||500,error.message,error.message);}
+    return;
+  }
+  if (url.pathname === '/pvp/online' && ['GET','POST'].includes(request.method)) {
+    const player = getCurrentPlayer(request);
+    if (!player) { sendError(response,401,'Sign in again','AUTH_REQUIRED'); return; }
+    if (!enforceRequestRate(request,response,url)) return;
+    response.setHeader('Cache-Control','no-store');
+    try {
+      const body = request.method === 'POST' ? await readJsonBody(request) : undefined;
+      const result = await onlinePvp.command(player, body?.action === 'claim-rank' ? undefined : body, pid => store.players.find(candidate => String(candidate.id) === String(pid)));
+      if (body?.action === 'claim-rank') {
+        result.rankReward = await claimPvpRankRewardDurable({ store, player, rank: body.rank, standing: result.progress });
+        result.progress.claimedRanks = Object.keys(player.pvp_rank_rewards || {}).map(Number);
+        result.player = normalizePlayerProgression(player);
+      }
+      sendData(response,200,result);
+    }
+    catch(error) { sendError(response,error.statusCode || 503,error.message,error.code || 'PVP_UNAVAILABLE'); }
+    return;
+  }
+  if (url.pathname === '/pvp' && ['GET','POST'].includes(request.method)) {
+    const player=getCurrentPlayer(request);
+    if(!player){sendError(response,401,'Sign in again','AUTH_REQUIRED');return;}
+    if(!enforceRequestRate(request,response,url))return;
+    response.setHeader('Cache-Control','no-store');
+    const key=String(player.id);
+    try{
+      let match;
+      if(request.method==='GET')match=pvpDuels.read(key);
+      else{
+        const body=await readJsonBody(request);
+        if(body.action==='start')match=pvpDuels.start(key,body.preset,{});
+        else if(body.action==='choose')match=pvpDuels.choose(key,body);
+        else if(body.action==='abandon'){pvpDuels.abandon(key);match=null;}
+        else{sendError(response,400,'Unknown action','UNKNOWN_ACTION');return;}
+      }
+      sendData(response,200,{match,progress:pvpDuels.standings(key)});
+    }catch(error){sendError(response,error.statusCode||error.status||400,error.message,error.code||error.message,{progress:pvpDuels.standings(key)});}
+    return;
+  }
+  if (url.pathname === '/equipment-forge' && ['GET','POST'].includes(request.method)) {
+    const player=getCurrentPlayer(request);
+    if(!player){sendError(response,401,'Sign in again','AUTH_REQUIRED');return;}
+    if(!enforceRequestRate(request,response,url))return;
+    response.setHeader('Cache-Control','no-store');
+    try{const forge=createEquipmentForge({store});const data=request.method==='GET'?forge.read(player):await forge.enhance(player,await readJsonBody(request));sendData(response,200,data);}
+    catch(error){sendError(response,error.statusCode||500,error.message,error.code||error.message);}
+    return;
+  }
   if (url.pathname === '/holder-pets/claim' && request.method === 'POST') {
     const player = ensureCurrentPlayer(request);
     if (!player) { sendError(response, 401, 'Player session not found', 'AUTH_REQUIRED'); return; }
@@ -2672,6 +3372,138 @@ export async function handleRequest(request, response) {
     shouldPersistGlobalState = false;
     return;
   }
+  const usesCombatLocks = request.method === 'POST' && (
+    /^\/clans\/[^/]+\/ship\/(open|attack|sync|escape)$/.test(url.pathname)
+    || /^\/boss-fights\/[^/]+\/attack$/.test(url.pathname)
+    || url.pathname === '/raid-boss/attack'
+  );
+  if (!['GET','HEAD','OPTIONS'].includes(request.method) && !usesCombatLocks) {
+    const actor = getCurrentPlayer(request, { materialize: false });
+    if (actor?.id) releasePlayerAction = await acquireKeyLock('action-player:' + actor.id);
+  }
+  if (['/player-activity','/api/player-activity'].includes(url.pathname) && request.method === 'POST') {
+    const player=ensureCurrentPlayer(request);if(!player){sendError(response,401,'Unauthorized','AUTH_REQUIRED');return;}
+    shouldPersistGlobalState=false;
+    const body=await readJsonBody(request);recordRetention(player,Date.now(),true,body.screen);sendData(response,200,{ok:true});return;
+  }
+  if (['/admin/retention','/api/admin/retention'].includes(url.pathname) && request.method === 'GET') {
+    if(!requireAdminToken(request,response))return;
+    sendData(response,200,retentionReport(store.players,{days:Math.max(1,Math.min(90,Number(url.searchParams.get('days'))||30))}));return;
+  }
+  if (/^\/(?:api\/)?admin\/news(?:\/[^/]+(?:\/(?:start|pause|test))?)?$/.test(url.pathname)) {
+    if(!requireAdminToken(request,response))return;
+    store.newsCampaigns ||= [];
+    if(request.method==='GET'){const detail=url.pathname.match(/news\/([^/]+)$/);if(detail){const job=store.newsCampaigns.find(item=>item.id===detail[1]);if(!job){sendError(response,404,'Campaign not found','NEWS_NOT_FOUND');return;}sendData(response,200,newsSummary(job));return;}sendData(response,200,{configured:Boolean(String(process.env.TELEGRAM_BOT_TOKEN||'').trim()),campaigns:store.newsCampaigns.slice(-30).reverse().map(job=>newsSummary(job,false))});return;}
+    if(request.method==='POST'){
+      const body=await readJsonBody(request);const match=url.pathname.match(/news\/([^/]+)\/(start|pause|test)$/);
+      const releaseNewsLock=await acquireKeyLock('telegram-news');
+      const previousCampaigns=structuredClone(store.newsCampaigns);
+      try{
+        if(!match){const draft=createNewsDraft(store.players,body);store.newsCampaigns.push(draft);await store.persistNow();sendData(response,201,newsSummary(draft));return;}
+        const job=store.newsCampaigns.find(item=>item.id===match[1]);if(!job){sendError(response,404,'Campaign not found','NEWS_NOT_FOUND');return;}
+        if(match[2]==='test'){
+          if(!/^\d{5,20}$/.test(String(body.chatId||'')))throw Object.assign(new Error('INVALID_TEST_CHAT'),{statusCode:400});
+          if(!String(process.env.TELEGRAM_BOT_TOKEN||'').trim())throw Object.assign(new Error('BOT_NOT_CONFIGURED'),{statusCode:503});
+          const testJob={...job,id:store.generateId('news-test'),test:true,status:'queued',recipients:[{chatId:String(body.chatId),language:['uk','ru','en'].includes(body.language)?body.language:'uk',status:'pending'}]};
+          store.newsCampaigns.push(testJob);await store.persistNow();sendData(response,201,newsSummary(testJob));return;
+        }
+        if(match[2]==='start'){
+          if(body.confirmation!==job.id||body.recipientCount!==job.recipients.length)throw Object.assign(new Error('CONFIRM_PREVIEW_REQUIRED'),{statusCode:400});
+          if(!String(process.env.TELEGRAM_BOT_TOKEN||'').trim())throw Object.assign(new Error('BOT_NOT_CONFIGURED'),{statusCode:503});
+          if(!['draft','paused'].includes(job.status))throw Object.assign(new Error('CAMPAIGN_ALREADY_STARTED'),{statusCode:409});
+          job.status='queued';job.startedAt=new Date().toISOString();
+        }else if(['queued','sending'].includes(job.status))job.status='paused';
+        await store.persistNow();sendData(response,200,newsSummary(job));return;
+      }catch(error){store.newsCampaigns=previousCampaigns;sendError(response,error.statusCode||500,error.message,error.message);return;}
+      finally{releaseNewsLock();}
+    }
+  }
+  if(url.pathname==='/support/reports'&&request.method==='POST'){
+    const player=ensureCurrentPlayer(request);if(!player||player.is_banned){sendError(response,401,'Unauthorized','AUTH_REQUIRED');return;}
+    try{sendData(response,201,await submitBug(store,player,await readJsonBody(request)));}catch(e){sendError(response,e.statusCode||500,e.message,e.message);}return;
+  }
+  if(url.pathname==='/api/admin/support'&&['GET','PATCH'].includes(request.method)){
+    if(!requireAdminToken(request,response))return;
+    const body=request.method==='PATCH'?await readJsonBody(request):{};
+    sendData(response,200,await supportReports(store,body.id,body.status));return;
+  }
+  if(url.pathname==='/api/admin/events/telegram'&&request.method==='POST'){
+    shouldPersistGlobalState=false;
+    if(!requireAdminToken(request,response))return;
+    const body=await readJsonBody(request);
+    try {sendData(response,200,{rows:await resolveTelegramProfiles(store.players,body.ids,{token:serverConfig.telegramBotToken})});}
+    catch(error){sendError(response,error.statusCode||500,error.message,'TELEGRAM_LOOKUP_FAILED');}
+    return;
+  }
+  if(url.pathname==='/api/admin/events'&&request.method==='GET'){
+    if(!requireAdminToken(request,response))return;
+    sendData(response,200,{event:{id:HALLOWEEN.id,active:halloweenActive(),start:HALLOWEEN.startAt.slice(0,10),end:HALLOWEEN.endAt.slice(0,10)},rows:eventParticipantRows(store.players,{min:Math.max(0,Number(url.searchParams.get('min'))||0),minLevel:Math.max(0,Number(url.searchParams.get('level'))||0),search:url.searchParams.get('search')||'',account:url.searchParams.get('account')||'all'})});return;
+  }
+  if(url.pathname==='/api/admin/spending'&&request.method==='GET'){
+    if(!requireAdminToken(request,response))return;
+    const days=Number(url.searchParams.get('days')||0);if(![0,1,7,30].includes(days)){sendError(response,400,'Invalid period','PERIOD_INVALID');return;}
+    const method=url.searchParams.get('method')||'all',min=Math.max(0,Number(url.searchParams.get('min'))||0),search=String(url.searchParams.get('search')||'').toLowerCase();
+    const since=new Date(days?Date.now()-days*86400000:0).toISOString();
+    const sql=paymentDb.getSql();const rows=await sql`SELECT user_id,payment_method,COUNT(*)::int AS count,COALESCE(SUM(NULLIF(amount_paid::text,'')::numeric),0)::text AS amount,COALESCE(SUM(usd_price::numeric),0)::text AS usd FROM payment_transactions WHERE status IN ('success','completed','succeeded','paid') AND COALESCE(completed_at,created_at)>=${since}::timestamptz GROUP BY user_id,payment_method`;
+    const byId=new Map(store.players.map(p=>[String(p.id),p]));
+    sendData(response,200,rows.map(r=>{const p=byId.get(String(r.user_id));return {...r,nickname:p?.nickname||p?.username||'',telegramId:p?.telegram_id||'',near:p?.near_wallet_id||''};}).filter(r=>(method==='all'||r.payment_method===method)&&Number(r.usd)>=min&&`${r.nickname} ${r.user_id} ${r.telegramId} ${r.near}`.toLowerCase().includes(search)).sort((a,b)=>Number(b.usd)-Number(a.usd)));return;
+  }
+  const cardRoute=url.pathname.match(/^\/(?:api\/)?card-game\/(state|shown|begin|choose|claim)$/);
+  if(cardRoute&&request.method==='POST'){
+    shouldPersistGlobalState=false;
+    const player=ensureCurrentPlayer(request,{syncReferrals:false});
+    if(!player||player.is_banned){sendError(response,401,'Unauthorized','AUTH_REQUIRED');return;}
+    try {sendData(response,200,await cardGameCommand(store,player,cardRoute[1],await readJsonBody(request)));}
+    catch(error){sendError(response,error.statusCode||500,error.code||'CARD_GAME_UNAVAILABLE',error.code||'CARD_GAME_UNAVAILABLE');}
+    return;
+  }
+  const achievementClaim = url.pathname.match(/^\/(?:api\/)?player-achievements\/([a-z_][a-z0-9_-]*)\/claim$/);
+  if (achievementClaim && request.method === 'POST') {
+    const player = ensureCurrentPlayer(request);
+    if (!player || player.is_banned) { sendError(response,401,'Player session not found','AUTH_REQUIRED');return; }
+    try { const result=await claimPlayerAchievement(store,player,achievementClaim[1]);sendData(response,200,{...result,player:combatPlayerSnapshot(player)}); }
+    catch(error){sendError(response,error.statusCode||500,error.message,error.message);}
+    return;
+  }
+  const shipRoute = url.pathname.match(/^\/clans\/([^/]+)\/ship(?:\/(contribute|rename|open|attack|sync|escape))?$/);
+  if (shipRoute) {
+    const player = getCurrentPlayer(request);
+    response.markCombatHttp?.('http_actor');
+    if (!player || player.is_banned) { sendError(response,401,'Player session not found','AUTH_REQUIRED'); return; }
+    const clan = ensureClanRecord(decodeURIComponent(shipRoute[1]));
+    const service = createClanShipService({store});
+    if (request.method === 'GET' && !shipRoute[2]) { sendData(response,200,await service.read(clan,player)); return; }
+    if (request.method === 'POST' && shipRoute[2] === 'rename') {
+      sendData(response,200,await service.rename(clan,player,await readJsonBody(request))); return;
+    }
+    if (request.method === 'POST' && shipRoute[2] === 'contribute') {
+      const result = await service.contribute(clan,player,await readJsonBody(request));
+      sendData(response,200,result); return;
+    }
+    if(request.method==='POST' && ['open','attack','sync','escape'].includes(shipRoute[2])){
+      // Combat persists ship and player snapshots atomically in its own service.
+      shouldPersistGlobalState=false;
+      const timings=[];
+      const body=await readJsonBody(request);
+      response.markCombatHttp?.('http_body');
+      const result=await service.combat(clan,player,shipRoute[2],body,{
+        onTiming:(name,duration)=>timings.push(`${name};dur=${duration}`),
+        onProgress:({playerId,damage,hits})=>{
+          const contributor=store.players.find(entry=>String(entry.id)===String(playerId));
+          if(!contributor||!isClanMember(contributor,clan))return;
+          if(damage>0)addClanBossDamage(contributor,damage);
+          if(hits>0)progressClanQuestMetric(clan,contributor,'hits',hits);
+          if (store.persistClanSoon) store.persistClanSoon(clan.id); else shouldPersistGlobalState=true;
+        },
+      });
+      response.markCombatHttp?.('http_combat');
+      response.setHeader('Server-Timing',timings.join(', '));
+      response.diagnosticMessage=timings.join(', ');
+      sendData(response,200,result);return;
+    }
+    sendError(response,405,'Method not allowed','METHOD_NOT_ALLOWED'); return;
+  }
+
   if (url.pathname === '/telegram/player-avatar' && request.method === 'GET') {
     const player = getCurrentPlayer(request);
     if (!player || player.is_banned) { sendError(response, 401, 'Authentication required', 'AUTH_REQUIRED'); return; }
@@ -2937,9 +3769,20 @@ export async function handleRequest(request, response) {
       return;
     }
     const partner = { id: store.generateId('partner'), verificationMode: body?.verificationMode === 'visit' ? 'visit' : 'verified', names, link: parsedLink.toString(), rewards: hasLegacyRewards ? legacyRewards : { uk: '', en: '', ru: '' }, ...(validRewardItems ? { rewardItems } : {}), icon: parsedIcon ? parsedIcon.toString() : icon, enabled: true, created_at: new Date().toISOString() };
-    store.partners = [...(store.partners || []), partner];
+    store.partners = [partner, ...(store.partners || [])];
     store.persistSoon(0);
     sendData(response, 201, partner);
+    return;
+  }
+
+  if (['/api/admin/partners/reorder', '/admin/partners/reorder'].includes(url.pathname) && request.method === 'POST') {
+    if (!requireAdminToken(request, response)) return;
+    const body = await readJsonBody(request);
+    try {
+      store.partners = reorderPartner(store.partners || [], String(body.id || ''), body.direction);
+      store.persistSoon();
+      sendData(response, 200, store.partners);
+    } catch (error) { sendError(response, error.statusCode || 400, error.message, error.message); }
     return;
   }
 
@@ -2994,6 +3837,16 @@ export async function handleRequest(request, response) {
     store.partners = store.partners.filter((partner) => partner.id !== partnerId);
     store.persistSoon(0);
     sendData(response, 200, { id: partnerId, deleted: true });
+    return;
+  }
+
+  if (url.pathname === '/api/admin/resource-packs/fulfill' && request.method === 'POST') {
+    if (!requireAdminToken(request, response)) return;
+    try {
+      const body=await readJsonBody(request);
+      const result=await fulfillAdminResourcePack({...body,db:paymentDb,nearPayment,paymentService,receiver:NEAR_RECEIVER,network:serverConfig.nearNetwork,flush:ids=>playerDb.flushDirtyPlayers(ids)});
+      sendData(response,200,{orderId:result.order.id,status:result.order.status,alreadyGranted:result.alreadyGranted});
+    } catch(error) {sendError(response,error.statusCode||400,error.message||'Pack fulfillment failed',error.code||'PACK_FULFILLMENT_FAILED');}
     return;
   }
 
@@ -3217,7 +4070,7 @@ export async function handleRequest(request, response) {
     if (!requireAdminToken(request, response)) return;
     const body = await readJsonBody(request);
     const code = String(body?.code || '').trim().toUpperCase();
-    const validFields = new Set(['tentacles', 'xp', 'energy', 'premium', 'small_poison', 'medium_poison', 'large_poison']);
+    const validFields = new Set(['tentacles', 'xp', 'energy', 'premium', 'small_poison', 'medium_poison', 'large_poison', 'spin']);
     const rewards = Array.isArray(body?.rewards) ? body.rewards.map((reward) => ({
       type: String(reward?.type || ''),
       amount: Number(reward?.amount),
@@ -3314,7 +4167,7 @@ export async function handleRequest(request, response) {
     if (!requireAdminToken(request, response)) return;
     try {
       const drops = getHolderDrops();
-      sendData(response, 200, drops.map(({ icon, iconMime, ...drop }) => ({ ...drop, iconUrl: icon ? `/api/holder-drop-icon?id=${encodeURIComponent(drop.id)}` : '', iconMime })));
+      sendData(response, 200, drops.map(({ icon, iconMime, ...drop }) => ({ ...drop, delivery: holderDropStatus(drop), iconUrl: icon ? `/api/holder-drop-icon?id=${encodeURIComponent(drop.id)}` : '', iconMime })));
     } catch (error) { sendError(response, 400, error.message, 'HOLDER_DROPS_FAILED'); }
     return;
   }
@@ -3342,6 +4195,13 @@ export async function handleRequest(request, response) {
       }
       if (body?.action === 'preview' || body?.action === 'run' || body?.action === 'resend' || body?.action === 'send-selected' || body?.action === 'send-pet-selected') {
         if (body.action === 'resend' && !String(body.playerId || '').trim()) { sendError(response, 400, 'Player is required for resend', 'HOLDER_PLAYER_REQUIRED'); return; }
+        if (body.background === true) {
+          const drop = getHolderDrop(body.id);
+          if (!drop) { sendError(response,404,'Drop not found','HOLDER_DROP_NOT_FOUND'); return; }
+          if (holderDropStatus(drop).running) { sendError(response,409,'Holder drop is already running','HOLDER_DROP_BUSY'); return; }
+          void processHolderDrop({id:body.id,previewOnly:body.action==='preview',forcePlayerId:body.action==='resend'?String(body.playerId):'',petOnly:body.action==='send-pet-selected',...(['send-selected','send-pet-selected'].includes(body.action)?{playerIds:body.playerIds??[]}:{} )}).catch(error=>console.error('[holder-drops] background operation failed',{id:body.id,message:error.message}));
+          sendData(response,202,{accepted:true,id:body.id});return;
+        }
         const result = await processHolderDrop({ id: body.id, previewOnly: body.action === 'preview', forcePlayerId: body.action === 'resend' ? String(body.playerId) : '', petOnly: body.action === 'send-pet-selected', ...(['send-selected', 'send-pet-selected'].includes(body.action) ? { playerIds: body.playerIds ?? [] } : {}) });
         sendData(response, 200, result); return;
       }
@@ -3404,6 +4264,25 @@ export async function handleRequest(request, response) {
       await store.persistNow();
       sendData(response, 200, { ...next, nftIcon: next.nftIcon ? '/api/nft-holder-campaign/icon?asset=nft' : '', tokenIcon: next.tokenIcon ? '/api/nft-holder-campaign/icon?asset=token' : '' });
     } catch (error) { sendError(response, error.statusCode || 400, error.message || 'Holder campaign failed', error.code || 'HOLDER_CAMPAIGN_FAILED'); }
+    return;
+  }
+
+  if (url.pathname === '/referrals/affiliate' && request.method === 'POST') {
+    const player = getCurrentPlayer(request);
+    if (!player || !Number.isSafeInteger(Number(player.telegram_id)) || Number(player.telegram_id) <= 0) {
+      sendError(response, 401, 'Telegram account required', 'TELEGRAM_AUTH_REQUIRED'); return;
+    }
+    const body = await readJsonBody(request);
+    const bot = process.env.TELEGRAM_BOT_USERNAME || process.env.VITE_TELEGRAM_BOT_USERNAME || 'planet_4bot';
+    let affiliate;
+    try { affiliate = body.url === '' ? {url:'',token:''} : parseAffiliateLink(body.url, bot); }
+    catch { sendError(response, 400, 'Paste your PLANET4 affiliate link from Telegram', 'INVALID_TELEGRAM_AFFILIATE_LINK'); return; }
+    // Only the authenticated player's preferences are changed. Telegram alone
+    // issues/revokes affiliate tokens and decides eligibility and commission.
+    player.telegram_affiliate_url = affiliate.url;
+    player.telegram_affiliate_referrer = affiliate.token;
+    await playerDb.flushDirtyPlayers([player.id]);
+    sendData(response, 200, { affiliateUrl: affiliate.url, referralLink: buildReferralLink(player, bot) });
     return;
   }
 
@@ -3549,6 +4428,8 @@ export async function handleRequest(request, response) {
       const rewardRows = Array.isArray(gift.rewards) ? gift.rewards : [{ field: gift.field, amount: gift.amount }];
       try { giftRewards = normalizeGiftRewards(rewardRows); }
       catch (error) { sendError(response, error.statusCode || 400, error.message, error.code || 'GIFT_INVALID'); return; }
+    } else if (gift.kind === 'mail') {
+      giftRewards = [];
     } else { sendError(response, 400, 'Unsupported gift type', 'GIFT_INVALID'); return; }
     const giftTitle = normalizeGiftMailContent(gift.title, 'Gift', 120);
     const giftText = normalizeGiftMailContent(gift.text, '', 4000);
@@ -3614,15 +4495,16 @@ export async function handleRequest(request, response) {
 
   if ((url.pathname === '/api/admin/players' || url.pathname === '/admin/players') && request.method === 'GET') {
     if (!requireAdminToken(request, response)) return;
-    const { sort = '-created_date', limit = '50', username, playerId, view } = getQuery(url);
+    const { sort = '-created_date', limit = '50', username, playerId, view, q } = getQuery(url);
     let players = playerId ? store.players.filter(player => String(player.id) === String(playerId)) : store.players;
+    if (q) players = filterAdminPlayers(players, q);
     if (username) {
       players = players.filter((player) =>
         `${player.nickname || ''} ${player.username || ''}`.toLowerCase().includes(String(username).toLowerCase())
       );
     }
     players = sortPlayers(players, sort).slice(0, Math.max(1, Math.min(500, Number(limit) || 50)));
-    const listFields = ['id', 'created_by', 'email', 'telegram_id', 'nickname', 'username', 'level', 'xp', 'energy', 'max_energy', 'stat_strength', 'tentacles', 'premium', 'is_banned', 'ban_reason', 'created_at', 'created_date', 'last_login_date', 'clan_id', 'clan_name'];
+    const listFields = ['id', 'created_by', 'email', 'telegram_id', 'near_wallet_id', 'nickname', 'username', 'level', 'xp', 'energy', 'max_energy', 'stat_strength', 'tentacles', 'premium', 'is_banned', 'ban_reason', 'created_at', 'created_date', 'last_login_date', 'clan_id', 'clan_name'];
     sendData(response, 200, view === 'summary'
       ? players.map(player => ({ ...Object.fromEntries(listFields.map(key => [key, player[key]])), _admin_summary: true }))
       : players.map(normalizePlayerProgression));
@@ -3648,12 +4530,41 @@ export async function handleRequest(request, response) {
     return;
   }
 
+  const statementMatch=url.pathname.match(/^\/api\/admin\/players\/([^/]+)\/statement$/);
+  if(statementMatch && request.method==='GET'){
+    if(!requireAdminToken(request,response))return;
+    const player=store.players.find(p=>String(p.id)===decodeURIComponent(statementMatch[1]));
+    if(!player){sendError(response,404,'Player not found','PLAYER_NOT_FOUND');return;}
+    const from=url.searchParams.get('from')||'',to=url.searchParams.get('to')||'';
+    if ((from && !Number.isFinite(Date.parse(from))) || (to && !Number.isFinite(Date.parse(to))) || (from && to && from > to)) { sendError(response,400,'Invalid date range','INVALID_DATE_RANGE'); return; }
+    let events;
+    try { events=await readPlayerAudit(player.id,from,to); } catch (error) { if (error.message === 'EXPORT_LIMIT') { sendError(response,413,'Too many events. Select a shorter period.','EXPORT_LIMIT'); return; } throw error; }
+    sendData(response,200,{schemaVersion:1,exportedAt:new Date().toISOString(),coverage:'Recorded since audit installation; historical events unavailable.',player:{id:player.id,nickname:player.nickname,level:player.level,xp:player.xp},period:{from,to},events,existing:{equipment:player.equipped_items||{},talents:player.talent_levels||{},bossRewardConfig:getBossRewardRuntimeConfig(),bossDailyRewards:player.boss_daily_rewards||{},caRankRewardsClaimed:player.ca_rank_rewards_claimed||[],pendingBossBoxes:player.pending_boss_boxes||[],lootClaimReceipts:player.loot_claim_receipts||[],errors:player.account_error_logs||player.error_logs||[],bossKills:player.boss_kills_by_id||{},inventory:player.weapon_inventory||{}}});return;
+  }
+
+  const adminPetGrant = url.pathname.match(/^\/api\/admin\/players\/([^/]+)\/pets$/);
+  if (adminPetGrant && request.method === 'POST') {
+    if (!requireAdminToken(request, response)) return;
+    const playerId = decodeURIComponent(adminPetGrant[1]);
+    const player = store.players.find(p => String(p.id) === playerId);
+    if (!player) { sendError(response,404,'Player not found','PLAYER_NOT_FOUND'); return; }
+    const body = await readJsonBody(request);
+    let result;
+    try { result = grantPet(player, body?.petId); }
+    catch (error) { sendError(response,error.statusCode || 400,error.message,error.code || 'PET_INVALID'); return; }
+    await playerDb.flushDirtyPlayers();
+    store.persistSoon(0);
+    sendData(response,200,{...result,player:normalizePlayerProgression(player)});
+    return;
+  }
+
   if (url.pathname.startsWith('/api/admin/players/') && url.pathname.endsWith('/equipment-sets') && request.method === 'POST') {
     if (!requireAdminToken(request, response)) return;
     const playerId = decodeURIComponent(url.pathname.split('/').at(-2));
     const player = store.players.find(p => String(p.id) === playerId);
     if (!player) { sendError(response, 404, 'Player not found', 'PLAYER_NOT_FOUND'); return; }
-    const result = grantAllEquipmentSets(player);
+    const body = await readJsonBody(request);
+    const result = body?.setId ? grantEquipmentSet(player, String(body.setId)) : grantAllEquipmentSets(player);
     store.persistSoon(0);
     sendData(response, 200, { ...result, player: normalizePlayerProgression(player) });
     return;
@@ -3729,7 +4640,9 @@ export async function handleRequest(request, response) {
     if (!IS_PRODUCTION && ['epic', 'legendary'].includes(String(body?.battle_pass_tier || ''))) {
       unlockBattlePassTier(player, body.battle_pass_tier);
     }
-    const safePatch = pickSafePlayerPatch(body);
+    let safePatch;
+    try { safePatch = pickAdminPlayerPatch(body, pickSafePlayerPatch(body)); }
+    catch (error) { sendError(response, 400, error.message, 'INVALID_ADMIN_PLAYER_PATCH'); return; }
     if (Object.hasOwn(safePatch, 'equipped_items') && !validateEquipmentLoadout(player, safePatch.equipped_items)) {
       sendError(response, 403, 'Equipment item is not owned', 'EQUIPMENT_NOT_OWNED');
       return;
@@ -3747,7 +4660,7 @@ export async function handleRequest(request, response) {
   if ((url.pathname === '/api/admin/boss-fights/active' || url.pathname === '/admin/boss-fights/active') && request.method === 'GET') {
     if (!requireAdminToken(request, response)) return;
     const { playerEmail } = getQuery(url);
-    const fight = store.bossFights.find((item) => item.status === 'active' && (!playerEmail || item.opened_by_email === playerEmail)) || null;
+    const fight = activeBossFights(store.bossFights).find((item) => item.status === 'active' && (!playerEmail || item.opened_by_email === playerEmail)) || null;
     sendData(response, 200, fight);
     return;
   }
@@ -3757,7 +4670,7 @@ export async function handleRequest(request, response) {
     const parts = url.pathname.split('/').filter(Boolean);
     const fightId = parts[parts.length - 1];
     const body = await readJsonBody(request);
-    const fight = store.bossFights.find((item) => item.id === fightId);
+    const fight = findBossFight(store.bossFights,fightId);
     if (!fight) {
       sendError(response, 404, 'Boss fight not found', 'BOSS_FIGHT_NOT_FOUND');
       return;
@@ -3769,6 +4682,7 @@ export async function handleRequest(request, response) {
       if (!fight.ended_at) fight.ended_at = new Date().toISOString();
     }
     const distribution = resolveBossRewards(fight);
+    checkpointWorldRow('bossFights', fight);
     sendData(response, 200, { ...fight, _distribution: distribution });
     return;
   }
@@ -4169,6 +5083,77 @@ export async function handleRequest(request, response) {
     } catch (error) { sendError(response, 401, error.message, 'WEB_LAUNCH_EXPIRED'); }
     return;
   }
+  if (url.pathname === '/auth/web/telegram' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    const verification = verifyTelegramLoginData(body);
+    if (!verification.ok) {
+      sendError(response, 401, 'Telegram authorization failed', 'TELEGRAM_LOGIN_INVALID');
+      return;
+    }
+    response.setHeader('Set-Cookie', webAuth.createSession({
+      telegramId: String(verification.user.id),
+      username: verification.user.username,
+      isMock: false,
+    }));
+    sendData(response, 200, { authenticated: true });
+    return;
+  }
+  if (url.pathname === '/auth/web/near/challenge' && request.method === 'POST') {
+    try {
+      const challenge = nearWebLogin.challenge(request.headers);
+      response.setHeader('Set-Cookie', challenge.cookie);
+      sendData(response, 200, challenge.data);
+    } catch (error) { sendError(response, error.status || 503, error.message, 'NEAR_LOGIN_UNAVAILABLE'); }
+    return;
+  }
+  if (url.pathname === '/auth/web/near/verify' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    try {
+      const session = await nearWebLogin.verify(request.headers, body, store.players, serverConfig.nearNetwork || 'mainnet');
+      // Recheck after proof verification; concurrent sign-ins must reuse one profile.
+      const matches = store.players.filter(p => String(p.near_wallet_id || '').toLowerCase() === session.nearAccountId);
+      if (matches.length > 1 || matches.some(p => p.is_banned || p.near_wallet_verified !== true)) {
+        sendError(response, 403, 'Wallet account unavailable', 'NEAR_LOGIN_NOT_LINKED'); return;
+      }
+      const guestPlayer = !matches.length && browserSession?.guest
+        ? store.players.find(p => p.guest_account === true && p.created_by === browserSession.email && !p.is_banned) : null;
+      if (guestPlayer) {
+        upgradeGuestToWallet(guestPlayer, session.nearAccountId);
+        session.email = guestPlayer.created_by;
+        await playerDb.flushDirtyPlayers([guestPlayer.id]);
+      } else if (!matches.length) {
+        const player = mergePlayerDefaults({}, { ...session, email: `near_${session.nearAccountId}@miniapp.local` });
+        player.near_wallet_id = session.nearAccountId;
+        player.near_wallet_verified = true;
+        player.near_wallet_verified_at = new Date().toISOString();
+        player.referral_code = resolveReferralCode(player);
+        playerDb.addPlayer(player);
+        await playerDb.flushDirtyPlayers([player.id]);
+      }
+      response.setHeader('Set-Cookie', webAuth.createSession(session));
+      sendData(response, 200, { authenticated: true });
+    } catch (error) { sendError(response, error.status || 502, error.status ? error.message : 'NEAR verification unavailable. Try again.', error.code || 'NEAR_LOGIN_UNAVAILABLE'); }
+    return;
+  }
+  if (url.pathname === '/auth/web/guest' && request.method === 'POST') {
+    if (process.env.GUEST_LOGIN_ENABLED === '0') { sendError(response, 404, 'Guest play is disabled', 'GUEST_DISABLED'); return; }
+    if (browserSession) { sendData(response, 200, { authenticated: true, existing: true }); return; }
+    if (!allowGuestCreation(request)) { sendError(response, 429, 'Too many new guest accounts. Try again later or sign in with NEAR.', 'GUEST_RATE_LIMITED'); return; }
+    const body = await readJsonBody(request);
+    const guestId = webAuth.createGuestId();
+    const session = { telegramId: '', username: `guest_${guestId.slice(-6)}`, guestId, email: `guest_${guestId}@miniapp.local`, isMock: false };
+    const player = mergePlayerDefaults({}, session);
+    player.guest_account = true;
+    player.nickname = `Guest ${guestId.slice(-4).toUpperCase()}`;
+    if (['uk', 'ru', 'en'].includes(body?.language)) player.language = body.language;
+    player.referral_code = resolveReferralCode(player);
+    if (body?.skipTutorial === true) applyPlayerAction(player, { type: 'tutorial-skip' });
+    playerDb.addPlayer(player);
+    await playerDb.flushDirtyPlayers([player.id]);
+    response.setHeader('Set-Cookie', webAuth.createSession(session));
+    sendData(response, 200, { authenticated: true, guest: true });
+    return;
+  }
   if (url.pathname === '/auth/web/logout' && request.method === 'POST') {
     response.setHeader('Set-Cookie', webAuth.clearCookie());
     sendData(response, 200, { loggedOut: true });
@@ -4230,6 +5215,7 @@ export async function handleRequest(request, response) {
   if (url.pathname === '/wallets/near/disconnect' && request.method === 'POST') {
     const player = ensureCurrentPlayer(request);
     if (!player) { sendError(response, 401, 'Player session not found', 'AUTH_REQUIRED'); return; }
+    if (!player.telegram_id) { sendError(response, 409, 'This wallet is the only sign-in method for this account', 'NEAR_ONLY_ACCOUNT'); return; }
     for (const [key, value] of nearWalletChallenges) if (value.playerId === String(player.id)) nearWalletChallenges.delete(key);
     player.near_wallet_id = '';
     player.near_wallet_verified = false;
@@ -4259,6 +5245,7 @@ export async function handleRequest(request, response) {
     const challenge = nearWalletChallenges.get(String(body?.challengeId || ''));
     const signed = body?.signedMessage || {};
     const accountId = String(signed.accountId || '').trim().toLowerCase();
+    if (!player.telegram_id && !player.guest_account && accountId !== player.near_wallet_id) { sendError(response, 409, 'Cannot replace the only sign-in wallet', 'NEAR_ONLY_ACCOUNT'); return; }
     if (!challenge || challenge.playerId !== String(player.id) || challenge.expiresAt < Date.now() || !accountId || !/^[a-z0-9]+(?:[-_.][a-z0-9]+)*$/.test(accountId)) {
       sendError(response, 400, 'Wallet proof expired or invalid', 'NEAR_PROOF_INVALID'); return;
     }
@@ -4272,14 +5259,23 @@ export async function handleRequest(request, response) {
       if (challenge.completedAccount === accountId && challenge.completedKey === signed.publicKey && player.near_wallet_id === accountId && player.near_wallet_verified) {
         sendData(response, 200, { near_wallet_id: accountId, near_wallet_verified: true }); return;
       }
-      const validAccountKey = await verifyNearAccountKey({ publicKey: signed.publicKey, accountId, network: serverConfig.nearNetwork || 'mainnet' });
+      // External RPC must not block gameplay or cancellation for this player.
+      releasePlayerAction?.();releasePlayerAction=null;
+      let validAccountKey;
+      try { validAccountKey=await verifyNearAccountKey({ publicKey: signed.publicKey, accountId, network: serverConfig.nearNetwork || 'mainnet' }); }
+      finally { releasePlayerAction=await acquireKeyLock('action-player:'+player.id); }
       if (!validAccountKey) { sendError(response, 400, 'Wallet signature could not be verified', 'NEAR_PROOF_INVALID'); return; }
       if (challenge.expiresAt < Date.now() || nearWalletChallenges.get(String(body.challengeId)) !== challenge) { sendError(response, 400, 'Wallet proof expired or invalid', 'NEAR_PROOF_INVALID'); return; }
       const linked = (store.players || []).find((candidate) => String(candidate.near_wallet_id || '').toLowerCase() === accountId && String(candidate.id) !== String(player.id));
       if (linked) { sendError(response, 409, 'This wallet is linked to another game account', 'NEAR_WALLET_ALREADY_LINKED'); return; }
-      player.near_wallet_id = accountId;
-      player.near_wallet_verified = true;
-      player.near_wallet_verified_at = new Date().toISOString();
+      if (player.guest_account) {
+        upgradeGuestToWallet(player, accountId);
+        response.setHeader('Set-Cookie', webAuth.createSession({ telegramId: '', username: player.username || accountId, nearAccountId: accountId, isMock: false }));
+      } else {
+        player.near_wallet_id = accountId;
+        player.near_wallet_verified = true;
+        player.near_wallet_verified_at = new Date().toISOString();
+      }
       await playerDb.flushDirtyPlayers([player.id]);
       challenge.completedAccount = accountId;
       challenge.completedKey = signed.publicKey;
@@ -4510,9 +5506,10 @@ export async function handleRequest(request, response) {
   }
 
   if (url.pathname === '/players' && request.method === 'GET') {
-    const { sort = '-created_date', limit = '50', username } = getQuery(url);
+    const { sort = '-created_date', limit = '50', username, id } = getQuery(url);
     const referralCounts = getPlayerReferralCounts();
     let players = sortPlayers(store.players, sort);
+    if (id) players = players.filter((player) => String(player.id) === String(id));
 
     if (username) {
       players = players.filter((player) =>
@@ -4526,6 +5523,7 @@ export async function handleRequest(request, response) {
   }
 
   if (url.pathname === '/clans' && request.method === 'GET') {
+    const directory = await clanDirectoryCache.get('clans', () => {
     const knownKeys = new Set(store.players.map((player) => player.clan_id || player.clan_name).filter(Boolean));
     knownKeys.forEach((key) => ensureClanRecord(key));
     const clanByKey = new Map();
@@ -4561,7 +5559,9 @@ export async function handleRequest(request, response) {
       const existing = uniqueClans.get(key);
       if (!existing || clan.members > existing.members) uniqueClans.set(key, clan);
     }
-    sendData(response, 200, [...uniqueClans.values()]);
+    return [...uniqueClans.values()];
+    });
+    sendData(response, 200, directory);
     return;
   }
 
@@ -4632,6 +5632,7 @@ export async function handleRequest(request, response) {
 
   if (url.pathname === '/clans' && request.method === 'POST') {
     const player = ensureCurrentPlayer(request);
+    if (player?.guest_account) { sendError(response, 403, 'Link a NEAR wallet to create a clan', 'GUEST_CLAN_RESTRICTED'); return; }
     const body = await readJsonBody(request);
     const name = String(body.clan_name || '').trim().slice(0, 40);
     const id = String(body.clan_id || name.toLowerCase().replace(/\s+/g, '-')).trim().slice(0, 64);
@@ -4654,6 +5655,7 @@ export async function handleRequest(request, response) {
     const clan = { id, name, owner_id: player.id, description: String(body.clan_description || '').slice(0, 300), logo_id: String(body.clan_logo_id || ''), join_type: 'open', min_level: 1, applications: [], activity_log: [], clan_mail: [], achievements: createClanAchievements(), quests: [], energy_requests: [], created_at: new Date().toISOString() };
     store.clans.push(clan);
     player.tentacles -= 10000;
+    clanDirectoryCache.clear();
     Object.assign(player, { clan_id: id, clan_name: name, clan_role: 'leader', clan_description: clan.description, clan_logo_id: clan.logo_id, clan_joined_at: new Date().toISOString() });
     store.persistSoon();
     sendData(response, 201, { clan: serializeClan(clan), player: normalizePlayerProgression(player) });
@@ -4669,6 +5671,7 @@ export async function handleRequest(request, response) {
       sendError(response, 404, 'Clan not found', 'CLAN_NOT_FOUND');
       return;
     }
+    if (action === 'join' && player.guest_account) { sendError(response, 403, 'Link a NEAR wallet to join a clan', 'GUEST_CLAN_RESTRICTED'); return; }
     if (action === 'join') {
       if (player.clan_id || player.clan_name) {
         sendError(response, 409, 'Leave your current clan first', 'CLAN_ALREADY_JOINED');
@@ -4739,7 +5742,7 @@ export async function handleRequest(request, response) {
       return;
     }
     if (String(quest.owner_id) === String(player.id) || (quest.participants || []).map(String).includes(String(player.id))) {
-      sendError(response, 409, 'Already participating in this quest', 'CLAN_QUEST_ALREADY_JOINED');
+      sendData(response, 200, quest);
       return;
     }
     quest.participants = [...(quest.participants || []), player.id];
@@ -4789,16 +5792,15 @@ export async function handleRequest(request, response) {
       sendError(response, 404, 'Clan not found', 'CLAN_NOT_FOUND');
       return;
     }
-    expireClanQuests(clan);
+    const questsExpired = expireClanQuests(clan);
     const resource = clanResourceMatch[2];
     if (request.method === 'GET') {
       if (resource === 'quests') {
-        const viewer = getCurrentPlayer(request);
+        const viewer = getCurrentPlayer(request, {materialize:false});
         const reconciledDonations = reconcileLegacyClanDonationQuests(clan);
         const questState = getClanAchievementState('quests', clan.achievements?.quests);
         const offers = isClanMember(viewer, clan) ? getClanQuestOffers(viewer, clan, questState.benefit.maxTier) : [];
-        if (reconciledDonations) store.persistSoon(0);
-        else store.persistSoon();
+        if (reconciledDonations || questsExpired) store.persistSoon(0);
         sendData(response, 200, { quests: clan.quests || [], offers });
       }
       else if (resource === 'energy-requests') {
@@ -4998,7 +6000,7 @@ export async function handleRequest(request, response) {
     } else if (action === 'mail' || action === 'announcement') {
       const title = String(body.title || '').trim().slice(0, 80); const text = String(body.text || '').trim().slice(0, 500);
       if (!title || !text) { sendError(response, 400, 'Title and text required', 'CLAN_MAIL_REQUIRED'); return; }
-      if (action === 'mail' && (clan.clan_mail || []).filter((entry) => Date.now() - Date.parse(entry.created_at || '') < 86400000).length >= 3) { sendError(response, 429, 'Daily clan mail limit reached', 'CLAN_MAIL_LIMIT'); return; }
+      if (action === 'mail' && (clan.clan_mail || []).filter((entry) => Number.isFinite(Date.parse(entry.created_at)) && kyivDayKey(entry.created_at) === kyivDayKey()).length >= 3) { sendError(response, 429, 'Daily clan mail limit reached', 'CLAN_MAIL_LIMIT'); return; }
       const mail = { id: store.generateId('clan-mail'), title, text, tag: String(body.tag || 'ВАЖЛИВО').slice(0, 20), author: clanActorName(player), author_id: player.id, author_role: CLAN_ROLE_META[actorRole].label, created_at: new Date().toISOString() };
       if (action === 'announcement') clan.pinned_announcement = mail;
       else { clan.clan_mail = [...(clan.clan_mail || []), mail]; members().forEach((entry) => { entry.clan_mail = [...(entry.clan_mail || []), { ...mail, clan: clan.name }].slice(-30); }); }
@@ -5039,10 +6041,12 @@ export async function handleRequest(request, response) {
   const clanMembersMatch = url.pathname.match(/^\/clans\/([^/]+)\/members$/);
   if (clanMembersMatch && request.method === 'GET') {
     const clanKey = decodeURIComponent(clanMembersMatch[1]).trim();
+    const memberClan=ensureClanRecord(clanKey);
+    if(!memberClan){sendData(response,200,[]);return;}
     const members = store.players
       .filter((player) => String(player.clan_id || '') === clanKey || String(player.clan_name || '') === clanKey)
-      .sort((a, b) => getPowerForLeaderboard(b) - getPowerForLeaderboard(a))
-      .map(normalizePlayerProgression);
+      .map(player=>clanMemberPayload(player,memberClan))
+      .sort((a, b) => b.power - a.power);
     sendData(response, 200, members);
     return;
   }
@@ -5155,6 +6159,7 @@ export async function handleRequest(request, response) {
       target.puddle_senders = puddleSenders;
     }
     target.dislikes_received_count = Number(target.dislikes_received_count || 0) + 1;
+    reconcilePlayerAchievements(target, now);
     if (!target.puddle_active) {
       target.puddle_active = true;
       target.puddle_created_at = new Date(now).toISOString();
@@ -5196,6 +6201,7 @@ export async function handleRequest(request, response) {
       contributions.push({ sender_id: actor.id, created_at: new Date().toISOString(), reward });
       target.like_box = { contributions, updated_at: new Date().toISOString() };
       target.likes_received_count = Math.max(Number(target.likes_received_count || 0), previousUniqueSenders.size) + 1;
+      reconcilePlayerAchievements(target, now);
       grantEnergyGain(actor, 10, 'like_sender_reward');
       actor.social_reaction_log = [...reactionLog, { target_id: target.id, type: 'like', created_at: new Date(now).toISOString() }];
       added = true;
@@ -5279,9 +6285,11 @@ export async function handleRequest(request, response) {
 
     if (body?.claimCARankReward) {
       try {
+        if (!releasePlayerAction) releasePlayerAction = await acquireKeyLock('action-player:' + player.id);
         const requestedRank = Number(body.claimCARankReward.rank);
-        const reward = claimCARankReward(player, requestedRank);
-        queueDirtyPlayerFlush(player.id);
+        const reward = await claimCARankRewardDurable({store,player,rank:requestedRank,apply:claimCARankReward});
+        dirtyPlayerFlushQueued = true;
+        shouldPersistGlobalState = false;
         sendData(response, 200, { ...normalizePlayerProgression(player), claimedCARank: requestedRank, claimedReward: reward });
       } catch (error) {
         sendError(response, error.statusCode || 400, error.message || 'Could not claim CA rank reward', error.code || 'CA_RANK_REWARD_CLAIM_FAILED');
@@ -5291,7 +6299,7 @@ export async function handleRequest(request, response) {
 
     if (body?.playerAction) {
       try {
-        const result = body.playerAction.type === 'reset-talents' ? resetPlayerTalents(player) : body.playerAction.type === 'redeem-promo' ? redeemPromoCode(player, body.playerAction.code, store.promoCodes || []) : applyPlayerAction(player, body.playerAction);
+        const result = body.playerAction.type === 'reset-talents' ? resetPlayerTalents(player) : body.playerAction.type === 'redeem-promo' ? redeemPromoCode(player, body.playerAction.code, store.promoCodes || []) : applyPlayerAction(player, body.playerAction, { halloweenClanTotal: body.playerAction.type === 'halloween-clan' && player.clan_id ? store.players.filter(p => String(p.clan_id || '') === String(player.clan_id)).reduce((sum, p) => sum + Number(halloweenState(p).activityEarned || 0), 0) : 0 });
         queueDirtyPlayerFlush(player.id);
         if (body.playerAction.type === 'redeem-promo') store.persistSoon(0);
         shouldPersistGlobalState = false;
@@ -5330,6 +6338,23 @@ export async function handleRequest(request, response) {
         sendError(response, 400, error.message, 'BATTLE_PASS_ACTION_FAILED');
       }
       return;
+    }
+
+    if (Object.hasOwn(body || {}, 'equipProfileHeaderTheme')) {
+      const theme = body.equipProfileHeaderTheme;
+      const chapter = typeof theme === 'string' && !theme.startsWith('friday13_') && Object.hasOwn(PROFILE_HEADER_THEMES, theme)
+        ? getDossierChapters(theme).find(chapter => chapter.tier === 'gold') : null;
+      if (theme !== null && ((typeof theme === 'string' && theme.startsWith('friday13_guild_')) || (!(player.unlocked_profile_banners || []).includes(theme) && (!chapter || !dossierChapterUnlocked(player, chapter))))) {
+        sendError(response, 403, 'Profile frame is locked', 'PROFILE_HEADER_LOCKED');
+        return;
+      }
+      player.profile_header_theme = theme;
+      sendData(response, 200, normalizePlayerProgression(player));
+      return;
+    }
+    if(body?.armorIntroSeen===true){player.boss_armor_intro_seen=true;sendData(response,200,normalizePlayerProgression(player));return;}
+    if (body?.advancedAttack) {
+      try { setAdvancedAttack(player,body.advancedAttack.id,body.advancedAttack.enabled);sendData(response,200,normalizePlayerProgression(player)); } catch(error){sendError(response,400,error.message,'ADVANCED_ATTACK_LOCKED');}return;
     }
 
     if (body?.talentUpgrade?.id) {
@@ -5372,7 +6397,8 @@ export async function handleRequest(request, response) {
         return;
         }
         for (const reward of pendingReward.rewards || [pendingReward]) {
-          applyRouletteReward(player, reward);
+          if (reward.type === 'halloween_pumpkin') grantHalloweenPumpkins(player, reward.amount || 1);
+          else applyRouletteReward(player, reward);
           if (reward.type === 'tentacles') recordBattlePassEvent(player, { type: 'earnedDm', source: 'reward', amount: reward.amount });
         }
         player.last_energy_update = new Date().toISOString();
@@ -5510,9 +6536,30 @@ export async function handleRequest(request, response) {
       return;
     }
     const mission = GAME_CONFIG.TASKS.find((task) => task.id === missionId);
+    const count = body.count ?? 1;
+    const quest = getQuestMission(missionId);
+    const canCrossLoop = body.batchMode === 'ten' && count <= 10 && !missionId.endsWith('-final');
+    if (!Number.isInteger(count) || count < 1 || count > 20 || (count > 1 && (!quest || (!canCrossLoop && count > quest.target - (Number(player.task_completions?.[missionId] || 0) % quest.target))))) {
+      sendError(response, 400, 'Invalid mission batch', 'MISSION_COUNT_INVALID');
+      return;
+    }
+    if (count > 1 && Number(player.energy || 0) < quest.energy * count) {
+      sendError(response, 400, 'Not enough energy', 'NOT_ENOUGH_ENERGY');
+      return;
+    }
     let result;
     try {
-      result = mission ? applyMission(player, mission.id) : applyQuestMission(player, body?.task || {});
+      const results = [];
+      for (let index = 0; index < count; index += 1) {
+        results.push(mission ? applyMission(player, mission.id) : applyQuestMission(player, body?.task || {}));
+      }
+      result = count === 1 ? results[0] : {
+        ...results.at(-1), completedCount: results.length,
+        pumpkins: results.reduce((sum, entry) => sum + Number(entry.pumpkins || 0), 0),
+        spentEnergy: results.reduce((sum, entry) => sum + Number(entry.spentEnergy || 0), 0),
+        gainedTentacles: results.reduce((sum, entry) => sum + Number(entry.gainedTentacles || 0), 0),
+        gainedXp: results.reduce((sum, entry) => sum + Number(entry.gainedXp || 0), 0),
+      };
     } catch (error) {
       const status = error?.code === 'NOT_ENOUGH_ENERGY' ? 400 : 404;
       sendError(response, status, error?.message || 'Mission failed', error?.code || 'MISSION_FAILED');
@@ -5555,13 +6602,19 @@ export async function handleRequest(request, response) {
   }
 
   if (url.pathname === '/chat/messages' && request.method === 'GET') {
-    const player = ensureCurrentPlayer(request);
+    const player = getCurrentPlayer(request, {materialize:false});
     const { channel = 'world', limit = '50', scope = '' } = getQuery(url);
     const safeChannel = channel === 'clan' ? 'clan' : 'world';
-    const playerClan = String(player?.clan_name || '').trim();
-    const includeAll = scope === 'all';
+    const chatClan = getClanForPlayer(player);
+    const playerClan = String(chatClan?.name || player?.clan_name || '').trim();
+    const includeAll = scope === 'all' && isAdminSession(getSessionFromHeaders(request.headers));
+    if(safeChannel==='clan'&&!chatClan&&!includeAll){sendError(response,403,'Clan membership required','CLAN_MEMBERSHIP_REQUIRED');return;}
     const safeLimit = Math.max(1, Math.min(100, Number(limit) || 50));
     const canViewRestricted = safeChannel === 'clan' && canManageClan(player, getClanForPlayer(player));
+    // Ordinary clan chat does not need a ship-state database round trip.
+    // Resolve ship invitations only when one is present in the requested chat.
+    const hasShipInvite=safeChannel==='clan'&&chatClan&&store.chatMessages.some(message=>message.channel==='clan'&&message.kind==='ship_boss_invite'&&String(message.clan||'').trim()===playerClan);
+    if (hasShipInvite) void createClanShipService({store}).read(chatClan,player,{recoverPayments:false,includeView:false}).catch(error=>console.warn('[chat] background ship refresh failed',{message:error.message}));
     const activeFightIds = new Set(store.bossFights.filter(isActiveBossFight).map((fight) => String(fight.id)));
     const playerById = new Map(store.players.map((entry) => [String(entry.id), entry]));
     const recentMessages = [];
@@ -5570,12 +6623,23 @@ export async function handleRequest(request, response) {
       if (message.channel !== safeChannel) continue;
       if (!includeAll && safeChannel === 'clan' && playerClan && String(message?.clan || '').trim() !== playerClan) continue;
       if (message.restricted && !canViewRestricted) continue;
+      if (message.kind === 'ship_boss_invite') {
+        const f=chatClan?.ship?.fights?.[message.bossFightInvite?.moduleId];
+        if(safeChannel!=='clan'||message.bossFightInvite?.clanId!==chatClan?.id||f?.id!==message.bossFightInvite?.fightId||f.status!=='active'||f.current_hp<=0||Date.parse(f.ends_at)<=Date.now())continue;
+      }
       if (message.kind === 'boss_fight_invite' && !activeFightIds.has(String(message.bossFightInvite?.fightId || ''))) continue;
       recentMessages.push(message);
     }
-    const messages = recentMessages.reverse()
+    const announcements = safeChannel === 'world' ? releaseAnnouncements.listForChat(player?.id) : [];
+    const messages = [...recentMessages.reverse(), ...announcements]
       .map((message) => normalizeChatMessage(message, player, playerById))
-      .sort((a, b) => (Date.parse(a.created_at || '') || 0) - (Date.parse(b.created_at || '') || 0));
+      .sort((a, b) => (Date.parse(a.created_at || '') || 0) - (Date.parse(b.created_at || '') || 0)).slice(-safeLimit);
+    // Keep the latest patch accessible even after ordinary chat scrolls past it.
+    const latestAnnouncement=announcements[0];
+    if(latestAnnouncement&&!messages.some(message=>message.id===latestAnnouncement.id)){
+      if(messages.length>=safeLimit)messages.shift();
+      messages.unshift(normalizeChatMessage(latestAnnouncement,player,playerById));
+    }
 
     sendData(response, 200, messages);
     return;
@@ -5602,9 +6666,18 @@ export async function handleRequest(request, response) {
     if (body.replyToId && !reply) { sendError(response, 400, 'Reply target unavailable', 'CHAT_REPLY_INVALID'); return; }
     const inviteClan = body.kind === 'clan_invite' ? getClanForPlayer(player) : null;
     let bossFightInvite = null;
+    if (body.kind === 'ship_boss_invite') {
+      const clan=getClanForPlayer(player);
+      if(channel!=='clan'||!clan){sendError(response,403,'Clan membership required','CLAN_REQUIRED');return;}
+      await createClanShipService({store}).read(clan,player,{recoverPayments:false});
+      const f=clan.ship?.fights?.[String(body.bossFightInvite?.moduleId||'')];
+      if(!f||f.id!==body.bossFightInvite?.fightId||f.status!=='active'||f.current_hp<=0||Date.parse(f.ends_at)<=Date.now()){sendError(response,409,'Ship fight is no longer active','SHIP_FIGHT_NOT_ACTIVE');return;}
+      if(store.chatMessages.some(m=>m.kind==='ship_boss_invite'&&m.bossFightInvite?.fightId===f.id)){sendError(response,409,'The clan has already been invited','BOSS_FIGHT_INVITE_ALREADY_SENT');return;}
+      bossFightInvite={fightId:f.id,bossId:f.boss_id,moduleId:f.moduleId,clanId:clan.id,ship:true,clanLogoId:clan.logo_id||''};
+    }
     if (body.kind === 'boss_fight_invite') {
       const fightId = String(body.bossFightInvite?.fightId || '');
-      const fight = store.bossFights.find((entry) => String(entry.id) === fightId);
+      const fight = findBossFight(store.bossFights,fightId);
       if (channel !== 'clan' || !fight || !isActiveBossFight(fight) || String(fight.opened_by_email || '').toLowerCase() !== String(player.created_by || '').toLowerCase()) {
         sendError(response, 403, 'Only the player who started an active fight can invite the clan', 'BOSS_FIGHT_INVITE_FORBIDDEN');
         return;
@@ -5614,14 +6687,16 @@ export async function handleRequest(request, response) {
         sendError(response, 409, 'The clan has already been invited to this boss fight', 'BOSS_FIGHT_INVITE_ALREADY_SENT');
         return;
       }
-      bossFightInvite = { fightId: fight.id, bossId: fight.boss_id, bossName: fight.boss_name || getBossById(fight.boss_id)?.name || '', clanLogoId: player.clan_logo_id || '' };
+      const inviteClanRecord=getClanForPlayer(player);
+      if(!inviteClanRecord){sendError(response,403,'Clan membership required','CLAN_REQUIRED');return;}
+      bossFightInvite = { clanId:inviteClanRecord.id, fightId: fight.id, bossId: fight.boss_id, bossName: fight.boss_name || getBossById(fight.boss_id)?.name || '', clanLogoId: player.clan_logo_id || '' };
     }
     if (body.kind === 'clan_invite' && (!inviteClan || channel !== 'world')) { sendError(response, 403, 'Clan membership required', 'CLAN_REQUIRED'); return; }
     if (inviteClan && !canManageClan(player, inviteClan)) { sendError(response, 403, 'Leader or deputy required', 'NO_PERMISSION'); return; }
     if (inviteClan && store.chatMessages.some(entry => entry.kind === 'clan_invite' && entry.clanInvite?.id === inviteClan.id && Date.now() - Date.parse(entry.created_at) < 20 * 60000)) { sendError(response, 429, 'Wait 20 minutes before inviting again', 'CHAT_INVITE_COOLDOWN'); return; }
     const createdAt = new Date().toISOString();
     const message = {
-      kind: inviteClan ? 'clan_invite' : bossFightInvite ? 'boss_fight_invite' : 'text',
+      kind: inviteClan ? 'clan_invite' : bossFightInvite?.ship ? 'ship_boss_invite' : bossFightInvite ? 'boss_fight_invite' : 'text',
       clanInvite: inviteClan ? { id: inviteClan.id, name: inviteClan.name, logoId: inviteClan.logo_id, level: Number(inviteClan.level || 0) } : undefined,
       bossFightInvite,
       reply: reply ? { id: reply.id, author: reply.author, text: reply.text.slice(0, 120) } : undefined,
@@ -5639,8 +6714,8 @@ export async function handleRequest(request, response) {
 
     store.chatMessages.push(message);
     if (bossFightInvite) {
-      const fight = store.bossFights.find((entry) => String(entry.id) === String(bossFightInvite.fightId));
-      if (fight) fight.clan_invite_sent_at = createdAt;
+      const fight = findBossFight(store.bossFights,bossFightInvite.fightId);
+      if (fight) { fight.solo = false;fight.clan_invite_sent_at = createdAt;fight.clan_invite_clan_id=bossFightInvite.clanId;fight.clan_invite_clan_name=player.clan_name||''; }
       store.persistSoon(0);
     }
     sendData(response, 201, normalizeChatMessage(message, player));
@@ -5664,12 +6739,28 @@ export async function handleRequest(request, response) {
     let receipt;
     try { receipt = purchaseEventPoison(store.players, player, body); }
     catch (error) { sendError(response, 400, error.message, 'POISON_SHOP_PURCHASE_FAILED'); return; }
-    await playerDb.flushDirtyPlayers([player.id]);
-    sendData(response, 200, { receipt, shop: poisonShopState(store.players) });
+    queueDirtyPlayerFlush(player.id);
+    sendData(response, 200, { receipt, shop: poisonShopState(store.players), player: normalizePlayerProgression(player) });
     return;
   }
   if (url.pathname === '/raid-boss' && request.method === 'GET') {
     sendData(response, 200, store.raidBoss ? { ...store.raidBoss, started_at: EVENT_SCHEDULE['raid-boss'].startAt, ends_at: EVENT_SCHEDULE['raid-boss'].endAt, event_phase: eventPhase('raid-boss') } : null);
+    return;
+  }
+
+  if (url.pathname === '/events/halloween' && request.method === 'GET') {
+    if (!FEATURE_FLAGS.halloween) { sendError(response, 404, 'Event is not available', 'EVENT_INACTIVE'); return; }
+    const player = ensureCurrentPlayer(request);
+    if (!player) { sendError(response, 401, 'Authentication required', 'AUTH_REQUIRED'); return; }
+    const rewardedPlayers = awardHalloweenRankRewards(store.players);
+    if (rewardedPlayers.length) queueDirtyPlayerFlush();
+    const rows = store.players.map(p => { const event = halloweenState(p); return { id: p.id, nickname: p.nickname || p.username || 'Player', avatar: p.avatar || p.photo_url || p.photoUrl || '', avatar_frame_id: p.avatar_frame_id || '', profile_header_theme: p.profile_header_theme || null, earned: event.earned, activityEarned: Number(event.activityEarned || 0), clan_id: p.clan_id || null, clan_name: p.clan_name || '' }; });
+    rows.sort((a, b) => b.activityEarned - a.activityEarned || String(a.id).localeCompare(String(b.id)));
+    sendData(response, 200, { active: halloweenActive(), shopOpen: halloweenShopOpen(), config: HALLOWEEN, state: halloweenState(player),
+      leaderboard: rows.slice(0, 100),
+      rank: rows.findIndex(row => String(row.id) === String(player.id)) + 1,
+      serverTotal: rows.reduce((sum, row) => sum + row.activityEarned, 0),
+      clanTotal: rows.filter(row => player.clan_id && String(row.clan_id) === String(player.clan_id)).reduce((sum, row) => sum + row.activityEarned, 0) });
     return;
   }
 
@@ -5682,6 +6773,7 @@ export async function handleRequest(request, response) {
         if (latestByBoss.has(fight.boss_id)) return;
         const winner = store.players.find((player) => String(player.created_by) === String(fight.opened_by_email));
         latestByBoss.set(fight.boss_id, {
+          ...(winner ? publicPlayerProfile(winner) : {}),
           player_id: winner?.id || '',
           name: winner?.nickname || winner?.username || 'player',
           avatar: winner?.avatar || winner?.photoUrl || winner?.photo_url || '',
@@ -5705,7 +6797,8 @@ export async function handleRequest(request, response) {
           hits: Number(contribution?.hits || 0),
           clan_name: player?.clan_name || '',
           clan_logo_id: player?.clan_logo_id || '',
-          battle_pass_tier: player ? normalizePlayerProgression(player).battle_pass_view?.tier || 'free' : 'free',
+          battle_pass_tier: getActiveBattlePassTier(player),
+          profile_header_theme: player?.profile_header_theme || null,
           avatar: player?.avatar || player?.photoUrl || '',
           avatar_frame_id: player?.avatar_frame_id || 'frame1',
         };
@@ -5716,8 +6809,11 @@ export async function handleRequest(request, response) {
   }
 
   if (url.pathname === '/raid-boss/attack' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    response.markCombatHttp?.('http_route_body');
+    const runRaidPress = (response, body) => {
     if (eventPhase('raid-boss') !== 'active') { sendError(response, 409, 'Raid event is not active', 'EVENT_INACTIVE'); return; }
-    const player = ensureCurrentPlayer(request);
+    const player = ensureCurrentPlayer(request, { syncReferrals: false });
     if (!player) {
       sendError(response, 401, 'Player session not found', 'AUTH_REQUIRED');
       return;
@@ -5738,7 +6834,6 @@ export async function handleRequest(request, response) {
       return;
     }
 
-    const body = await readJsonBody(request);
     Object.assign(player, migrateTalentTreeState(player));
     const weapon = getWeaponById(body.weaponId);
     if (!weapon) {
@@ -5746,9 +6841,9 @@ export async function handleRequest(request, response) {
       return;
     }
     const effectiveWeapon = buildEffectiveWeapon(weapon, player);
-    const poisonInventoryId = { satchel: 'small-poison', f4: 'medium-poison', c4: 'large-poison' }[effectiveWeapon.id];
+    const poisonInventoryId = getCombatPoisonSlot(effectiveWeapon.id);
     const requestedMultiplier = Number(body.multiplier);
-    const attackCount = poisonInventoryId && (requestedMultiplier === 10 || requestedMultiplier === 100) ? requestedMultiplier : 1;
+    const attackCount = poisonInventoryId && ([5, 10, 100].includes(requestedMultiplier)) ? requestedMultiplier : 1;
     if (!localTester && poisonInventoryId && Number((player.weapon_inventory || {})[poisonInventoryId] || 0) < attackCount) {
       sendError(response, 400, 'Not enough poison in inventory', 'NOT_ENOUGH_POISON');
       return;
@@ -5767,35 +6862,30 @@ export async function handleRequest(request, response) {
     const raidState = allyTier > previousAllyTier && Number(player.talent_levels?.t59 || 0) > 0
       ? { ...previousRaidState, lastAllyDamageTier: allyTier, pendingAllyBonus: Number(previousRaidState.pendingAllyBonus || 0) + (allyTier - previousAllyTier) * Number(player.talent_levels.t59) * 5 }
       : previousRaidState;
-    let raidCombat = null;
-    let raidTalentDamage = 0;
-    let raidRuntimeState = raidState;
-    for (let index = 0; index < attackCount; index += 1) {
-      raidCombat = resolveTalentAttack({ weapon: effectiveWeapon, levels: Number(player.talent_tree_version || 0) >= 2 ? (player.talent_levels || {}) : {}, state: raidRuntimeState, fight: raidBoss, player, now: Date.now() + index });
-      raidRuntimeState = raidCombat.state;
-      raidTalentDamage += raidCombat.damage + raidCombat.bleedDamage + raidCombat.repeatDamage;
-    }
-    const isCrit = Boolean(raidCombat?.isCrit);
-    const damage = Math.max(1, Math.floor(raidTalentDamage * (1 + Number(effectiveWeapon.equipmentBossDamagePct || 0)) * (poisonInventoryId ? getClanPoisonMultiplier(player) : 1)));
+    const raidLevels = Number(player.talent_tree_version || 0) >= 2 ? player.talent_levels || {} : {};
+    const raidCombat = resolveBossHit({ player, weapon: effectiveWeapon, levels: raidLevels, state: raidState,
+      fight: raidBoss, clan: getClanForPlayer(player), count: attackCount });
+    const { isCrit, damage } = raidCombat;
     player.talent_combat_state = { ...(player.talent_combat_state || {}), [raidFightKey]: raidCombat.state };
+    trackActiveBleedPlayer(player);
     if (isCrit && effectiveWeapon.id === 'fist' && Number(player.talent_levels?.t14 || 0) > 0 && Number(effectiveWeapon.cooldownMin || 0) > 0) {
       const reducedElapsedMs = Number(effectiveWeapon.cooldownMin) * 60000 * Math.min(.1, Number(player.talent_levels.t14) * .01);
       player.weapon_cooldowns = { ...(player.weapon_cooldowns || {}), fist: new Date(Date.now() - reducedElapsedMs).toISOString() };
     }
+    applyTalentCooldownResets(player,raidCombat);
     let poisonUsed = 0;
     if (poisonInventoryId) {
-      const savedUses = Array.from({ length: attackCount }).filter(() => Math.random() < Number(effectiveWeapon.saveChance || 0)).length;
-      poisonUsed = localTester ? 0 : attackCount - savedUses;
+      const consumed = raidCombat.refundBatch ? 0 : countConsumedPoison(attackCount, effectiveWeapon.saveChance);
+      poisonUsed = localTester ? 0 : consumed;
       if (!localTester) {
         player.weapon_inventory = { ...(player.weapon_inventory || {}), [poisonInventoryId]: Math.max(0, Number((player.weapon_inventory || {})[poisonInventoryId] || 0) - poisonUsed) };
       }
     }
+    const raidLastPoisonSaved = !localTester && Boolean(poisonInventoryId) && attackCount === 1 && poisonUsed === 0 && poisonCount(player) === 1;
     const raidPreviousHp = Number(raidBoss.current_hp || 0);
-    raidBoss.current_hp = Math.max(0, raidPreviousHp - damage);
+    raidBoss.current_hp = Math.max(0, raidPreviousHp - damage); raidBoss.combat_revision = (Number(raidBoss.combat_revision) || 0) + 1;
     player.talent_combat_state[raidFightKey] = registerHpThresholds(player.talent_combat_state[raidFightKey], raidPreviousHp, Number(raidBoss.current_hp || 0), Number(raidBoss.max_hp || 1));
-    if (isCrit && Number(player.talent_levels?.t48 || 0) > 0 && Math.random() < Number(player.talent_levels.t48) * .02) {
-      refundCombatEnergy(player, 10);
-    }
+    refundCriticalEnergy(player, isCrit, Number(player.talent_tree_version || 0) >= 2 ? player.talent_levels : {});
     raidBoss.participants = { ...(raidBoss.participants || {}) };
     const contribution = raidBoss.participants[player.id] || { name: player.nickname || player.username || 'player', damage: 0, hits: 0, poison_used: 0, poison_tracking_complete: true };
     contribution.damage += damage;
@@ -5803,6 +6893,7 @@ export async function handleRequest(request, response) {
     contribution.poison_used = Number(contribution.poison_used || 0) + poisonUsed;
     if (contribution.poison_tracking_complete !== true) contribution.poison_tracking_complete = false;
     raidBoss.participants[player.id] = contribution;
+    recordAchievementDamage({ fight: raidBoss, player, players: store.players, hpBefore: raidPreviousHp, damage: Math.min(raidPreviousHp, damage), weaponId: effectiveWeapon.id, lastPoisonSaved: raidLastPoisonSaved });
     if (raidBoss.current_hp <= 0) {
       raidBoss.status = 'defeated';
       raidBoss.defeated_at = new Date().toISOString();
@@ -5810,31 +6901,43 @@ export async function handleRequest(request, response) {
     player.raid_boss_hits_today = Number(player.raid_boss_hits_today || 0) + attackCount;
     progressClanQuestMetric(getClanForPlayer(player), player, 'hits', attackCount);
     addClanBossDamage(player, damage);
-    recordBattlePassEvent(player, { type: 'boss', damage, raid: true, smallPoison: effectiveWeapon.id === 'satchel' });
-    awardTalentProgressV2(player, damage);
+    recordBattlePassEvent(player, { type: 'boss', damage, raid: true, smallPoison: !raidCombat?.blocked && effectiveWeapon.id === 'satchel' });
+    if (poisonInventoryId) awardTalentProgressV2(player, Math.min(raidPreviousHp, raidCombat.poisonDamage));
     store.persistSoon();
     const fight = { ...raidBoss, boss_id: 'heli', boss_name: raidBoss.name || 'Raid Boss' };
     sendData(response, 200, {
       raidBoss,
       fight,
       damage,
-      hit: { damage, isCrit },
+      hit: { damage, isCrit, boneCurseApplied: raidCombat?.boneCurseApplied ?? false },
       playerDamageLog: { damage: contribution.damage, hits: contribution.hits },
-      player: normalizePlayerProgression(player),
+      player: combatPlayerSnapshot(player, `raid:${raidBoss.id || 'active'}`),
     });
+    };
+    const raidPresses = parseCombatPresses(body);
+    if (raidPresses?.error) { sendError(response, 400, 'Invalid attack batch', raidPresses.error); return; }
+    await atomicAttack(body, 'raid', raidPresses ? (response) => runCombatPresses(response, raidPresses.presses, runRaidPress, body) : (response) => runRaidPress(response, body));
     return;
   }
 
   if (url.pathname === '/boss-fights/active' && request.method === 'GET') {
-    if (expireStaleBossFights(store.bossFights)) store.persistSoon(0);
+    expireBossFightsAndCheckpoint();
     const player = getCurrentPlayer(request);
     if (!player) {
       sendError(response, 401, 'Player session not found', 'AUTH_REQUIRED');
       return;
     }
-    const fight = store.bossFights.find((item) => item.status === 'active' && Number(item.current_hp || 0) > 0 && (item.invited_player_ids || []).map(String).includes(String(player.id)))
-      || store.bossFights.find((item) => item.status === 'active' && Number(item.current_hp || 0) > 0 && String(item.opened_by_email || '').toLowerCase() === String(player.created_by || '').toLowerCase())
+    const fight = activeBossFights(store.bossFights).find((item) => item.status === 'active' && Number(item.current_hp || 0) > 0 && (item.invited_player_ids || []).map(String).includes(String(player.id)))
+      || activeBossFights(store.bossFights).find((item) => item.status === 'active' && Number(item.current_hp || 0) > 0 && String(item.opened_by_email || '').toLowerCase() === String(player.created_by || '').toLowerCase())
       || null;
+    if (!fight) {
+      const clan=getClanForPlayer(player);
+      if(clan){
+        if (!useBackgroundCombatWrites()) await createClanShipService({store}).read(clan,player,{recoverPayments:false,includeView:false});
+        const shipFight=Object.values(clan.ship?.fights||{}).find(f=>f.status==='active'&&Number(f.current_hp)>0&&Date.parse(f.ends_at)>Date.now()&&(!(f.escaped_player_ids||[]).map(String).includes(String(player.id)))&&(f.participants?.[player.id]||(f.joined_player_ids||[]).map(String).includes(String(player.id))));
+        if(shipFight){sendData(response,200,{id:shipFight.id,kind:'ship',clanId:clan.id,moduleId:shipFight.moduleId,combat_revision:shipFight.combat_revision,boss_id:shipFight.boss_id,status:shipFight.status,current_hp:shipFight.current_hp,max_hp:shipFight.max_hp,ends_at:shipFight.ends_at});return;}
+      }
+    }
     const legacyInviteAt = fight && store.chatMessages.find((message) => message.kind === 'boss_fight_invite' && String(message.bossFightInvite?.fightId || '') === String(fight.id))?.created_at;
     sendData(response, 200, fight ? { ...fight, clan_invite_sent_at: fight.clan_invite_sent_at || legacyInviteAt || null } : null);
     return;
@@ -5845,12 +6948,13 @@ export async function handleRequest(request, response) {
     const body = await readJsonBody(request);
     const fight = { id: store.generateId('fight'), ...body };
     store.bossFights.push(fight);
+    checkpointWorldRow('bossFights', fight);
     sendData(response, 201, fight);
     return;
   }
 
   if (url.pathname === '/boss-fights/spawn' && request.method === 'POST') {
-    if (expireStaleBossFights(store.bossFights)) store.persistSoon(0);
+    expireBossFightsAndCheckpoint();
     const player = ensureCurrentPlayer(request);
     if (!player) {
       sendError(response, 401, 'Player session not found', 'AUTH_REQUIRED');
@@ -5858,7 +6962,8 @@ export async function handleRequest(request, response) {
     }
 
     const body = await readJsonBody(request);
-    const activeFight = store.bossFights.find((item) => isActiveBossFight(item)
+    try{assertSingleBossFight({...store,bossFights:[]},player)}catch(e){sendError(response,409,e.message,e.code);return;}
+    const activeFight = activeBossFights(store.bossFights).find((item) => isActiveBossFight(item)
       && (String(item.opened_by_email || '').toLowerCase() === String(player.created_by || '').toLowerCase()
         || (item.invited_player_ids || []).map(String).includes(String(player.id))));
     if (activeFight) {
@@ -5906,6 +7011,7 @@ export async function handleRequest(request, response) {
       id: store.generateId('fight'),
       boss_id: boss.id,
       boss_name: boss.name,
+      solo: body.mode !== 'clan',
       location: boss.location,
       max_hp: boss.maxHp,
       current_hp: boss.maxHp,
@@ -5916,6 +7022,7 @@ export async function handleRequest(request, response) {
     };
 
     store.bossFights.push(fight);
+    checkpointWorldRow('bossFights', fight);
     sendData(response, 201, fight);
     return;
   }
@@ -5926,8 +7033,8 @@ export async function handleRequest(request, response) {
     const subResource = parts[2];
 
     if (!subResource) {
-      if (expireStaleBossFights(store.bossFights)) store.persistSoon(0);
-      const fight = store.bossFights.find((item) => item.id === fightId);
+      expireBossFightsAndCheckpoint();
+      const fight = findBossFight(store.bossFights,fightId);
       if (!fight) {
         sendError(response, 404, 'Boss fight not found', 'BOSS_FIGHT_NOT_FOUND');
         return;
@@ -5940,22 +7047,14 @@ export async function handleRequest(request, response) {
       if (parts[3] === 'me') {
         const player = getCurrentPlayer(request);
         const log = player
-          ? store.bossDamageLogs.find((item) => item.fight_id === fightId && item.player_email === player.created_by) || null
+          ? findBossDamageLog(store.bossDamageLogs,fightId,player.created_by) || null
           : null;
         sendData(response, 200, log);
         return;
       }
 
       const { limit = '100' } = getQuery(url);
-      const logs = store.bossDamageLogs
-        .filter((item) => item.fight_id === fightId)
-        .sort((a, b) => (b.damage || 0) - (a.damage || 0))
-        .slice(0, Number(limit))
-        .map((item) => {
-          const player = store.players.find((entry) => entry.created_by === item.player_email);
-          return { ...item, player_id: player?.id || item.player_id || null, username: player?.username || '', nickname: player?.nickname || '', player_name: player?.nickname || item.player_name, clan_name: player?.clan_name || '', clan_logo_id: player?.clan_logo_id || '', battle_pass_tier: player ? normalizePlayerProgression(player).battle_pass_view?.tier || 'free' : 'free' };
-        });
-      sendData(response, 200, logs);
+      sendData(response, 200, getBossFightLeaderboard(fightId, Number(limit)));
       return;
     }
   }
@@ -5964,7 +7063,7 @@ export async function handleRequest(request, response) {
     if (!requireAdminToken(request, response)) return;
     const fightId = url.pathname.split('/')[2];
     const body = await readJsonBody(request);
-    const fight = store.bossFights.find((item) => item.id === fightId);
+    const fight = findBossFight(store.bossFights,fightId);
 
     if (!fight) {
       sendError(response, 404, 'Boss fight not found', 'BOSS_FIGHT_NOT_FOUND');
@@ -5972,6 +7071,7 @@ export async function handleRequest(request, response) {
     }
 
     Object.assign(fight, body);
+    checkpointWorldRow('bossFights', fight);
     sendData(response, 200, fight);
     return;
   }
@@ -5982,19 +7082,18 @@ export async function handleRequest(request, response) {
     const action = parts[2];
 
     if (action === 'join') {
+      await atomicAttack({}, 'boss:' + fightId, (response) => {
       const player = ensureCurrentPlayer(request);
       if (!player) { sendError(response, 401, 'Player session not found', 'AUTH_REQUIRED'); return; }
-      const fight = store.bossFights.find((item) => String(item.id) === String(fightId));
-      const clanName = String(player.clan_name || '').trim();
-      const validInvite = store.chatMessages.some((message) => message.kind === 'boss_fight_invite'
-        && String(message.bossFightInvite?.fightId || '') === String(fightId)
-        && String(message.clan || '').trim() === clanName
-        && clanName);
-      if (!fight || !isActiveBossFight(fight) || !validInvite) {
-        sendError(response, 403, 'No active clan invitation for this boss fight', 'BOSS_FIGHT_INVITE_REQUIRED');
-        return;
+      const fight = findBossFight(store.bossFights,fightId);
+      try{assertSingleBossFight(store,player,fightId)}catch(e){sendError(response,409,e.message,e.code);return;}
+      if (!isJoinableBossFight(fight)) {
+        sendError(response,409,'This boss fight has ended','BOSS_FIGHT_NOT_ACTIVE');return;
       }
-      const activeFight = store.bossFights.find((item) => isActiveBossFight(item)
+      if (!hasClanBossInvitation(player,fight,store.chatMessages)) {
+        sendError(response,403,'No active clan invitation for this boss fight','BOSS_FIGHT_INVITE_REQUIRED');return;
+      }
+      const activeFight = activeBossFights(store.bossFights).find((item) => isActiveBossFight(item)
         && (String(item.opened_by_email || '').toLowerCase() === String(player.created_by || '').toLowerCase()
           || (item.invited_player_ids || []).map(String).includes(String(player.id))));
       if (activeFight && String(activeFight.id) !== String(fight.id)) {
@@ -6002,8 +7101,8 @@ export async function handleRequest(request, response) {
         return;
       }
       fight.invited_player_ids = [...new Set([...(fight.invited_player_ids || []).map(String), String(player.id)])];
-      store.persistSoon(0);
       sendData(response, 200, fight);
+      });
       return;
     }
 
@@ -6013,31 +7112,41 @@ export async function handleRequest(request, response) {
         sendError(response, 401, 'Player session not found', 'AUTH_REQUIRED');
         return;
       }
-      const fight = store.bossFights.find((item) => item.id === fightId);
-      if (!fight || String(fight.opened_by_email || '').toLowerCase() !== String(player.created_by || '').toLowerCase()) {
+      const fight = findBossFight(store.bossFights,fightId);
+      const isOwner = Boolean(player.created_by) && String(fight?.opened_by_email || '').toLowerCase() === String(player.created_by).toLowerCase();
+      const isInvited = (fight?.invited_player_ids || []).map(String).includes(String(player.id));
+      if (!fight || (!isOwner && !isInvited)) {
         sendError(response, 404, 'Boss fight not found', 'BOSS_FIGHT_NOT_FOUND');
         return;
       }
       if (fight.status === 'active') {
-        fight.status = 'abandoned';
-        fight.ended_at = new Date().toISOString();
+        if (isOwner) {
+          fight.status = 'abandoned';
+          fight.ended_at = new Date().toISOString();
+        } else {
+          fight.invited_player_ids = (fight.invited_player_ids || []).filter((id) => String(id) !== String(player.id));
+        }
         player.weapon_cooldowns = applyBossEscapeCooldown(player.weapon_cooldowns);
         store.persistSoon();
         queueDirtyPlayerFlush(player.id);
+        checkpointWorldRow('bossFights', fight);
       }
       sendData(response, 200, { ...fight, boss_escape_cooldown_until: player.weapon_cooldowns?.boss_escape_until || null });
       return;
     }
 
     if (action === 'attack') {
-      if (expireStaleBossFights(store.bossFights)) store.persistSoon(0);
-      const player = ensureCurrentPlayer(request);
+      const body = await readJsonBody(request);
+      response.markCombatHttp?.('http_route_body');
+      const runBossPress = (response, body) => {
+      if (expireStaleBossFights(store.combatFightIds ? store.bossFights.filter(fight => store.combatFightIds.has(String(fight.id))) : store.bossFights, Date.now(), store.players)) store.persistSoon(0);
+      const player = ensureCurrentPlayer(request, { syncReferrals: false });
       if (!player) {
         sendError(response, 401, 'Player session not found', 'AUTH_REQUIRED');
         return;
       }
       const localTester = isLocalTester(player);
-      const fight = store.bossFights.find((item) => String(item.id) === String(fightId));
+      const fight = findBossFight(store.bossFights,fightId);
       if (!isActiveBossFight(fight)) {
         sendError(response, 404, 'Active boss fight not found', 'BOSS_FIGHT_NOT_FOUND');
         return;
@@ -6048,7 +7157,7 @@ export async function handleRequest(request, response) {
       }
       const ownsFight = String(fight.opened_by_email || '').trim().toLowerCase() === String(player.created_by || '').trim().toLowerCase();
       const joinedByClanInvite = (fight.invited_player_ids || []).map(String).includes(String(player.id));
-      if (!ownsFight && !joinedByClanInvite) {
+      if (!ownsFight && (fight.solo === true || !joinedByClanInvite)) {
         sendError(response, 403, 'You can only attack your own or invited boss fight', 'BOSS_FIGHT_NOT_OWNED');
         return;
       }
@@ -6057,7 +7166,6 @@ export async function handleRequest(request, response) {
         return;
       }
 
-      const body = await readJsonBody(request);
       Object.assign(player, migrateTalentTreeState(player));
       const weapon = getWeaponById(body.weaponId);
       if (!weapon) {
@@ -6071,16 +7179,12 @@ export async function handleRequest(request, response) {
       if (weapon.id === 'satchel' || weapon.id === 'small-poison') newbieStats.small_poison_uses = Number(newbieStats.small_poison_uses || 0) + 1;
 
       const effectiveWeapon = buildEffectiveWeapon(weapon, player);
-      const poisonInventoryId = {
-        satchel: 'small-poison',
-        f4: 'medium-poison',
-        c4: 'large-poison',
-      }[effectiveWeapon.id];
+      const poisonInventoryId = getCombatPoisonSlot(effectiveWeapon.id);
       const poisonInventory = player.weapon_inventory || {};
       const usesStoredPoison = poisonInventoryId && (poisonInventory[poisonInventoryId] || 0) > 0;
       const isPoisonWeapon = Boolean(poisonInventoryId);
       const requestedMultiplier = Number(body.multiplier);
-      const attackCount = isPoisonWeapon && (requestedMultiplier === 10 || requestedMultiplier === 100) ? requestedMultiplier : 1;
+      const attackCount = isPoisonWeapon && ([5, 10, 100].includes(requestedMultiplier)) ? requestedMultiplier : 1;
 
       if (!localTester && isPoisonWeapon && (!usesStoredPoison || Number(poisonInventory[poisonInventoryId] || 0) < attackCount)) {
         sendError(response, 400, 'Not enough poison in inventory', 'NOT_ENOUGH_POISON');
@@ -6106,9 +7210,11 @@ export async function handleRequest(request, response) {
       }
 
       const savedPoisonUses = isPoisonWeapon && effectiveWeapon.saveChance > 0
-        ? Array.from({ length: attackCount }).filter(() => Math.random() < effectiveWeapon.saveChance).length
+        ? attackCount - countConsumedPoison(attackCount, effectiveWeapon.saveChance)
         : 0;
-      const consumedPoisonUses = attackCount - savedPoisonUses;
+      let consumedPoisonUses = attackCount - savedPoisonUses;
+      let armorBlocked=false;
+      let boneCurseApplied=false;
       const saveRollSucceeded = consumedPoisonUses === 0;
 
       if (!localTester && effectiveWeapon.cooldownMin > 0) {
@@ -6129,14 +7235,16 @@ export async function handleRequest(request, response) {
       const prevMarks = Math.max(0, Number(combatState.toxicMarks || 0));
       const nowMs = Date.now();
       let bleedDamage = 0;
-      if (combatState.bleed && Number(combatState.bleed.expiresAt || 0) > nowMs) {
-        const ticks = Math.floor((nowMs - Number(combatState.bleed.lastTickAt || nowMs)) / 10000);
-        if (ticks > 0) {
-          bleedDamage = ticks * Number(combatState.bleed.damage || 0);
-          combatState.bleed.lastTickAt = Number(combatState.bleed.lastTickAt || nowMs) + ticks * 10000;
+      if (Number(player.talent_tree_version || 0) < 2) {
+        if (combatState.bleed && Number(combatState.bleed.expiresAt || 0) > nowMs) {
+          const ticks = Math.floor((nowMs - Number(combatState.bleed.lastTickAt || nowMs)) / 10000);
+          if (ticks > 0) {
+            bleedDamage = ticks * Number(combatState.bleed.damage || 0);
+            combatState.bleed.lastTickAt = Number(combatState.bleed.lastTickAt || nowMs) + ticks * 10000;
+          }
+        } else {
+          delete combatState.bleed;
         }
-      } else {
-        delete combatState.bleed;
       }
       let damageMultiplier = 1;
       let extraFlatDamage = 0;
@@ -6235,27 +7343,25 @@ export async function handleRequest(request, response) {
       // The talent combat service is authoritative. The legacy-compatible block above
       // remains only for non-v2 profiles while their saved state is migrated.
       if (Number(player.talent_tree_version || 0) >= 2) {
-        let talentCombat = null;
-        let talentDamage = 0;
-        let talentPoisonDamage = 0;
-        let runtimeState = originalCombatState;
-        for (let index = 0; index < attackCount; index += 1) {
-          talentCombat = resolveTalentAttack({ weapon: effectiveWeapon, levels: resolvedTalentLevels, state: runtimeState, fight, player, now: nowMs + index });
-          runtimeState = talentCombat.state;
-          talentDamage += talentCombat.damage + talentCombat.bleedDamage + talentCombat.repeatDamage;
-          if (isPoisonWeapon) talentPoisonDamage += talentCombat.damage + talentCombat.repeatDamage;
-        }
-        isCrit = Boolean(talentCombat?.isCrit);
-        damage = Math.max(1, Math.floor(talentDamage * getCollectionDamageBonus(player) * (1 + Number(effectiveWeapon.equipmentBossDamagePct || 0))));
-        poisonDamage = isPoisonWeapon
-          ? Math.min(damage, Math.floor(talentPoisonDamage * getCollectionDamageBonus(player) * (1 + Number(effectiveWeapon.equipmentBossDamagePct || 0))))
-          : 0;
+        const talentCombat = resolveBossHit({ player, weapon: effectiveWeapon, levels: resolvedTalentLevels,
+          state: originalCombatState, fight, clan: getClanForPlayer(player), now: nowMs, count: attackCount });
+        armorBlocked = talentCombat.blocked;
+        boneCurseApplied = talentCombat.boneCurseApplied;
+        if (talentCombat.refundBatch) consumedPoisonUses = 0;
+        applyTalentCooldownResets(player, talentCombat);
+        isCrit = talentCombat.isCrit;
+        damage = talentCombat.damage;
+        poisonDamage = talentCombat.poisonDamage;
         player.talent_combat_state = { ...combatStates, [fight.id]: talentCombat.state };
         player.toxic_marks = Number(talentCombat.state.toxicMarks || 0);
-        if (talentCombat.isCrit && Number(resolvedTalentLevels.t48 || 0) > 0 && Math.random() < Number(resolvedTalentLevels.t48) * .02) {
-          refundCombatEnergy(player, 10);
-        }
+      } else {
+        const currentState = player.talent_combat_state?.[fight.id] || combatState;
+        const nextState = applyBossEquipmentBleed(currentState, {
+          weapon: effectiveWeapon, levels: talentLevels, blocked: armorBlocked, count: attackCount, now: nowMs,
+        });
+        if (nextState !== currentState) player.talent_combat_state = { ...player.talent_combat_state, [fight.id]: nextState };
       }
+      trackActiveBleedPlayer(player, nowMs);
       // Consumables are removed only after the successful damage calculation.
       if (usesStoredPoison && !saveRollSucceeded) {
         if (!localTester) player.weapon_inventory = { ...poisonInventory, [poisonInventoryId]: Math.max(0, Number(poisonInventory[poisonInventoryId] || 0) - consumedPoisonUses) };
@@ -6265,19 +7371,25 @@ export async function handleRequest(request, response) {
       player.newbie_stats = newbieStats;
       if (isPoisonWeapon) player.poison_found_today = Number(player.poison_found_today || 0) + 1;
       const endedAt = new Date().toISOString();
-      const impacts = getClanDamageFightTargets({
+      const attackTargets = getClanDamageFightTargets({
         attacker: player,
         sourceFight: fight,
         fights: store.bossFights,
         players: store.players,
       })
-        .filter(isActiveBossFight)
-        .map((targetFight) => applyDamageToPersonalBossFight(targetFight, player, damage, attackCount, endedAt, {
+        .filter(isActiveBossFight);
+      const refundableTargets = attackTargets.filter(target => shouldReceiveBossFightDamageReward(target, { player_email: player.created_by }, player.id));
+      const refundBudgets = new Map(allocateBossPoisonRefundUnits(refundableTargets.map(target => ({ id: target.id, damage: Math.min(Number(target.current_hp || 0), poisonDamage) })), consumedPoisonUses, poisonDamage, attackCount).map(entry => [entry.id, entry.units]));
+      const impacts = attackTargets.map((targetFight) => applyDamageToPersonalBossFight(targetFight, player, damage, attackCount, endedAt, {
           poisonType: poisonInventoryId ? poisonInventoryId.replace('-poison', '') : '',
           poisonDamage,
           plannedPoisonDamage: poisonDamage,
+          directAttack: String(targetFight.id) === String(fight.id),
+          refundBudget: refundBudgets.get(targetFight.id) || 0,
           consumedPoisonUses,
           attackCount,
+          weaponId: effectiveWeapon.id,
+          lastPoisonSaved: !localTester && isPoisonWeapon && attackCount === 1 && savedPoisonUses === 1 && poisonCount(player) === 1,
         }));
       const sourceImpact = impacts.find((impact) => impact.fight.id === fight.id);
       const thresholds = [0.75, 0.5, 0.25];
@@ -6319,14 +7431,12 @@ export async function handleRequest(request, response) {
       player.boss_damage_today = (player.boss_damage_today || 0) + actualDamage;
       player.boss_damage_lifetime = (player.boss_damage_lifetime || 0) + actualDamage;
       addClanBossDamage(player, actualDamage);
-      if (isCrit && resolvedTalentLevels.t48 > 0 && Math.random() < resolvedTalentLevels.t48 * 0.005) {
-        refundCombatEnergy(player, 1);
-      }
-      recordBattlePassEvent(player, { type: 'boss', damage: actualDamage, smallPoison: effectiveWeapon.id === 'satchel' });
-      awardTalentProgressV2(player, actualDamage);
+      refundCriticalEnergy(player, isCrit, resolvedTalentLevels);
+      recordBattlePassEvent(player, { type: 'boss', damage: actualDamage, smallPoison: !armorBlocked && effectiveWeapon.id === 'satchel' });
+      if (isPoisonWeapon) awardTalentProgressV2(player, Math.min(poisonDamage, actualDamage));
 
       let rewardSummary = null;
-      const xpGranted = isDead ? 50 : isCrit ? 10 : 4;
+      const xpGranted = actualDamage>0 ? (isDead ? 50 : isCrit ? 10 : 4) : 0;
       grantXpToPlayer(player, xpGranted);
 
       for (const impact of impacts) {
@@ -6347,21 +7457,21 @@ export async function handleRequest(request, response) {
         playerDamageLog: playerLog,
         hit: {
           damage: actualDamage,
-          isCrit,
+          isCrit, boneCurseApplied,
           icon: effectiveWeapon.icon,
         },
+        ...(isDead ? { leaderboard: getBossFightLeaderboard(fight.id) } : {}),
         rewardSummary,
         clanAssists,
         xpGranted,
         xpApplied: true,
-        player: normalizePlayerProgression(player),
+        player: combatPlayerSnapshot(player, fight.id),
       };
-      // Return the resolved hit immediately so HP and damage react without
-      // waiting for two database upserts. Persistence continues in background.
       sendData(response, 200, attackResponse);
-      void playerDb.flushDirtyPlayers().catch((error) => {
-        console.error('[boss-attack] background player flush failed', error);
-      });
+      };
+      const bossPresses = parseCombatPresses(body);
+      if (bossPresses?.error) { sendError(response, 400, 'Invalid attack batch', bossPresses.error); return; }
+      await atomicAttack(body, 'boss:' + fightId, bossPresses ? (response) => runCombatPresses(response, bossPresses.presses, runBossPress, body) : (response) => runBossPress(response, body));
       return;
     }
   }
@@ -6371,6 +7481,7 @@ export async function handleRequest(request, response) {
     const body = await readJsonBody(request);
     const log = { id: store.generateId('damage'), ...body };
     store.bossDamageLogs.push(log);
+    checkpointWorldRow('bossDamageLogs', log);
     sendData(response, 201, log);
     return;
   }
@@ -6387,6 +7498,7 @@ export async function handleRequest(request, response) {
     }
 
     Object.assign(log, body);
+    checkpointWorldRow('bossDamageLogs', log);
     sendData(response, 200, log);
     return;
   }
@@ -6428,6 +7540,7 @@ export async function handleRequest(request, response) {
     // granting the drops a second time.
     const priorReceipt = instanceId && (player.loot_claim_receipts || []).find((entry) => entry.instanceId === instanceId);
     if (priorReceipt) {
+      if(String(priorReceipt.bossId||'').startsWith('ship-')||String(instanceId).startsWith('ship-box-'))await playerDb.flushDirtyPlayers([player.id]);
       sendData(response, 200, {
         drops: priorReceipt.drops,
         xpGranted: priorReceipt.xpGranted,
@@ -6438,7 +7551,7 @@ export async function handleRequest(request, response) {
       return;
     }
 
-    const pendingBox = instanceId
+    let pendingBox = instanceId
       ? (player.pending_boss_boxes || []).find((entry) => entry?.instanceId === instanceId)
       : null;
     if (!pendingBox) {
@@ -6446,6 +7559,8 @@ export async function handleRequest(request, response) {
       return;
     }
 
+    const oldDamageLog = findBossDamageLog(store.bossDamageLogs,pendingBox.fightId,player.created_by);
+    pendingBox = migratePendingBossReward(pendingBox, oldDamageLog && Number(oldDamageLog.direct_damage || 0) >= Number(oldDamageLog.damage || 0) ? 1 : 0);
     const boxType = pendingBox.boxType;
     const bossId = pendingBox.bossId || null;
     const fightId = pendingBox.fightId || null;
@@ -6462,7 +7577,7 @@ export async function handleRequest(request, response) {
     }
 
     const rewardBoxTypes = Array.isArray(pendingBox?.rewardBoxTypes) && pendingBox.rewardBoxTypes.length ? pendingBox.rewardBoxTypes : [boxType];
-    const drops = (pendingBox?.rewardFormula === 'boss_v2' || pendingBox?.rewardFormula === 'raid_rank_v1')
+    const drops = (pendingBox?.rewardFormula === 'boss_v2' || pendingBox?.rewardFormula === 'raid_rank_v1' || pendingBox?.rewardFormula === 'halloween_rank_v1')
       ? (Array.isArray(pendingBox.rewardSnapshot) ? pendingBox.rewardSnapshot : [])
       : pendingBox?.rewardFormula === 'damage_v1'
       ? [
@@ -6514,7 +7629,8 @@ export async function handleRequest(request, response) {
         grantEnergyGain(player, drop.qty, 'boss_box');
       }
 
-      if (drop.type === 'spin') player.roulette_bonus_spins = Number(player.roulette_bonus_spins || 0) + Number(drop.qty || 0);
+      if (drop.type === 'enhancement_gum') grantEnhancementGum(player, drop);
+    if (drop.type === 'spin') player.roulette_bonus_spins = Number(player.roulette_bonus_spins || 0) + Number(drop.qty || 0);
 
       if (drop.type === 'premium') {
         player.premium = (player.premium || 0) + drop.qty;
@@ -6580,7 +7696,7 @@ export async function handleRequest(request, response) {
           const slot = String(drop.itemId).split('_').pop() || 'weapon';
           player.inventory_items = [
             ...(player.inventory_items || []),
-            { id: drop.itemId, type: 'equipment', slot, bossId, quality: drop.quality || 'boss_gear_piece', count: 1 },
+            { id: drop.itemId, type: 'equipment', slot, bossId, quality: drop.quality || 'boss_gear_piece', count: 1, ...(drop.starterEquipment ? {starterEquipment:true} : {}) },
           ];
           drop.qty = 1;
         }
@@ -6631,7 +7747,7 @@ export async function handleRequest(request, response) {
     if (instanceId) {
       player.loot_claim_receipts = [
         ...(player.loot_claim_receipts || []).filter((entry) => entry.instanceId !== instanceId),
-        { instanceId, drops: mergedDrops, xpGranted },
+        { instanceId, bossId, drops: mergedDrops, xpGranted },
       ].slice(-30);
     }
     console.log('[loot] reward granted', {
@@ -6643,6 +7759,7 @@ export async function handleRequest(request, response) {
       xpGranted,
       drops: mergedDrops.map((drop) => ({ type: drop.type, qty: drop.qty, id: drop.id || drop.itemId || drop.petId || null })),
     });
+    if(String(bossId||'').startsWith('ship-'))await playerDb.flushDirtyPlayers([player.id]);
     sendData(response, 200, {
       drops: mergedDrops,
       xpGranted,
@@ -6672,7 +7789,8 @@ export async function handleRequest(request, response) {
       return;
     }
 
-    const isRevenge = Boolean(body.isRevenge);
+    const revengeLog = findAvailableRevenge(store.attackLogs, player, target, body.isRevenge);
+    const isRevenge = Boolean(revengeLog);
     if (!canSpendTutorialEnergyOnMission(player, null)) {
       sendError(response, 403, 'During the newbie tutorial, energy can only be spent on the highlighted first-planet quest', 'TUTORIAL_ENERGY_RESTRICTED');
       return;
@@ -6684,8 +7802,10 @@ export async function handleRequest(request, response) {
 
     player.energy = Math.max(0, (player.energy || 0) - GAME_CONFIG.RAID_ENERGY_COST);
     player.last_energy_update = new Date().toISOString();
+    if (revengeLog) revengeLog.revenge_used_at = new Date().toISOString();
+    trackPlayer(target);
     player.raid_boss_hits_today = Number(player.raid_boss_hits_today || 0) + 1;
-    console.log('[energy] updated', {
+    gameDebugLog('[energy] updated', {
       source: 'raid_spend',
       playerId: player.id,
       currentEnergy: player.energy,
@@ -6811,11 +7931,37 @@ export async function handleRequest(request, response) {
       sendError(response, 400, 'itemId and paymentMethod are required', 'PAYMENT_REQUEST_INVALID');
       return;
     }
-    if (browserSession && !request.headers['x-telegram-init-data'] && paymentMethod !== 'near') {
+    if (browserSession && !request.headers['x-telegram-init-data'] && paymentMethod !== 'near' && !((itemId.startsWith('ship_build:') || /^pvp_refill_[1-5]$/.test(itemId)) && paymentMethod === 'telegram_stars' && player.telegram_id)) {
       sendError(response, 400, 'Web purchases use NEAR', 'PAYMENT_METHOD_UNSUPPORTED'); return;
     }
 
     try {
+      if(itemId==='friday13_pack'||itemId==='forge_pack_i'||itemId==='forge_pack_ii')assertResourcePackAvailable(player,itemId);
+      const constructionItem = findShopPackById(itemId);
+      if (constructionItem?.pvpRefillAttempts) {
+        const status = await onlinePvp.command(player);
+        if (!player.telegram_id || paymentMethod !== 'telegram_stars') throw Object.assign(new Error('Open Telegram for Stars payment'), {code:'PVP_STARS_TELEGRAM_REQUIRED'});
+        if (status.queue || status.match?.status === 'active' || status.progress.refill.attempts !== constructionItem.pvpRefillAttempts) throw Object.assign(new Error('PvP attempts changed; refresh the refill price'), {code:'PVP_REFILL_QUOTE_CHANGED'});
+      }
+      if (constructionItem?.giftSeasonId) {
+        const recipient = constructionItem.giftRecipientId ? store.players.find(candidate => String(candidate.id) === constructionItem.giftRecipientId) : player;
+        if (!recipient || (constructionItem.giftRecipientId && String(recipient.id) === String(player.id))) throw Object.assign(new Error('Choose another player'), {code:'BP_GIFT_RECIPIENT'});
+        const pass = battlePassView(recipient);
+        if (!battlePassEnabled() || !pass.active || pass.seasonId !== constructionItem.giftSeasonId) throw Object.assign(new Error('Battle Pass season is unavailable'), {code:'BP_GIFT_SEASON'});
+        if (pass.tier === 'legendary' || pass.tier === constructionItem.tier) throw Object.assign(new Error('This player already owns the pass'), {code:'BP_GIFT_ALREADY_OWNED'});
+      } else if (constructionItem?.tier) {
+        const pass = battlePassView(player);
+        if (!battlePassEnabled() || !pass.active || pass.skeletonSeason) throw Object.assign(new Error('Battle Pass purchase is unavailable'), {code:'BP_GIFT_SEASON'});
+      }
+      if (constructionItem?.constructionUnits) {
+        const clan=ensureClanRecord(constructionItem.clanId);
+        if(String(clan?.id)!==constructionItem.clanId)throw Object.assign(new Error('Invalid construction clan'),{code:'CLAN_NOT_FOUND'});
+        const state=await createClanShipService({store}).read(clan,player);
+        const sector=state.modules.find(m=>m.id===constructionItem.moduleId);
+        if(!sector?.state.unlocked || sector.state.built)throw Object.assign(new Error('Ship sector is unavailable'),{code:'SHIP_SECTOR_UNAVAILABLE'});
+        const remaining=sector.cost-Number(state.progress[sector.id]||0);
+        if(constructionItem.stars>Math.ceil(remaining/4000))throw Object.assign(new Error('Construction amount exceeds the remaining cost'),{code:'SHIP_CONTRIBUTION_TOO_LARGE'});
+      }
       if (itemId.startsWith('newbie_pack_')) {
         assertNewbiePackPurchasable(player, itemId);
         store.persistSoon();
@@ -7011,6 +8157,7 @@ export async function handleRequest(request, response) {
         } else {
           const item = findShopPackById(order.item_id);
           const orderPlayer = store.players.find((candidate) => String(candidate.id || '') === String(order.user_id || ''));
+          if(item?.id==='friday13_pack'||item?.id==='forge_pack_i'||item?.id==='forge_pack_ii'){try{if(!orderPlayer)throw Error('PLAYER_NOT_FOUND');assertResourcePackAvailable(orderPlayer,item.id)}catch{await starsPayment.answerPreCheckoutQuery({preCheckoutQueryId:query.id,ok:false,errorMessage:'This pack is not available'});sendData(response,200,{ok:true});return}}
           if (String(item?.id || '').startsWith('newbie_pack_')) {
             try {
               assertNewbiePackPurchasable(orderPlayer, item.id);
@@ -7096,6 +8243,7 @@ export async function handleRequest(request, response) {
     }
     sendError(response, error.statusCode || 500, error.statusCode ? message : 'Internal server error', error.code || 'INTERNAL_SERVER_ERROR');
   } finally {
+    releasePlayerAction?.();
     if (storeReady) {
       // Keep the request response independent of the global SQL flush queue.
       // A slow write for another player must not make every Go/Claim wait.
@@ -7106,23 +8254,9 @@ export async function handleRequest(request, response) {
           });
         });
       }
-      if (shouldPersistImmediately && shouldPersistGlobalState && IS_PRODUCTION) {
-        try {
-          await store.persistNow();
-          console.info('[mutation]', {
-            method: request.method,
-            endpoint: url.pathname,
-            persist: 'persistNow.completed',
-          });
-        } catch (error) {
-          console.error('[mutation]', {
-            method: request.method,
-            endpoint: url.pathname,
-            persist: 'persistNow.failed',
-            message: error?.message || 'unknown_error',
-          });
-        }
-      } else if (shouldPersistImmediately && shouldPersistGlobalState) {
+      if (shouldPersistImmediately && shouldPersistGlobalState) {
+        // Combine routine global snapshots instead of serializing the entire
+        // growing world state after every individual attack or click.
         store.persistSoon(200);
       }
     }

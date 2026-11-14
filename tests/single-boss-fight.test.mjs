@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {assertSingleBossFight} from '../server/utils/singleBossFight.js';
+const p={id:'p',created_by:'p@game'},f=id=>({id,status:'active',current_hp:10,ends_at:new Date(Date.now()+100000).toISOString()});
+test('ship reservation blocks a second ship and personal boss, allows same fight',()=>{const store={clans:[{ship:{fights:{hull:{...f('ship1'),joined_player_ids:['p']}}}}]};assert.throws(()=>assertSingleBossFight(store,p,'ship2'),/Finish/);assert.throws(()=>assertSingleBossFight(store,p),/Finish/);assert.doesNotThrow(()=>assertSingleBossFight(store,p,'ship1'))});
+test('personal ownership and clan invitation block ship entry',()=>{for(const meta of [{opened_by_email:'p@game'},{invited_player_ids:['p']}])assert.throws(()=>assertSingleBossFight({bossFights:[{...f('normal'),...meta}]},p,'ship'),/Finish/)});
+test('finished, expired and another player fights do not block',()=>{assert.doesNotThrow(()=>assertSingleBossFight({bossFights:[{...f('old'),opened_by_email:'p@game',ends_at:'2020-01-01'},{...f('dead'),status:'dead',opened_by_email:'p@game'},{...f('other'),opened_by_email:'other'}]},p))});

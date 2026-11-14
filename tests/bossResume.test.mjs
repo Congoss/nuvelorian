@@ -26,6 +26,20 @@ test('active boss is recovered for the same player and repeated spawn does not c
     assert.equal(first.id, resumed.id);
     assert.equal(first.id, second.id);
     assert.equal(store.bossFights.length, 1);
+    player.nickname = 'DifferentNickname';
+    player.level = 42;
+    const lookup = await (await fetch(url + '/players?id=' + player.id, { headers })).json();
+    assert.equal(lookup.data.length, 1);
+    assert.equal(lookup.data[0].id, player.id);
+    assert.equal(lookup.data[0].level, 42);
+    const missing = await (await fetch(url + '/players?id=nonexistent-player', { headers })).json();
+    assert.deepEqual(missing.data, []);
+    const finished = store.bossFights.find(f => f.id === first.id);
+    finished.status = 'dead'; finished.ended_at = new Date().toISOString();
+    const winners = await (await fetch(url + '/boss-fights/last-winners', { headers })).json();
+    assert.equal(winners.data[finished.boss_id].level, 42);
+    assert.equal(winners.data[finished.boss_id].player_id, player.id);
+
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -59,7 +73,7 @@ test('a player can have only one active personal or clan-invited boss fight', as
     };
     store.bossFights.push(inviteFight);
     store.chatMessages.push({
-      id: 'clan-fight-invite', kind: 'boss_fight_invite', clan: 'Test Clan',
+      id: 'clan-fight-invite', kind: 'boss_fight_invite', channel:'clan', clan: 'Test Clan',
       bossFightInvite: { fightId: inviteFight.id }, created_at: new Date().toISOString(),
     });
 
@@ -78,6 +92,28 @@ test('a player can have only one active personal or clan-invited boss fight', as
     const rejectedSpawn = await post('/boss-fights/spawn', '90103', { bossId: GAME_CONFIG.BOSSES[0].id });
     assert.equal(rejectedSpawn.status, 409);
     assert.equal(rejectedSpawn.code, 'BOSS_FIGHT_ALREADY_ACTIVE');
+
+    const outsiderEscape = await post('/boss-fights/' + personal.data.id + '/escape', '90102');
+    assert.equal(outsiderEscape.status, 404);
+    const escaped = await post('/boss-fights/' + inviteFight.id + '/escape', '90103');
+    assert.equal(escaped.status, 200);
+    assert.equal(inviteFight.status, 'active');
+    assert.equal(inviteFight.invited_player_ids.includes(String(player.id)), false);
+    assert.ok(escaped.data.boss_escape_cooldown_until);
+    assert.equal((await (await fetch(url + '/boss-fights/active', { headers: headers('90103') })).json()).data, null);
+    for (const boss of GAME_CONFIG.BOSSES) {
+      const fight = { id: 'escape-' + boss.id, boss_id: boss.id, status: 'active', current_hp: boss.maxHp, opened_by_email: owner.created_by };
+      store.bossFights.push(fight);
+      const result = await post('/boss-fights/' + fight.id + '/escape', '90102');
+      assert.equal(result.status, 200, boss.id);
+      assert.equal(fight.status, 'abandoned', boss.id);
+      assert.ok(fight.ended_at);
+      const cooldown = result.data.boss_escape_cooldown_until;
+      const repeat = await post('/boss-fights/' + fight.id + '/escape', '90102');
+      assert.equal(repeat.status, 200);
+      assert.equal(repeat.data.boss_escape_cooldown_until, cooldown);
+    }
+
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

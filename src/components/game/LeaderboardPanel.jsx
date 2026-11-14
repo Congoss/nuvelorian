@@ -1,10 +1,13 @@
+import { warmFirstFrameImages } from '@/lib/sceneAssets';
+import CombatLoader from './CombatLoader';
+import { useQuery } from '@tanstack/react-query';
 import { translateUiText } from '@/lib/uiTextTranslations';
 import PlayerName from './PlayerName';
 import { getClanJoinState } from '@/lib/clanJoinState';
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Loader2, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import MarkerFrame from '@/components/game/MarkerFrame';
 import { getClan, joinClan, listClanMembers, listClans, listTopPlayers, getMyLeaderboardPosition } from '@/services/gameApi';
 import heroIcon from '@/assets/optimized/nav-hero.webp';
@@ -12,7 +15,7 @@ import AvatarWithFrame from '@/components/game/AvatarWithFrame';
 import friendsIcon from '@/assets/ui/friends.png';
 import { DEFAULT_GUILD_LOGO, GUILD_LOGO_BY_ID } from '@/lib/clanLogos';
 import GameTextureButton from './GameTextureButton';
-import { ClanBioView } from './ClanPanel';
+const ClanBioView = lazy(() => import('./ClanPanel').then(module => ({ default: module.ClanBioView })));
 import bronzeMedal from '@/assets/boss-ui/bronze-medal.png';
 import silverMedal from '@/assets/boss-ui/silver-medal.png';
 import goldMedal from '@/assets/boss-ui/gold-medal.png';
@@ -154,18 +157,14 @@ function PlayerRankCA({ rank, ca, rankIcon, onShow, onHide }) {
       }}
         className="relative ml-auto flex shrink-0 items-center gap-1"
       >
+      <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center sm:h-9 sm:w-9">
         {rankIcon ? (
-            <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-none sm:h-9 sm:w-9">
-            <img src={rankIcon} alt="" aria-hidden="true" className="h-8 w-8 object-contain sm:h-9 sm:w-9" />
-          </div>
+          <img src={rankIcon} alt="" aria-hidden="true" className="h-full w-full object-contain" />
         ) : (
           <RankBadge rank={rank} />
         )}
-        <div className="relative h-9 min-w-[82px] sm:min-w-[88px]">
-          <div className="absolute inset-y-[6px] left-[16px] right-0 border border-[#28ee90] bg-[#0e150c]" />
-          <img src={getResourceIcon('strength')} alt="" aria-hidden="true" className="absolute left-0 top-0 z-10 h-9 w-9 object-contain" />
-          <span className="absolute inset-y-[6px] left-[30px] right-0 z-10 flex min-w-[46px] items-center justify-center px-1.5 font-mono text-[11px] font-black leading-none text-[#fff5ba]">{formatNumber(ca)}</span>
-        </div>
+      </div>
+      <LeaderboardValuePill value={ca} icon={getResourceIcon('strength')} className="w-28" compact />
     </div>
   );
 }
@@ -280,6 +279,7 @@ function getEquippedOwnedFrameId(player) {
 function ClanRow({ clan, rank, t, onOpen }) {
   return (
     <LeaderboardRow
+      clanHeaderTheme={clan.raidHeaderTheme}
       rank={rank}
       mediaKind={clan.logoId ? "logo" : "tag"}
       mediaSrc={clan.logoId ? GUILD_LOGO_BY_ID[clan.logoId] || DEFAULT_GUILD_LOGO : null}
@@ -336,11 +336,11 @@ export function ClanPreviewModal({ clan, profile, onClose, onOpenPlayerProfile }
       <div className="mx-auto flex w-full max-w-[520px] shrink-0 justify-end border-b border-[#28ee90]/40 bg-[#091008]">
         <button type="button" onClick={onClose} aria-label={profile?.language === 'ru' ? 'Закрыть клан' : profile?.language === 'en' ? 'Close clan' : 'Закрити клан'} className="flex h-11 w-11 items-center justify-center text-2xl text-[#dfff9c]">×</button>
       </div>
-      <div className="mx-auto min-h-0 w-full max-w-[520px] flex-1 overflow-y-auto overscroll-contain"><ClanBioView onOpenPlayerProfile={onOpenPlayerProfile} language={profile?.language} clan={previewClan} onClose={null} onOpenChat={() => {}} onLeaveClan={() => {}} onRefreshClan={() => {}} externalAction={{ label: joining ? '...' : actionLabel, tone: joinState.disabled ? 'gray' : 'yellow', disabled: joining || joinState.disabled, onClick: submitJoin }} />{joinError ? <p className="mt-2 text-center font-mono text-[9px] font-black text-[#ffb2a5]">{joinError}</p> : null}</div>
+      <div className="mx-auto min-h-0 w-full max-w-[520px] flex-1 overflow-y-auto overscroll-contain"><Suspense fallback={<div className="p-4 text-center">…</div>}><ClanBioView onOpenPlayerProfile={onOpenPlayerProfile} language={profile?.language} clan={previewClan} onClose={null} onOpenChat={() => {}} onLeaveClan={() => {}} onRefreshClan={() => {}} externalAction={{ label: joining ? '...' : actionLabel, tone: joinState.disabled ? 'gray' : 'yellow', disabled: joining || joinState.disabled, onClick: submitJoin }} /></Suspense>{joinError ? <p className="mt-2 text-center font-mono text-[9px] font-black text-[#ffb2a5]">{joinError}</p> : null}</div>
     </div>;
   }
   const achievementArt = { damage: [damageAchievement, damageFlag], quests: [questsAchievement, questsFlag], helper: [helperAchievement, helperFlag], donations: [donationsAchievement, donationsFlag] };
-  return <div className="fixed inset-0 z-[120] overflow-y-auto bg-black/90 p-3"><div className="mx-auto w-full max-w-[520px] border border-[#28ee90] bg-[#091008] p-3"><div className="flex gap-3"><div className="flex h-[96px] w-[96px] shrink-0 items-center justify-center"><img src={logo} alt="" className="h-[92px] w-[92px] object-contain" /></div><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate font-mono text-[18px] font-black text-[#fff0db]">{record?.name || clan.name}</p><p className="mt-0.5 font-mono text-[9px] font-black uppercase tracking-[0.16em] text-[#d1ba5c]">CLAN LEVEL {clanLevel}</p></div><button type="button" onClick={onClose} className="text-xl text-[#dfff9c]">×</button></div><p className="mt-2 font-mono text-[10px] leading-relaxed text-[#d5c5aa]">{record?.description || 'Клановий профіль'}</p></div></div><div className="mt-3 grid grid-cols-3 gap-2">{[{ label: 'CLAN POWER', value: formatNumber(clan.power || 0), icon: getResourceIcon('strength') }, { label: 'ACTIVE PLAYERS', value: `${members.length}/${record?.max_members || 25}`, icon: heroIcon }, { label: 'LAST RAID DAMAGE', value: '0', icon: getResourceIcon('energy') }].map((item) => <div key={item.label} className="flex min-h-[56px] min-w-0 items-center gap-2 border border-[#28ee90] bg-[#0e150d] px-2 py-2"><img src={item.icon} alt="" className="h-6 w-6 shrink-0 object-contain" /><div className="min-w-0"><p className="truncate font-mono text-[8px] uppercase text-[#93b765]">{item.label}</p><p className="truncate font-mono text-[12px] font-black text-[#fff0db]">{item.value}</p></div></div>)}</div><GameTextureButton type="button" tone={joinState.disabled ? 'gray' : 'yellow'} disabled={joining || joinState.disabled} onClick={submitJoin} className="mt-3 h-10 w-full"><span className="relative z-10 font-mono text-[11px] font-black uppercase text-[#17220e]">{joining ? '...' : actionLabel}</span></GameTextureButton>{joinError ? <p className="mt-2 text-center font-mono text-[9px] font-black text-[#ffb2a5]">{joinError}</p> : null}<div className="mt-3 grid grid-cols-4 gap-2">{['damage', 'quests', 'helper', 'donations'].map((id) => { const state = achievements[id] || {}; const [icon, flag] = achievementArt[id]; return <ClanAchievementBadge key={id} icon={icon} flag={flag} level={state.level || 0} label={id} progress={state.progress} nextThreshold={state.maxed ? state.progress : state.nextThreshold} />; })}</div><p className="mt-4 font-mono text-[10px] font-black uppercase text-[#a9cd74]">{"" + translateUiText("УЧАСНИКИ") + " "}{members.length}/{record?.max_members || 25}</p><div className="mt-2 space-y-1.5">{members.map((member) => <button type="button" key={member.id} onClick={() => member.id && onOpenPlayerProfile?.(member)} className="flex w-full items-center gap-2 border border-[#345333] bg-[#0c130b] p-2 text-left transition hover:bg-[#142414]"><AvatarWithFrame profile={member} size="sm" /><div className="min-w-0 flex-1"><p className="truncate font-mono text-[11px] font-black text-[#fff0db]"><PlayerName player={member} name={member.nickname || member.username || 'player'} /></p><p className="font-mono text-[8px] uppercase text-[#8eb26c]">LVL {member.level || 1} · {formatNumber(getPower(member))} CA</p></div></button>)}</div></div></div>;
+  return <div onClick={event=>{if(event.target===event.currentTarget)onClose();}} className="fixed inset-0 z-[120] overflow-y-auto bg-black/90 p-3"><div className="mx-auto w-full max-w-[520px] border border-[#28ee90] bg-[#091008] p-3"><div className="flex gap-3"><div className="flex h-[96px] w-[96px] shrink-0 items-center justify-center"><img src={logo} alt="" className="h-[92px] w-[92px] object-contain" /></div><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate font-mono text-[18px] font-black text-[#fff0db]">{record?.name || clan.name}</p><p className="mt-0.5 font-mono text-[9px] font-black uppercase tracking-[0.16em] text-[#d1ba5c]">CLAN LEVEL {clanLevel}</p></div><button type="button" onClick={onClose} className="text-xl text-[#dfff9c]">×</button></div><p className="mt-2 font-mono text-[10px] leading-relaxed text-[#d5c5aa]">{record?.description || 'Клановий профіль'}</p></div></div><div className="mt-3 grid grid-cols-3 gap-2">{[{ label: 'CLAN POWER', value: formatNumber(clan.power || 0), icon: getResourceIcon('strength') }, { label: 'ACTIVE PLAYERS', value: `${members.length}/${record?.max_members || 25}`, icon: heroIcon }, { label: 'LAST RAID DAMAGE', value: '0', icon: getResourceIcon('energy') }].map((item) => <div key={item.label} className="flex min-h-[56px] min-w-0 items-center gap-2 border border-[#28ee90] bg-[#0e150d] px-2 py-2"><img src={item.icon} alt="" className="h-6 w-6 shrink-0 object-contain" /><div className="min-w-0"><p className="truncate font-mono text-[8px] uppercase text-[#93b765]">{item.label}</p><p className="truncate font-mono text-[12px] font-black text-[#fff0db]">{item.value}</p></div></div>)}</div><GameTextureButton type="button" tone={joinState.disabled ? 'gray' : 'yellow'} disabled={joining || joinState.disabled} onClick={submitJoin} className="mt-3 h-10 w-full"><span className="relative z-10 font-mono text-[11px] font-black uppercase text-[#17220e]">{joining ? '...' : actionLabel}</span></GameTextureButton>{joinError ? <p className="mt-2 text-center font-mono text-[9px] font-black text-[#ffb2a5]">{joinError}</p> : null}<div className="mt-3 grid grid-cols-4 gap-2">{['damage', 'quests', 'helper', 'donations'].map((id) => { const state = achievements[id] || {}; const [icon, flag] = achievementArt[id]; return <ClanAchievementBadge key={id} icon={icon} flag={flag} level={state.level || 0} label={id} progress={state.progress} nextThreshold={state.maxed ? state.progress : state.nextThreshold} />; })}</div><p className="mt-4 font-mono text-[10px] font-black uppercase text-[#a9cd74]">{"" + translateUiText("УЧАСНИКИ") + " "}{members.length}/{record?.max_members || 25}</p><div className="mt-2 space-y-1.5">{members.map((member) => <button type="button" key={member.id} onClick={() => member.id && onOpenPlayerProfile?.(member)} className="flex w-full items-center gap-2 border border-[#345333] bg-[#0c130b] p-2 text-left transition hover:bg-[#142414]"><AvatarWithFrame profile={member} size="sm" /><div className="min-w-0 flex-1"><p className="truncate font-mono text-[11px] font-black text-[#fff0db]"><PlayerName player={member} name={member.nickname || member.username || 'player'} /></p><p className="font-mono text-[8px] uppercase text-[#8eb26c]">LVL {member.level || 1} · {formatNumber(getPower(member))} CA</p></div></button>)}</div></div></div>;
 }
 
 function PodiumCard({ place, title, subtitle, subtitleIcon = null, tone = 'gold', t, clanLogoId = null, clanTag = null, showFallbackAvatar = true, avatarSrc = heroIcon, avatarFrameId = null }) {
@@ -467,6 +467,7 @@ function buildClanRows(profile, players, clanRecords = []) {
     .map((clan) => ({
       ...clan,
       clanLevel: Math.min(...['damage', 'donations', 'helper', 'quests'].map((id) => Number(recordsByKey.get(String(clan.name || '').toLowerCase())?.achievements?.[id]?.level || 0))),
+      raidHeaderTheme: recordsByKey.get(String(clan.name || '').toLowerCase())?.raid_header_theme || null,
       tag: clan.name
         .split(' ')
         .map((part) => part[0])
@@ -519,51 +520,36 @@ function buildReferralRows(profile, players) {
   }).slice(0, 100);
 }
 
-export default function LeaderboardPanel({ profile, onOpenPlayerProfile, onClose }) {
+export default function LeaderboardPanel({ profile, viewStateRef, onOpenPlayerProfile, onClose }) {
   const { t, i18n } = useTranslation();
-  const [activeTab, setActiveTab] = useState('players');
-  const [ownPosition, setOwnPosition] = useState(null);
-  const [players, setPlayers] = useState([]);
-  const [clanRecords, setClanRecords] = useState([]);
+  const fallbackViewState = useRef({ activeTab: 'players', scroll: {} });
+  const savedView = viewStateRef || fallbackViewState;
+  const listRef = useRef(null);
+  const [activeTab, setActiveTab] = useState(() => savedView.current.activeTab || 'players');
+  const selectTab = (tab) => {
+    savedView.current.activeTab = tab;
+    setActiveTab(tab);
+  };
   const [openedClan, setOpenedClan] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [positionLoading, setPositionLoading] = useState(true);
-
-  useEffect(() => {
-    let alive = true;
-    async function loadRows() {
-      setLoading(true);
-      setPositionLoading(activeTab !== 'clans');
-      setOwnPosition(null);
-      const sort = activeTab === 'referrals' ? '-referrals' : '-stat_strength';
-      try {
-        const [data, clans] = activeTab === 'clans'
-          ? [null, await listClans()]
-          : [await listTopPlayers(sort, 100), null];
-        if (!alive) return;
-        setPlayers(Array.isArray(data) ? data : []);
-        if (Array.isArray(clans)) setClanRecords(clans);
-      } catch {
-        if (alive) setPlayers([]);
-      } finally {
-        if (alive) setLoading(false);
-      }
-      if (activeTab === 'clans' || !alive) return;
-      try {
-        const position = await getMyLeaderboardPosition(sort);
-        if (alive) setOwnPosition(position);
-      } catch {
-        if (alive) setOwnPosition(null);
-      } finally {
-        if (alive) setPositionLoading(false);
-      }
-    }
-
-    loadRows();
-    return () => {
-      alive = false;
-    };
-  }, [activeTab, profile?.clan_name, profile?.clan_id]);
+  const sort = activeTab === 'referrals' ? '-referrals' : '-stat_strength';
+  const rowsQuery = useQuery({
+    queryKey: ['leaderboard-rows', profile?.id, activeTab, profile?.clan_id, profile?.clan_name],
+    queryFn: () => activeTab === 'clans' ? listClans() : listTopPlayers(sort, 100),
+    staleTime: 30000,
+    retry: 1,
+  });
+  const positionQuery = useQuery({
+    queryKey: ['leaderboard-position', profile?.id, sort],
+    queryFn: () => getMyLeaderboardPosition(sort),
+    enabled: activeTab !== 'clans',
+    staleTime: 30000,
+    retry: 1,
+  });
+  const players = activeTab === 'clans' ? [] : rowsQuery.data || [];
+  const clanRecords = activeTab === 'clans' ? rowsQuery.data || [] : [];
+  const ownPosition = positionQuery.data || null;
+  const loading = rowsQuery.isPending;
+  const positionLoading = activeTab !== 'clans' && positionQuery.isPending;
 
   const playerRows = useMemo(() => buildPlayerRows(profile, players), [profile, players]);
   const clanRows = useMemo(() => buildClanRows(profile, playerRows, clanRecords), [profile, playerRows, clanRecords]);
@@ -576,13 +562,20 @@ export default function LeaderboardPanel({ profile, onOpenPlayerProfile, onClose
   const podiumOffset = 0;
   const rows = activeRows;
 
+  // The panel unmounts while visiting a player; restore after cached/fetched rows render.
+  useLayoutEffect(() => {
+    if (!loading && listRef.current) {
+      listRef.current.scrollTop = savedView.current.scroll[activeTab] || 0;
+    }
+  }, [activeTab, loading, savedView]);
+
   return (
-    <div className="leaderboard-page flex h-full min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden">
+    <div className="leaderboard-page trophy-ranking-background flex h-full min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden bg-cover bg-center bg-no-repeat">
       <Frame className="leaderboard-panel flex h-full min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden p-2 sm:p-3">
         <div className="leaderboard-tabs mb-2 grid h-10 w-full min-w-0 shrink-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_40px] gap-1 sm:h-12">
-          <TabButton active={activeTab === 'players'} label={t('leaderboard_panel.tab_players')} onClick={() => setActiveTab('players')} />
-          <TabButton active={activeTab === 'clans'} label={t('leaderboard_panel.tab_clans')} onClick={() => setActiveTab('clans')} />
-          <TabButton active={activeTab === 'referrals'} label={t('leaderboard_panel.tab_referrals')} onClick={() => setActiveTab('referrals')} />
+          <TabButton active={activeTab === 'players'} label={t('leaderboard_panel.tab_players')} onClick={() => selectTab('players')} />
+          <TabButton active={activeTab === 'clans'} label={t('leaderboard_panel.tab_clans')} onClick={() => selectTab('clans')} />
+          <TabButton active={activeTab === 'referrals'} label={t('leaderboard_panel.tab_referrals')} onClick={() => selectTab('referrals')} />
           <button
             type="button"
             onClick={onClose}
@@ -596,12 +589,12 @@ export default function LeaderboardPanel({ profile, onOpenPlayerProfile, onClose
         <div className="flex h-0 min-h-0 flex-1 flex-col overflow-hidden">
           {loading ? (
             <div className="flex min-h-0 flex-1 items-center justify-center py-4">
-              <Loader2 className="h-6 w-6 animate-spin text-[#9dff60]" />
+              <CombatLoader/>
             </div>
           ) : (
             <>
               {hasPodium ? (
-                <div className="leaderboard-top mb-2 shrink-0 overflow-hidden rounded-none bg-[#0b100a] px-1 py-2 sm:px-2">
+                <div className="leaderboard-top mb-2 shrink-0 overflow-hidden rounded-none bg-[#0b100a]/70 px-1 py-2 sm:px-2">
                   <LeaderboardPodium
                     onOpenPlayerProfile={onOpenPlayerProfile}
                     rows={
@@ -645,7 +638,7 @@ export default function LeaderboardPanel({ profile, onOpenPlayerProfile, onClose
                   />
                 </div>
               ) : null}
-              <div className="leaderboard-list-wrap players-scroll h-0 min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain touch-pan-y pb-4">
+              <div ref={listRef} onScroll={(event) => { savedView.current.scroll[activeTab] = event.currentTarget.scrollTop; }} className="leaderboard-list-wrap players-scroll h-0 min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain touch-pan-y pb-4">
                 <div className="space-y-1.5">
                     {activeTab === 'players' && rows.length
                       ? rows.map((player, index) => (
@@ -684,7 +677,7 @@ export default function LeaderboardPanel({ profile, onOpenPlayerProfile, onClose
           )}
         </div>
         {activeTab !== 'clans' ? <PositionDock>
-          {positionLoading ? <div className="flex h-16 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin" /></div> : ownPosition?.rank ? activeTab === 'referrals'
+          {positionLoading ? <div className="flex h-16 items-center justify-center"><CombatLoader compact/></div> : ownPosition?.rank ? activeTab === 'referrals'
             ? <ReferralRow player={{...ownPosition.player, username:ownPosition.player.nickname || ownPosition.player.username}} rank={ownPosition.rank} isMe onOpenPlayerProfile={onOpenPlayerProfile} t={t} />
             : <PlayerRow player={{...ownPosition.player, username:ownPosition.player.nickname || ownPosition.player.username}} rank={ownPosition.rank} isMe onOpenPlayerProfile={onOpenPlayerProfile} t={t} lang={lang} />
             : <p className="py-3 font-mono text-xs text-[#a6b29a]">{profile?.language === 'ru' ? 'Позиция недоступна' : profile?.language === 'en' ? 'Position unavailable' : 'Позиція недоступна'}</p>}
@@ -693,4 +686,8 @@ export default function LeaderboardPanel({ profile, onOpenPlayerProfile, onClose
       {openedClan ? <ClanPreviewModal clan={openedClan} profile={profile} onClose={() => setOpenedClan(null)} onOpenPlayerProfile={onOpenPlayerProfile} /> : null}
     </div>
   );
+}
+
+export function warmFirstFrame() {
+  return warmFirstFrameImages([heroIcon, bronzeMedal, silverMedal, goldMedal]);
 }

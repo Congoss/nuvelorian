@@ -10,6 +10,7 @@ const DATABASE_URL_KEYS = [
 const runtime = {
   sql: null,
   initialized: false,
+  initPromise: null,
 };
 
 function getDatabaseUrl() {
@@ -187,8 +188,8 @@ async function listPendingTransactions(limit = 100) {
   const rows = await sql`
     SELECT *
     FROM payment_transactions
-    WHERE status = 'pending'
-    ORDER BY created_at ASC
+    WHERE status = 'pending' AND payment_method = 'near' AND near_amount_yocto ~ '^[0-9]+$'
+    ORDER BY created_at DESC, id DESC
     LIMIT ${limit}
   `;
   return rows.map(mapTransaction);
@@ -250,7 +251,10 @@ export const paymentDb = {
       runtime.initialized = true;
       return false;
     }
-    await ensureSchema();
+    if (!runtime.initPromise) {
+      runtime.initPromise = ensureSchema().finally(() => { runtime.initPromise = null; });
+    }
+    await runtime.initPromise;
     runtime.initialized = true;
     return true;
   },

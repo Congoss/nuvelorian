@@ -1,0 +1,17 @@
+# Online duels — local implementation, 2026-11-14
+
+Not deployed. No PL4 payments, wagers, or merchant payouts are enabled by this change.
+
+The PvP screen has one ranked search button. It searches for a player for 20 seconds, then starts a clearly labeled AI duel. Both use the authenticated player’s actual equipped items, canonical enhancement levels and existing duelStats model, with the same persistent rating, attempts and history. No build selector. Stats freeze when entering the queue; client presets and supplied stats are ignored.
+
+Matchmaking initially allows a 2× difference in attack × HP and a rating distance of 200, increasing by 10 per waiting second. After 10 seconds it allows a 4× strength difference. Searches expire after 45 seconds without a heartbeat. Polling is 1.2 seconds while visible; the last valid arena remains displayed during a connection error. AI fallback begins at the 20-second search deadline on the player’s next poll. Cancelling at the deadline still cancels; expired, abandoned searches do not start a background AI match. The AI reuses the existing adaptive pilot pool and commits its hidden choice with SHA-256 before accepting the human move.
+
+Five attempts; one attempt returns every eight minutes. Queueing/cancelling costs no attempt; pairing consumes one for each player. Player and AI fallback duels share one rating and history; AI pilots never appear as fake players in the season leaderboard. Existing shared-damage finger/pencil/poison rules apply. Poison symbols do not consume inventory.
+
+Choices remain server-only until both players submit. The same move can be retried; a changed retry, stale round, wrong match, or third player is rejected. Each round has 30 seconds. One submitted move at timeout wins the match by forfeit; neither submitted is a draw. A match has a 30-round cap and 15-minute deadline. Leaving the arena forfeits; reloading or losing connection preserves the match until its deadline.
+
+`GET/POST /api/pvp/online` derives player identity from the existing session and preserves web origin checks. Queue, moves, HP, attempts, rating and 12-entry histories persist in a dedicated PostgreSQL JSON row locked with `FOR UPDATE` per transaction. The shared lock serializes matchmaking and round settlement across application workers. Production never falls back to memory. A local server uses `.local/pvp-online.json` with serialized atomic file replacement. Finished match snapshots are pruned after one hour; player ratings/history remain. This first implementation shares one database lock; production concurrency/load testing remains a rollout check.
+
+Validation: service and authenticated HTTP tests cover hidden moves, simultaneous requests, identity isolation, authoritative gear, unchanged retries, ratings, timeouts, queue cancellation/expiry, matchmaking expansion, attempt refill, round cap and restart recovery. The file repository was exercised locally; the production PostgreSQL path has not been exercised against the live database. Browser testing uses two independent local pilot profiles and verifies matchmaking, mirrored HP, and resume.
+
+Key files: `server/services/pvp-online.js`, `pvp-online-store.js`, `src/components/game/PvpPanel.jsx`. Local test pilots: `?mockUserId=777000801` and `?mockUserId=777000802` on the local Telegram mock launcher. With a web-mode launcher, add `&platform=telegram` to select mock identities. Existing web guest cookies may take priority: use separate browser profiles when testing player identity.

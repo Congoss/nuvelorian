@@ -1,0 +1,190 @@
+{
+  "tool": "image_gen built-in",
+  "references": [
+    "T03",
+    "T08",
+    "T25"
+  ],
+  "images": [
+    {
+      "id": "t31",
+      "name": "Small portion",
+      "path": "src/assets/skills/talants/generated/T31.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A small squat glass poison jar character with skinny arms proudly pouring a concentrated lime green tiny poison drop onto an alarmed metal alien robot. Small poison damage increase, not healing."
+    },
+    {
+      "id": "t32",
+      "name": "Medium business",
+      "path": "src/assets/skills/talants/generated/T32.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A medium-sized anthropomorphic syringe filled with green poison confidently injecting a large pink slug monster, industrial alien lab. Medium poison damage boost."
+    },
+    {
+      "id": "t33",
+      "name": "Large dose",
+      "path": "src/assets/skills/talants/generated/T33.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A huge battered poison canister character tipping a torrent of green sludge onto a panicking large robotic monster; oversized poison damage."
+    },
+    {
+      "id": "t34",
+      "name": "Do not waste it",
+      "path": "src/assets/skills/talants/generated/T34.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A careful poison bottle character catching every green droplet back into its own bottle with a tiny funnel, stingy mischievous expression. Poison conservation."
+    },
+    {
+      "id": "t35",
+      "name": "Sticky sludge",
+      "path": "src/assets/skills/talants/generated/T35.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A small grumpy poison jar throws stretchy sticky lime slime that clings firmly to a fleeing purple alien monster, thick goo strands."
+    },
+    {
+      "id": "t36",
+      "name": "Sludge stuck",
+      "path": "src/assets/skills/talants/generated/T36.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A green poison flask laughing as five sticky toxic blobs cling to a rusty robot and amplify the green poison splatter. Toxic marks increase poison damage."
+    },
+    {
+      "id": "t37",
+      "name": "Toxic trail",
+      "path": "src/assets/skills/talants/generated/T37.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: An expressive medium poison syringe races past a bewildered alien leaving a bright toxic green sizzling trail across the industrial floor. Medium poison stronger."
+    },
+    {
+      "id": "t38",
+      "name": "Overdose",
+      "path": "src/assets/skills/talants/generated/T38.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: An enormous poison flask detonates five glowing green slime marks on an alien monster, cartoon green burst, terrified bulging eyes. No text, count five marks visually."
+    },
+    {
+      "id": "t39",
+      "name": "Do not sniff jar",
+      "path": "src/assets/skills/talants/generated/T39.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A sealed oversized jar of toxic green poison with a malicious face and black hazard skull emblem emits a foul vapor; nearby alien recoils pinching nose. No lettering."
+    },
+    {
+      "id": "t40",
+      "name": "Big toxic uproar",
+      "path": "src/assets/skills/talants/generated/T40.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A wild celebrating giant poison canister unleashes a massive acid-green splash explosion across a junkyard of panicking aliens, five toxic dots bursting. Key talent powerful climactic composition."
+    },
+    {
+      "id": "t41",
+      "name": "Work rhythm",
+      "path": "src/assets/skills/talants/generated/T41.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A personified finger, yellow pencil and green poison bottle working together like a coordinated silly attack team rhythmically striking a battered robot. Finger is a goofy detached cartoon hand with extended index finger, not a fist."
+    },
+    {
+      "id": "t42",
+      "name": "Blood and chemistry",
+      "path": "src/assets/skills/talants/generated/T42.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A yellow pencil character has scratched a rusty robot leaving harmless stylized red drips while a poison jar character pours green acid into the scratches, combined poison and bleeding synergy, non-graphic."
+    },
+    {
+      "id": "t43",
+      "name": "Boss nervous",
+      "path": "src/assets/skills/talants/generated/T43.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A large dented alien boss sweating and looking terrified while a finger, pencil and poison bottle corner it; cracked low-health robot shell, energetic attack pressure."
+    },
+    {
+      "id": "t44",
+      "name": "Second wind",
+      "path": "src/assets/skills/talants/generated/T44.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: An exhausted goofy alien adventurer inhales a fresh glowing green energy bubble from a whimsical little battery character, renewed determination, positive energy reserve."
+    },
+    {
+      "id": "t45",
+      "name": "Keep pushing",
+      "path": "src/assets/skills/talants/generated/T45.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A determined finger and pencil character pushing relentless blows toward a badly dented stumbling robot boss with blinking damaged chest light, low-health damage bonus."
+    },
+    {
+      "id": "t46",
+      "name": "Finishing moment",
+      "path": "src/assets/skills/talants/generated/T46.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A yellow pencil character and poison jar poised for one final synchronized strike on a tiny wobbling nearly defeated robot, dramatic harmless cartoon tension, no gore."
+    },
+    {
+      "id": "t47",
+      "name": "Long battle",
+      "path": "src/assets/skills/talants/generated/T47.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: An anthropomorphic battered alarm clock on a rusty alien arena wall extends a stretched elastic clock hand while two exhausted goofy combatants continue their duel, extra battle time."
+    },
+    {
+      "id": "t48",
+      "name": "Catch your breath",
+      "path": "src/assets/skills/talants/generated/T48.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A goofy finger fighter lands a bright yellow star-shaped critical hit on a robot and catches a glowing green energy bubble with its other hand, restoring stamina."
+    },
+    {
+      "id": "t49",
+      "name": "Work concentration",
+      "path": "src/assets/skills/talants/generated/T49.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: Three living poison containers small jar, medium syringe, large flask stand together squinting in intense concentration, focused green streams converging on one metal target in alien laboratory."
+    },
+    {
+      "id": "t50",
+      "name": "Pressure without pauses",
+      "path": "src/assets/skills/talants/generated/T50.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: Small poison jar and medium poison syringe relentlessly spraying a cornered silly robot with exactly five bright green slime marks on its chest, industrial junkyard, key talent."
+    },
+    {
+      "id": "t51",
+      "name": "Eternal battle",
+      "path": "src/assets/skills/talants/generated/T51.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A determined living yellow pencil draws an endless looping red scratch line around a rusty robot that is frustrated by recurring stylized red drips, symbolic prolonged bleeding, no gore."
+    },
+    {
+      "id": "t52",
+      "name": "Adrenaline",
+      "path": "src/assets/skills/talants/generated/T52.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A jittery wide-eyed alien adventurer with messy dark teal hair clutches a huge glowing green battery, energetic sparks and dynamic exhausted-to-energized posture."
+    },
+    {
+      "id": "t53",
+      "name": "Overdosed yard",
+      "path": "src/assets/skills/talants/generated/T53.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A giant poison flask crashes into a shabby alien courtyard, massive green toxic splash consuming five floating toxic slime marks around a robot boss. Cartoon exaggeration."
+    },
+    {
+      "id": "t54",
+      "name": "Blood and chemistry master",
+      "path": "src/assets/skills/talants/generated/T54.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A furious yellow pencil with red graphite tip drives a glowing red scratch through three acid green slime marks on a bulky rusty robot, combined bleed and poison, non-graphic scratches only."
+    },
+    {
+      "id": "t55",
+      "name": "Take the hit",
+      "path": "src/assets/skills/talants/generated/T55.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A tough goofy finger and yellow pencil stand fearless against a huge healthy unbroken robot boss charging at them, defensive bracing pose and impact star, full health enemy."
+    },
+    {
+      "id": "t56",
+      "name": "Last chance",
+      "path": "src/assets/skills/talants/generated/T56.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A desperate living finger, pencil and poison bottle launch a final all-out attack against a barely standing broken robot with one tiny chest indicator glowing red, dramatic comeback."
+    },
+    {
+      "id": "t57",
+      "name": "The zone presses",
+      "path": "src/assets/skills/talants/generated/T57.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A nervous half-broken alien robot squeezed between crooked scrap walls while a grinning finger fighter aims a precise yellow star critical strike at its dented weak spot."
+    },
+    {
+      "id": "t58",
+      "name": "Authority",
+      "path": "src/assets/skills/talants/generated/T58.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A swaggering anthropomorphic finger boss wearing a tiny crooked crown leads a pencil and green poison bottle squad through a filthy cosmic alley, confidence and stronger attacks, silly crime boss energy."
+    },
+    {
+      "id": "t59",
+      "name": "Toxic authority",
+      "path": "src/assets/skills/talants/generated/T59.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: A smug giant poison flask wearing a tiny crooked crown stands atop rusty crates flanked by living small poison jar, syringe, pencil and finger, green acid power glow, funny commanding presence."
+    },
+    {
+      "id": "t60",
+      "name": "Law of the zone",
+      "path": "src/assets/skills/talants/generated/T60.webp",
+      "prompt": "Generate ONE new standalone landscape talent card illustration, aspect ratio 5:3, matching the attached existing game's talent art references closely. References are STYLE guides only, not edit targets. Thick scratchy black outlines, hand-drawn adult sci-fi cartoon like Rick and Morty, expressive funny living objects with eyes mouths skinny rubber-hose arms, cel shading with lightly grungy painted texture, absurd dirty alien junkyard/lab backgrounds in muted teal and purple, acid green poison, yellow pencils with pink eraser, warm expressive faces. Bright readable central action occupying most of frame, simple readable silhouette when shrunk to 120px. Edge-to-edge scene, no borders, no numbers, no lettering, no UI, no watermark, no typography. Keep established art rather than glossy 3D or fantasy concept painting. Talent scene: Epic goofy final talent scene: living finger, furious yellow pencil and giant poison canister execute a combined attack on a huge scratched rusty alien boss, five toxic green marks burst amid red scratch lines, no gore. Wide dynamic cartoon composition."
+    }
+  ]
+}

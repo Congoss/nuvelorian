@@ -1,5 +1,8 @@
+import { warmSceneImage } from '@/lib/sceneAssets';
 import { useEffect, useMemo, useState } from 'react';
 import i18n from '@/i18n';
+
+const EMPTY_ASSETS = [];
 
 function preloadImage(src) {
   return new Promise((resolve) => {
@@ -8,28 +11,17 @@ function preloadImage(src) {
       return;
     }
 
-    const image = new Image();
-    const done = () => {
-      window.clearTimeout(timeout);
-      image.onload = null;
-      image.onerror = null;
-      resolve(src);
-    };
-    const timeout = window.setTimeout(done, 8000);
-    image.onload = done;
-    image.onerror = done;
-    image.decoding = 'async';
-    image.loading = 'eager';
-    image.fetchPriority = 'high';
-    image.src = src;
-
-    if (image.complete) {
-      queueMicrotask(done);
-    }
+    const timeout = window.setTimeout(() => resolve(src), 1200);
+    warmSceneImage(src, { fetchPriority: 'high' })
+      .catch(() => {})
+      .finally(() => {
+        window.clearTimeout(timeout);
+        resolve(src);
+      });
   });
 }
 
-export function useStartupLoadingManager({ loading, initError, bootstrapReady, bootProgress, criticalAssetPaths = [], criticalAssetUrls = [] }) {
+export function useStartupLoadingManager({ loading, initError, bootstrapReady, bootProgress, criticalAssetPaths = EMPTY_ASSETS, criticalAssetUrls = EMPTY_ASSETS }) {
   const [assetProgress, setAssetProgress] = useState(0);
   const [assetsReady, setAssetsReady] = useState(false);
   const [fontsReady, setFontsReady] = useState(false);
@@ -88,6 +80,9 @@ export function useStartupLoadingManager({ loading, initError, bootstrapReady, b
       return () => {};
     }
 
+    const timeout = window.setTimeout(() => {
+      if (!cancelled) setFontsReady(true);
+    }, 1200);
     document.fonts.ready
       .then(() => {
         if (!cancelled) setFontsReady(true);
@@ -98,6 +93,7 @@ export function useStartupLoadingManager({ loading, initError, bootstrapReady, b
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timeout);
     };
   }, []);
 

@@ -7,7 +7,7 @@ import { build } from 'esbuild';
 // mounting API-dependent game panels or running a browser.
 const bundled = await build({
   entryPoints: ['src/pages/Game.jsx'], bundle: true, write: false,
-  platform: 'node', format: 'cjs', jsx: 'automatic',
+  platform: 'node', format: 'cjs', jsx: 'automatic', define:{'import.meta.env.DEV':'false'},
   plugins: [{ name: 'navigation-panels', setup(builder) {
     builder.onResolve({ filter: /.*/ }, args => args.kind === 'entry-point'
       ? undefined : { path: args.path, namespace: 'navigation-mock' });
@@ -30,12 +30,20 @@ const bundled = await build({
         export const jsxs = jsx;
         export const Fragment = props => props.children;`;
       else if (path === 'framer-motion') contents = 'export const MotionConfig = props => props.children;';
+      else if(path.endsWith('/achievementClaim')) contents='export const claimAchievement=async()=>({});';
+      else if(path.endsWith('/useAchievementLanguage')) contents='export const ViewerLanguageContext={Provider:p=>p.children};export const AchievementClaimContext={Provider:p=>p.children};';
+      else if(path.endsWith('/chatReadState')) contents='export const chatIndicators=()=>({});export const CHAT_READ_EVENT="chat-read";';
+      else if(path.endsWith('/useClanQuestNotifications')) contents='export const useClanQuestNotifications=()=>{};';
       else if (path.endsWith('/useGameState')) contents = 'export const useGameState = () => globalThis.navigation.gameState;';
       else if (path.endsWith('/useStartupLoadingManager')) contents = 'export const useStartupLoadingManager = () => ({loadingProgress:100, loadingVisible:false});';
       else if (path.endsWith('/animationPreference')) contents = 'export const useGlobalAnimations = () => true;';
       else if (path.endsWith('/gameConfig')) contents = 'export const GAME_CONFIG = {CONTENT_UNLOCK_LEVELS:{}};';
+      else if (path.endsWith('/backgrounds')) contents = 'export const getCampBackgroundById = () => ({source:"background"});';
       else if (path.endsWith('/tutorialProgress.js')) contents = 'export const TUTORIAL_STEPS = new Set(); export const resolveTutorialStep = () => null; export const FIRST_QUEST_TUTORIAL_ENERGY = 231; export const getQuestTutorialRecoveryStep = () => null; export const isNewbieTutorialActive = () => false;';
-      else if (path.endsWith('/gameApi')) contents = 'export const findPlayerProfiles = async () => []; export const listChatMessages = async () => [];';
+      else if (path.endsWith('/gameApi')) contents = 'export const findPlayerProfiles = async () => []; export const listChatMessages = async () => []; export const gameApi = {};';
+      else if (path.endsWith('/clanOverviewQueries')) contents = 'export const clanOverviewQueries = () => [];';
+      else if (path.endsWith('/query-client')) contents = 'export const queryClientInstance = { prefetchQuery: async () => {}, getQueryData: () => undefined };';
+      else if (path.endsWith('/sceneAssets')) contents = 'export const warmSceneImage = async () => {}; export const warmFirstFrameImages = async () => {}; export const isSceneImageReady = () => true;';
       else if (path.endsWith('/appVersion')) contents = 'export const APP_VERSION_LABEL = "TEST";';
       else if (path.endsWith('/resourceIcons')) contents = 'export const getResourceIcon = () => "resource";';
       else if (path.endsWith('/caRanks')) contents = 'export const CA_RANKS = []; export const getCARankProgress = () => ({current:0,next:null}); export const getCARankIcon = () => "rank"; export const getPlayerCA = () => 0;';

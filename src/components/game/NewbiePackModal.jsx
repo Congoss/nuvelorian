@@ -98,7 +98,7 @@ export default function NewbiePackModal({ profile, onClose, onRefreshProfile }) 
     } catch (err) { setError(err.message || 'Unable to create payment'); }
     finally { setBusy(false); }
   };
-  return createPortal(<div role="dialog" aria-modal="true" aria-label="Newbie Pack" className="fixed inset-x-0 top-0 z-[100] flex items-center justify-center bg-black/80 px-3" style={{ height: 'var(--app-viewport-height, 100dvh)', paddingTop: 'calc(var(--app-top-offset, var(--app-safe-top, 0px)) + 12px)', paddingBottom: 'calc(var(--app-safe-bottom, 0px) + 12px)' }}>
+  return createPortal(<div onClick={event=>{if(event.target===event.currentTarget&&!busy)onClose();}} role="dialog" aria-modal="true" aria-label="Newbie Pack" className="fixed inset-x-0 top-0 z-[100] flex items-center justify-center bg-black/80 px-3" style={{ height: 'var(--app-viewport-height, 100dvh)', paddingTop: 'calc(var(--app-top-offset, var(--app-safe-top, 0px)) + 12px)', paddingBottom: 'calc(var(--app-safe-bottom, 0px) + 12px)' }}>
     <section className="relative flex min-h-0 max-h-full w-full max-w-[420px] flex-col overflow-hidden rounded-[20px_15px_22px_17px] border-2 border-[#4ff58e] bg-[radial-gradient(ellipse_at_50%_12%,#284b25,#101b12_49%,#070b08)] shadow-[0_0_25px_rgba(63,255,133,.28)]">
       <button type="button" onClick={onClose} aria-label="Close" className="absolute right-3 top-3 z-10 p-1 text-[#dfffb8]"><X size={18} /></button>
       <div className="min-h-0 overflow-y-auto overscroll-contain p-3 pt-9">

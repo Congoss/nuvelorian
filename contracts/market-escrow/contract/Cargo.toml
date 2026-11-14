@@ -1,0 +1,13 @@
+[package]
+name = "p4-market-escrow"
+description = "Planet4 PL4 market escrow contract for NEAR"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+near-sdk = "5.30.1"
+p4-escrow-core = { path = "../core" }

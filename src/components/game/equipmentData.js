@@ -1,3 +1,24 @@
+import { FRIDAY13_PET } from '@/lib/friday13Promo';
+import { SKELETON_BP_EQUIPMENT } from '@/lib/skeletonBattlePassSet';
+import {equipmentRarity} from '@/lib/equipmentRarity';
+import { FEATURE_FLAGS } from '../../lib/featureFlags.js';
+import { ANUBIS_ITEMS } from './anubisItems';
+import { SHKRABAN_ITEMS, SHKRABAN_PET } from './shkrabanItems';
+import { HALLOWEEN_EQUIPMENT } from '../../lib/halloweenEquipment.js';
+import halloweenPetArt from '@/assets/ui/halloween-pumpkin.webp';
+import halloweenTalismanIcon from '@/assets/ui/halloween-talisman.svg';
+import halloweenArmorIcon from '@/assets/hero/halloween-set/hellow-set-armor-ico.png';
+import halloweenBootsIcon from '@/assets/hero/halloween-set/hellow-set-boots-ico.png';
+import halloweenHandsIcon from '@/assets/hero/halloween-set/hellow-set-hands-ico.png';
+import halloweenHeadIcon from '@/assets/hero/halloween-set/hellow-set-head-ico.png';
+import halloweenLegsIcon from '@/assets/hero/halloween-set/hellow-set-pants-ico.png';
+import halloweenWeaponIcon from '@/assets/hero/halloween-set/hellow-set-weap-ico.png';
+import halloweenArmorLayer from '@/assets/hero/halloween-set/hellow-set-armor-bottom54.png';
+import halloweenBootsLayer from '@/assets/hero/halloween-set/hellow-set-boots-bottom54.png';
+import halloweenHandsLayer from '@/assets/hero/halloween-set/hellow-set-hands-bottom54.png';
+import halloweenHeadLayer from '@/assets/hero/halloween-set/hellow-set-head-bottom54.png';
+import halloweenLegsLayer from '@/assets/hero/halloween-set/hellow-set-pants-bottom54.png';
+import halloweenWeaponLayer from '@/assets/hero/halloween-set/hellow-set-hands-weap-bottom54.png';
 import { EPIC_BP_ITEMS } from '../../lib/epicBattlePassSet.js';
 import { BP_ANIMATION_ITEMS, inventoryWithBattlePassAnimations } from '../../lib/battlePassAnimations.js';
 import epicAnimationIcon from '@/assets/hero/animation-icons/epic-ravens.png';
@@ -12,6 +33,8 @@ import raidPet from '@/assets/hero/accessories/raidboss2-pet.png';
 import raidPetIcon from '@/assets/hero/accessories/raidboss2-pet-ico.png';
 import hereEarlyPetArt from '@/assets/hero/hereearlypet/hereearlypet.webp';
 import hereEarlyPetIcon from '@/assets/hero/hereearlypet/hereearlypet-icon.webp';
+import legionPetArt from '@/assets/hero/legion-pet/legion-pet.png';
+import legionPetIcon from '@/assets/hero/legion-pet/legion-pet-icon.webp';
 import { LEGENDARY_BP_ITEMS } from '../../lib/legendaryBattlePassSet.js';
 import bpEpicarmorIcon from '@/assets/hero/bp epic set/setbp1-armor-ico.png';
 import bpEpicbootsIcon from '@/assets/hero/bp epic set/setbp1-boots-ico.png';
@@ -20,6 +43,7 @@ import bpEpicheadIcon from '@/assets/hero/bp epic set/setbp1-head-ico.png';
 import bpEpiclegsIcon from '@/assets/hero/bp epic set/setbp1-legs-ico.png';
 import bpEpicweaponIcon from '@/assets/hero/bp epic set/setbp1-weap-ico.png';
 import bpEpicpetIcon from '@/assets/hero/bp epic set/setbp1-pet-ico.png';
+import bpLegendaryPetIcon from '@/assets/hero/bp leg set/voidling-pet.png';
 import bpEpicarmorLayer from '@/assets/hero/bp epic set/setbp1-armor.png';
 import bpEpicbootsLayer from '@/assets/hero/bp epic set/setbp1-boots.png';
 import bpEpichandsLayer from '@/assets/hero/bp epic set/setbp1-hands.png';
@@ -43,6 +67,7 @@ import pet2Full from '@/assets/hero/pet-2-full.png';
 import pet4Full from '@/assets/hero/pet-4-full.png';
 import pet5Body from '@/assets/hero/pet5/pet5-body.png';
 import pet5Icon from '@/assets/hero/pet5/pet5-ico.png';
+import purrgulpArt from '@/assets/hero/purrgulp/purrgulp.png';
 import nightArmorLayer from '@/assets/hero/night-disinfector/set2-armor.png';
 import nightBootsLayer from '@/assets/hero/night-disinfector/set2-boots.png';
 import nightHandsIcon from '@/assets/hero/night-disinfector/set2-hands-ico.png';
@@ -584,14 +609,42 @@ const NEWBIE_PACK_II_ITEMS = [
   attack: item.attack || 0, hp: item.hp || 0, locked: true,
 }));
 
-const legendaryFiles = import.meta.glob('/src/assets/hero/bp leg set/*.png', { eager:true, query:'?url', import:'default' });
+const legendaryFiles = import.meta.glob('/src/assets/hero/bp leg set/icons/*.svg', { eager:true, query:'?url', import:'default' });
 export const DEFAULT_EQUIPMENT_ITEMS = [
+  ...SHKRABAN_ITEMS, ...SHKRABAN_PET,
+  ...Object.values(SKELETON_BP_EQUIPMENT).map(item => ({
+    ...item,
+    names: ({
+      weapon: {ua:'Кістяний меч',ru:'Костяной меч',en:'Bone Sword'},
+      head: {ua:'Череп',ru:'Череп',en:'Skull'},
+      armor: {ua:'Кістяна броня',ru:'Костяная броня',en:'Bone Armor'},
+      hands: {ua:'Кістяні рукавиці',ru:'Костяные перчатки',en:'Bone Gloves'},
+      legs: {ua:'Кістяні штани',ru:'Костяные штаны',en:'Bone Trousers'},
+      boots: {ua:'Кістяні чоботи',ru:'Костяные сапоги',en:'Bone Boots'},
+    })[item.slot],
+    sourceType: 'battle_pass',
+    purchasable: false,
+    locked: true,
+    icon: '/skeleton-bp/' + (item.slot === 'head' ? 'head-final' : item.slot === 'armor' ? 'armor-neck' : item.slot === 'hands' ? 'hands-aligned-v2' : item.slot) + '-icon.webp',
+    layerSrc: '/skeleton-bp/' + (item.slot === 'head' ? 'head-final' : item.slot === 'armor' ? 'armor-neck' : item.slot === 'hands' ? 'hands-aligned-v2' : item.slot) + '.webp',
+  })),
+  ...(FEATURE_FLAGS.halloween ? HALLOWEEN_EQUIPMENT : []).map(item => {
+    const icons={weapon:halloweenWeaponIcon,head:halloweenHeadIcon,armor:halloweenArmorIcon,hands:halloweenHandsIcon,legs:halloweenLegsIcon,boots:halloweenBootsIcon};
+    const layers={weapon:halloweenWeaponLayer,head:halloweenHeadLayer,armor:halloweenArmorLayer,hands:halloweenHandsLayer,legs:halloweenLegsLayer,boots:halloweenBootsLayer};
+    return {...item,locked:true,icon:icons[item.slot]||(item.slot==='pet'?halloweenPetArt:halloweenTalismanIcon),layerSrc:layers[item.slot]||null,renderArt:item.slot==='pet'?halloweenPetArt:null};
+  }),
   { id: 'hereearlypet', slot: 'pet', name: 'HERE Early Pet', names: { ua: 'HERE Early Pet', ru: 'HERE Early Pet', en: 'HERE Early Pet' }, icon: hereEarlyPetIcon, renderArt: hereEarlyPetArt, sourceType: 'holder', rarity: 'legendary', attack: 0, hp: 0, bonuses: [], locked: true, purchasable: false },
+  { id: 'legion_pet', slot: 'pet', name: 'Legion Pet', names: { ua: 'Legion Pet', ru: 'Legion Pet', en: 'Legion Pet' }, icon: legionPetIcon, renderArt: legionPetArt, sourceType: 'holder', rarity: 'legendary', attack: 0, hp: 0, bonuses: [
+    { type: 'bleed_chance_pct', value: 0.05 },
+    { type: 'small_poison_flat', value: 10 },
+    { type: 'medium_poison_flat', value: 20 },
+    { type: 'large_poison_flat', value: 30 },
+  ], locked: true, purchasable: false },
   ...BP_ANIMATION_ITEMS.map(item => ({ ...item, icon: item.rarity === 'epic' ? epicAnimationIcon : legendaryAnimationIcon })),
   { id: 'raidboss2_crown_accessory', slot: 'accessory', name: 'Raid Champion Crown', names: { ua: 'Корона чемпіона рейду', ru: 'Корона чемпиона рейда', en: 'Raid Champion Crown' }, icon: raidCrownIcon, layerSrc: raidCrown, sourceType: 'raid', rarity: 'legendary', attack: 0, hp: 0, bonuses: [], locked: true, purchasable: false },
   ...[{ rank: 2, layerSrc: raidCrown2, icon: raidCrown2Icon }, { rank: 3, layerSrc: raidCrown3, icon: raidCrown3Icon }].map(({ rank, layerSrc, icon }) => ({ id: `raidboss2_crown${rank}_accessory`, slot: 'accessory', name: `Raid Crown #${rank}`, names: { ua: `Корона рейду · ${rank} місце`, ru: `Корона рейда · ${rank} место`, en: `Raid Crown · #${rank}` }, layerSrc, icon, sourceType: 'raid', raidRank: rank, rarity: 'legendary', attack: 0, hp: 0, bonuses: [], locked: true, purchasable: false })),
   { id: 'raidboss2_pet', slot: 'pet', name: 'Raid Scarecrow', names: { ua: 'Рейдове опудало', ru: 'Рейдовое пугало', en: 'Raid Scarecrow' }, icon: raidPetIcon, renderArt: raidPet, sourceType: 'raid', rarity: 'legendary', attack: 0, hp: 0, bonuses: [], locked: true, purchasable: false },
-  ...LEGENDARY_BP_ITEMS.map(item=>({...item,icon:legendaryFiles['/src/assets/hero/bp leg set/setbp2-'+(item.slot==='weapon'?'weap':item.slot)+'.png'],locked:true})),
+  ...LEGENDARY_BP_ITEMS.map(item=>({...item,icon:item.slot==='pet'?bpLegendaryPetIcon:legendaryFiles['/src/assets/hero/bp leg set/icons/'+(item.slot==='weapon'?'weap':item.slot)+'.svg'],renderArt:item.slot==='pet'?bpLegendaryPetIcon:null,locked:true})),
   ...EPIC_BP_ITEMS.map(item => ({ ...item,
     icon: { armor: bpEpicarmorIcon, boots: bpEpicbootsIcon, hands: bpEpichandsIcon, head: bpEpicheadIcon, legs: bpEpiclegsIcon, weapon: bpEpicweaponIcon, pet: bpEpicpetIcon }[item.slot],
     layerSrc: { armor: bpEpicarmorLayer, boots: bpEpicbootsLayer, hands: bpEpichandsLayer, head: bpEpicheadLayer, legs: bpEpiclegsLayer }[item.slot], locked: true,
@@ -601,10 +654,12 @@ export const DEFAULT_EQUIPMENT_ITEMS = [
   ...NUVELOR_ITEMS,
   ...SET4_ITEMS,
   ...SET5_ITEMS,
+  ...ANUBIS_ITEMS,
   ...NEWBIE_PACK_II_ITEMS,
-  { id: 'pet-skunk', slot: 'pet', name: 'Junk Skunk', icon: pet1Icon, renderArt: pet1Full, attack: 18, hp: 110, locked: true, buyPrice: 5000 },
+  FRIDAY13_PET,
+  { id: 'pet-skunk', slot: 'pet', name: 'Junk Skunk', icon: pet1Icon, renderArt: pet1Full, attack: 18, hp: 110, locked: true, sourceType: 'boss', dropSource: 'Шорк', dropBossId: 'chinook', purchasable: false, bossDrop: true },
   { id: 'pet-raccoon', slot: 'pet', name: 'Trash Panda', icon: pet2Icon, renderArt: pet2Full, attack: 14, hp: 140, locked: true, buyPrice: 5000 },
-  { id: 'pet-cthulhu', slot: 'pet', name: 'Mr.Newbie', icon: newbieSoulIcon, renderArt: newbieSoulArt, attack: 24, hp: 95, locked: true, buyPrice: 5000, bonuses: [
+  { id: 'pet-cthulhu', slot: 'pet', name: 'Mr.Newbie', icon: newbieSoulIcon, renderArt: newbieSoulArt, attack: 24, hp: 95, locked: true, sourceType: 'newbie_pack', purchasable: false, bossDrop: false, bonuses: [
     { type: 'small_poison_flat', value: 20 },
     { type: 'medium_poison_flat', value: 35 },
     { type: 'large_poison_flat', value: 50 },
@@ -617,6 +672,7 @@ export const DEFAULT_EQUIPMENT_ITEMS = [
     { type: 'energy_capacity_flat', value: 25 },
   ] },
   { id: 'pet5', slot: 'pet', name: 'Gum Blob', icon: pet5Icon, renderArt: pet5Body, attack: 28, hp: 190, locked: true, sourceType: 'boss', dropSource: 'Глиста', dropBossId: 'boss4', purchasable: false, bossDrop: true },
+  { id: 'pet-purrgulp', slot: 'pet', name: 'Purrgulp', names: { ua: 'Мурзаглот', ru: 'Мурзаглот', en: 'Purrgulp' }, icon: purrgulpArt, renderArt: purrgulpArt, attack: 0, hp: 0, bonuses: [], rarity: 'epic', locked: true, sourceType: 'boss', dropSource: 'Клеопатреш', dropBossId: 'boss7', purchasable: false, bossDrop: true },
 ].map((item) => {
   const balance = getBalancedEquipmentItem(item.id);
   return balance ? { ...item, ...balance } : item;
@@ -641,16 +697,19 @@ export function getShopSourceLabel(language = 'en') {
 
 export function getEquipmentSourceLabel(item, language = 'en') {
   const lang = toLang(language);
-  if (item?.sourceType === 'holder' || item?.sourceType === 'nft_holder') return lang === 'en' ? 'NFT collection · HERE Early' : lang === 'ru' ? 'NFT-коллекция · HERE Early' : 'NFT-колекція · HERE Early';
+  if (item?.sourceType === 'halloween') return 'Halloween 2026';
+  if (item?.sourceType === 'holder' || item?.sourceType === 'nft_holder') {
+    const collection = item.id === 'legion_pet' ? 'NEAR Legion' : 'HERE Early';
+    return `${lang === 'en' ? 'NFT collection' : lang === 'ru' ? 'NFT-коллекция' : 'NFT-колекція'} · ${collection}`;
+  }
   if (item?.sourceType === 'raid') {
     const place = item.slot === 'pet' ? 'TOP 3' : `#${item.raidRank || 1}`;
     return `${lang === 'en' ? 'Raid Boss' : lang === 'ru' ? 'Рейд-босс' : 'Рейд-бос'} · ${place}`;
   }
   if (item?.sourceType === 'battle_pass') return item?.setId === 'bp_legendary' || item?.rarity === 'legendary' ? 'Battle Pass · LEGENDARY' : 'Battle Pass · EPIC';
   if (item?.sourceType === 'newbie_pack') {
-    if (lang === 'en') return 'Newbie Pack II';
-    if (lang === 'ru') return 'Пак новичка II';
-    return 'Пак новачка II';
+    const pack = item.id === 'pet-cthulhu' ? 'Newbie Pack I' : 'Newbie Pack II';
+    return lang === 'en' ? `${pack} · Purchase only` : lang === 'ru' ? `${pack} · Только за покупку пака` : `${pack} · Лише за покупку паку`;
   }
   if (item?.sourceType === 'boss') {
     const bossName = GAME_CONFIG.BOSSES?.find((boss) => boss?.id === item?.dropBossId)?.names?.[lang]
@@ -666,11 +725,14 @@ export function getEquipmentSourceLabel(item, language = 'en') {
 export function getEquipmentSourceDescription(item, language = 'en') {
   const lang = toLang(language);
   const source = getEquipmentSourceLabel(item, language);
-  if (['holder', 'nft_holder'].includes(item?.sourceType)) return lang === 'en' ? 'Hold an unused HERE Early collection NFT in your verified NEAR wallet, then press Check NFT below. Each NFT can redeem one pet.' : lang === 'ru' ? 'Нужна неиспользованная NFT коллекции HERE Early в подтверждённом NEAR-кошельке. Нажми «Проверить NFT» ниже. Одна NFT даёт одного питомца.' : 'Потрібна невикористана NFT колекції HERE Early у підтвердженому NEAR-гаманці. Натисни «Перевірити NFT» нижче. Одна NFT дає одного пета.';
+  if (['holder', 'nft_holder'].includes(item?.sourceType)) {
+    const collection = item.id === 'legion_pet' ? 'NEAR Legion (nearlegion.nfts.tg)' : 'HERE Early';
+    return lang === 'en' ? `Hold an unused ${collection} NFT in your verified NEAR wallet, then press Check NFT below. Each NFT can redeem one pet.` : lang === 'ru' ? `Нужна неиспользованная NFT коллекции ${collection} в подтверждённом NEAR-кошельке. Нажми «Проверить NFT» ниже. Одна NFT даёт одного питомца.` : `Потрібна невикористана NFT колекції ${collection} у підтвердженому NEAR-гаманці. Натисни «Перевірити NFT» нижче. Одна NFT дає одного пета.`;
+  }
   if (item?.sourceType === 'raid') return lang === 'en' ? `Reward for ${source} at the end of the raid. Earn your place by dealing damage to the raid boss.` : lang === 'ru' ? `Награда за ${source} после завершения рейда. Наноси урон рейд-боссу, чтобы занять призовое место.` : `Нагорода за ${source} після завершення рейду. Завдавай шкоди рейд-босу, щоб посісти призове місце.`;
   if (item?.sourceType === 'battle_pass') return lang === 'en' ? `${source} reward. Reach the required pass level and claim this item from its reward track.` : lang === 'ru' ? `Награда ${source}. Достигни нужного уровня пропуска и забери предмет на соответствующей дорожке наград.` : `Нагорода ${source}. Досягни потрібного рівня пропуску й забери предмет на відповідній доріжці нагород.`;
   if (item?.sourceType === 'boss') return lang === 'en' ? `${source}. Defeat this boss and open its reward chests. The item is a random drop.` : lang === 'ru' ? `${source}. Побеждай этого босса и открывай наградные сундуки. Предмет выпадает случайно.` : `${source}. Перемагай цього боса й відкривай нагородні скрині. Предмет випадає випадково.`;
-  if (item?.sourceType === 'newbie_pack') return lang === 'en' ? `Included in ${source}. Obtain the corresponding newbie pack in the game.` : lang === 'ru' ? `Входит в ${source}. Получи соответствующий пак новичка в игре.` : `Входить до ${source}. Отримай відповідний пак новачка у грі.`;
+  if (item?.sourceType === 'newbie_pack') return lang === 'en' ? 'Available only by purchasing the corresponding Newbie Pack. Does not drop from bosses or other gameplay rewards.' : lang === 'ru' ? 'Доступно только за покупку соответствующего Newbie Pack. Не выпадает из боссов и других игровых наград.' : 'Доступно лише за покупку відповідного Newbie Pack. Не випадає з босів та інших ігрових нагород.';
   return lang === 'en' ? `Source: ${source}. Look for this item in the in-game shop.` : lang === 'ru' ? `Источник: ${source}. Ищи этот предмет в магазине игры.` : `Джерело: ${source}. Шукай цей предмет у магазині гри.`;
 }
 
@@ -693,15 +755,16 @@ export function normalizeEquipmentInventory(profile) {
       name: item.name || catalogItem.name,
       names: { ...item.names, ...catalogItem.names },
       icon: [NIGHT_DISINFECTOR_SET_ID, NUVELOR_SET_ID, SET5_SET_ID].includes(catalogItem.setId) ? catalogItem.icon : (item.icon || catalogItem.icon),
-      layerSrc: item.layerSrc || catalogItem.layerSrc || null,
+      layerSrc: (item.id?.startsWith('bp_skeleton_2026_') && catalogItem.layerSrc) || item.layerSrc || catalogItem.layerSrc || null,
       renderArt: item.renderArt || catalogItem.renderArt || null,
       attack: item.attack || catalogItem.attack || 0,
       hp: item.hp || catalogItem.hp || 0,
-      setId: item.setId || null,
+      setId: item.setId || catalogItem.setId || null,
       setName: item.setName || null,
       setNameI18n: catalogItem.setNameI18n || item.setNameI18n || null,
       setBonusNameI18n: catalogItem.setBonusNameI18n || item.setBonusNameI18n || null,
       rarity: item.rarity || null,
+      rarityTier: equipmentRarity(item,catalogItem).id,
       price: item.price || null,
       sourceType: item.sourceType || null,
       dropSource: item.dropSource || catalogItem.dropSource || null,
@@ -709,6 +772,7 @@ export function normalizeEquipmentInventory(profile) {
       purchasable: Boolean(item.purchasable),
       bossDrop: Boolean(item.bossDrop),
       bonuses: getBalancedEquipmentItem(item.id)?.bonuses || (Array.isArray(item.bonuses) && item.bonuses.length ? item.bonuses : (catalogItem.bonuses || [])),
+      enhancementLevel: Math.max(0, Math.min(15, Math.floor(Number(item.enhancementLevel) || 0))),
       poisonPct: item.poisonPct || 0,
       smallPoisonPct: item.smallPoisonPct || 0,
       mediumPoisonPct: item.mediumPoisonPct || 0,
@@ -813,57 +877,63 @@ export function describeEquipmentBonuses(item, language = 'ua') {
   if (!item) return [];
   const lang = toLang(language);
   const ua = {
-    finger_damage_flat: 'Палець: +{{v}}',
-    pencil_damage_flat: 'Олівець: +{{v}}',
+    finger_damage_flat: 'Шкода пальця: +{{v}}',
+    pencil_damage_flat: 'Шкода олівця: +{{v}}',
     poison_damage_flat: 'Уся отрута: +{{v}}',
-    boss_damage_flat: 'Шкода босам: +{{v}}',
+    boss_damage_flat: 'Усі атаки: шкода +{{v}}',
     finger_damage_pct: 'Палець: шкода +{{v}}%',
     pencil_damage_pct: 'Олівець: шкода +{{v}}%',
-    finger_cooldown_sec: 'Палець: КД {{v}} сек',
-    pencil_cooldown_sec: 'Олівець: КД {{v}} сек',
+    finger_cooldown_sec: 'Перезарядка пальця: {{v}} с',
+    pencil_cooldown_sec: 'Перезарядка олівця: {{v}} с',
     poison_damage_pct: 'Уся отрута: шкода +{{v}}%',
     small_poison_flat: 'Малий яд: +{{v}} шкоди',
     medium_poison_flat: 'Середній яд: +{{v}} шкоди',
     large_poison_flat: 'Фляга з отрутою: +{{v}} шкоди',
+    poison_crit_chance_pct: 'Шанс криту отрутами +{{v}}%',
     crit_chance_pct: 'Шанс криту +{{v}}%',
+    bleed_chance_pct: 'Шанс спричинити кровотечу +{{v}}%',
     poison_preserve_chance_pct: 'Шанс не витратити яд +{{v}}%',
     energy_capacity_flat: 'Запас енергії +{{v}}',
     energy_regen_pct: 'Швидкість відновлення енергії +{{v}}%',
     boss_damage_pct: 'Урон по босах +{{v}}%',
   };
   const ru = {
-    finger_damage_flat: 'Палец: +{{v}}',
-    pencil_damage_flat: 'Карандаш: +{{v}}',
+    finger_damage_flat: 'Урон пальца: +{{v}}',
+    pencil_damage_flat: 'Урон карандаша: +{{v}}',
     poison_damage_flat: 'Весь яд: +{{v}}',
-    boss_damage_flat: 'Урон по боссам: +{{v}}',
+    boss_damage_flat: 'Все атаки: урон +{{v}}',
     finger_damage_pct: 'Палец: урон +{{v}}%',
     pencil_damage_pct: 'Карандаш: урон +{{v}}%',
-    finger_cooldown_sec: 'Палец: КД {{v}} сек',
-    pencil_cooldown_sec: 'Карандаш: КД {{v}} сек',
+    finger_cooldown_sec: 'Перезарядка пальца: {{v}} с',
+    pencil_cooldown_sec: 'Перезарядка карандаша: {{v}} с',
     poison_damage_pct: 'Весь яд: урон +{{v}}%',
     small_poison_flat: 'Малый яд: +{{v}} урона',
     medium_poison_flat: 'Средний яд: +{{v}} урона',
     large_poison_flat: 'Фляга с ядом: +{{v}} урона',
+    poison_crit_chance_pct: 'Шанс крита ядами +{{v}}%',
     crit_chance_pct: 'Шанс крита +{{v}}%',
+    bleed_chance_pct: 'Шанс вызвать кровотечение +{{v}}%',
     poison_preserve_chance_pct: 'Шанс не потратить яд +{{v}}%',
     energy_capacity_flat: 'Запас энергии +{{v}}',
     energy_regen_pct: 'Скорость восстановления энергии +{{v}}%',
     boss_damage_pct: 'Урон по боссам +{{v}}%',
   };
   const en = {
-    finger_damage_flat: 'Finger: +{{v}}',
-    pencil_damage_flat: 'Pencil: +{{v}}',
+    finger_damage_flat: 'Finger damage: +{{v}}',
+    pencil_damage_flat: 'Pencil damage: +{{v}}',
     poison_damage_flat: 'All poison: +{{v}}',
-    boss_damage_flat: 'Boss damage: +{{v}}',
+    boss_damage_flat: 'All attacks: damage +{{v}}',
     finger_damage_pct: 'Finger damage +{{v}}%',
     pencil_damage_pct: 'Pencil damage +{{v}}%',
-    finger_cooldown_sec: 'Finger cooldown {{v}} sec',
-    pencil_cooldown_sec: 'Pencil cooldown {{v}} sec',
+    finger_cooldown_sec: 'Finger cooldown: {{v}} sec',
+    pencil_cooldown_sec: 'Pencil cooldown: {{v}} sec',
     poison_damage_pct: 'All poison damage +{{v}}%',
     small_poison_flat: 'Small poison: +{{v}} damage',
     medium_poison_flat: 'Medium poison: +{{v}} damage',
     large_poison_flat: 'Poison flask: +{{v}} damage',
+    poison_crit_chance_pct: 'Poison critical chance +{{v}}%',
     crit_chance_pct: 'Critical chance +{{v}}%',
+    bleed_chance_pct: 'Bleed chance +{{v}}%',
     poison_preserve_chance_pct: 'Chance to preserve poison +{{v}}%',
     energy_capacity_flat: 'Energy capacity +{{v}}',
     energy_regen_pct: 'Energy regeneration speed +{{v}}%',
@@ -875,7 +945,8 @@ export function describeEquipmentBonuses(item, language = 'ua') {
   (item.bonuses || []).forEach((bonus) => {
     const tpl = dict[bonus.type];
     if (!tpl) return;
-    const value = bonus.type.includes('cooldown') || bonus.type.includes('_flat') ? String(Math.abs(Number(bonus.value || 0))) : String(Math.round(Number(bonus.value || 0) * 100));
+    const amount = Number(bonus.value || 0);
+    const value = bonus.type.includes('cooldown') ? `${amount > 0 ? '+' : ''}${amount}` : bonus.type.includes('_flat') ? String(Math.abs(amount)) : String(Math.round(amount * 100));
     lines.push(tpl.replace('{{v}}', value));
   });
   return lines;

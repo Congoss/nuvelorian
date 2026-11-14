@@ -1,11 +1,13 @@
 ﻿import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { gameApi } from '@/services/gameApi';
 import bossesIcon from '@/assets/optimized/all/nav/boss-nav.webp';
 import questsIcon from '@/assets/optimized/all/nav/quests-nav.webp';
 import heroIcon from '@/assets/optimized/nav-hero.webp';
 import inventoryIcon from '@/assets/optimized/all/nav/talents-nav.webp';
 import clanIcon from '@/assets/optimized/all/nav/clans-nav.webp';
+import marketIcon from '@/assets/nav/market-nav.png';
 
 const BOTTOM_TABS = [
   { id: 'boss', icon: bossesIcon },
@@ -13,6 +15,7 @@ const BOTTOM_TABS = [
   { id: 'camp', icon: heroIcon },
   { id: 'skills', icon: inventoryIcon },
   { id: 'clan', icon: clanIcon },
+  { id: 'market', icon: marketIcon },
 ];
 
 function NavIcon({ src, active, locked = false, lockLabel = '' }) {
@@ -36,6 +39,13 @@ function NavIcon({ src, active, locked = false, lockLabel = '' }) {
 }
 
 export default function BottomNav({ activeTab, onTabChange, onTabIntent, language = 'uk', lockedTabs = {}, lockedTabLevels = {}, lightBlur = false, onHeightChange }) {
+  const [marketAllowed,setMarketAllowed]=useState(false);
+  useEffect(()=>{
+    let live=true;
+    const refresh=()=>gameApi.marketAccess().then(result=>{if(live)setMarketAllowed(result.allowed===true||result.view===true);}).catch(()=>{if(live)setMarketAllowed(false);});
+    void refresh();const timer=setInterval(refresh,30000);
+    return()=>{live=false;clearInterval(timer);};
+  },[]);
   const navRef = useRef(null);
   useLayoutEffect(() => {
     const nav = navRef.current;
@@ -54,6 +64,7 @@ export default function BottomNav({ activeTab, onTabChange, onTabIntent, languag
     camp: t('bottom_nav.hero'),
     skills: t('bottom_nav.skills'),
     clan: t('bottom_nav.clans'),
+    market: language === 'en' ? 'Market' : 'Маркет',
   };
 
   return (
@@ -62,8 +73,8 @@ export default function BottomNav({ activeTab, onTabChange, onTabIntent, languag
       className={`absolute inset-x-0 bottom-0 z-30 bg-transparent px-1 pt-1 shadow-none sm:px-2 sm:pt-2 ${lightBlur ? 'backdrop-blur-[3px]' : 'backdrop-blur-[10px]'}`}
       style={{ paddingBottom: '8px' }}
     >
-      <div className="grid min-w-0 grid-cols-5 items-end gap-0">
-        {BOTTOM_TABS.map((tab) => {
+      <div className={`grid min-w-0 ${marketAllowed ? 'grid-cols-6' : 'grid-cols-5'} items-end gap-0`}>
+        {BOTTOM_TABS.filter(tab=>tab.id!=='market'||marketAllowed).map((tab) => {
           const isActive = activeTab === tab.id;
           const locked = Boolean(lockedTabs[tab.id]);
 

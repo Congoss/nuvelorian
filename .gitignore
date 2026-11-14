@@ -1,0 +1,41 @@
+# Secrets and local config — never commit
+.env*
+!.env.production.example
+*.pem
+*.key
+*keys*.json
+.vercel/
+
+# Local saves, player data, runtime state
+.local/
+# root only: server/data/ is source code and must be tracked
+/data/
+logs/
+*.log
+tmp/
+.tmp*/
+output/
+artifacts/
+isolated/
+
+# Dependencies and build output
+node_modules/
+target/
+dist/
+dist-*/
+stats.html
+*.tgz
+
+# Release packages, backups, recovery copies
+releases/
+recovery/
+deploy/
+*.zip
+
+# Local tools and caches
+.tools/
+.video-tools/
+.deps-restore/
+.dseg-font-stage/
+.claude-check/
+.claude/

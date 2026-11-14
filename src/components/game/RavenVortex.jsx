@@ -24,7 +24,7 @@ export default function RavenVortex() {
   </g>
   {BIRDS.map((b,i)=><g key={i} transform={'translate('+b.x+' '+b.y+') rotate('+b.r+') scale('+b.s+')'}>
    <g className="bp-set-crow-fade" style={{animationDuration:(8.7+i%4*2.3)+'s',animationDelay:(-i*3.17-2)+'s'}}>
-   <g className="bp-set-vortex-bird" style={{'--arc-x':b.dx+'px','--arc-y':b.dy+'px',animationDuration:b.d+'s',animationDelay:b.delay+'s'}}>
+   <g className="bp-set-vortex-bird" style={{'--arc-x':b.dx+'px','--arc-y':b.dy+'px','--arc-mid-x':b.dx*.25+'px','--arc-mid-y':b.dy*1.4+'px','--arc-end-x':b.dx*-.3+'px','--arc-end-y':b.dy*.55+'px',animationDuration:b.d+'s',animationDelay:b.delay+'s'}}>
      <g transform={'rotate('+(b.v===1?-24:8)+')'}><g className="bp-set-crow-wing bp-set-crow-wing-left" style={{animationDuration:(4.2+i*.37)+'s',animationDelay:(-i*.83)+'s'}}><path d={FEATHERED_WING} transform="scale(.15) translate(-489 -428)" strokeWidth="5"/></g></g>
      <g transform={'scale(-1 1) rotate('+(b.v===1?28:-7)+')'}><g className="bp-set-crow-wing bp-set-crow-wing-right" style={{animationDuration:(4.2+i*.37)+'s',animationDelay:(-i*.83-.18)+'s'}}><path d={FEATHERED_WING} transform="scale(.15) translate(-489 -428)" strokeWidth="5"/></g></g>
      <path d="M-6 0 Q-9-11-2-18 Q6-26 13-20 L24-16 12-13 Q8-5 9 6 L4 24 9 35-1 30-10 34-5 20 Z" className="bp-set-crow-body"/>

@@ -1,3 +1,6 @@
+import bronzeCleopatraMedal from '@/assets/boss-ui/bronze-cleopatrash.png';
+import silverCleopatraMedal from '@/assets/boss-ui/silver-cleopatrash.png';
+import goldCleopatraMedal from '@/assets/boss-ui/gold-cleopatrash.png';
 import bronzeMedalBos1 from '@/assets/optimized/boss-mobile/9cffb492b34f.webp';
 import silverMedalBos1 from '@/assets/optimized/boss-mobile/9a27f0c3c02f.webp';
 import goldMedalBos1 from '@/assets/optimized/boss-mobile/1b5a5ad4b5d5.webp';
@@ -36,6 +39,7 @@ const BOSS_MEDAL_ASSETS = {
   boss4: { bronze: bronzeWormMedal, silver: silverWormMedal, gold: goldWormMedal },
   boss5: { bronze: bronzeSporgolMedal, silver: silverSporgolMedal, gold: goldSporgolMedal },
   boss6: { bronze: bronzeSuckholeMedal, silver: silverSuckholeMedal, gold: goldSuckholeMedal },
+  boss7: { bronze: bronzeCleopatraMedal, silver: silverCleopatraMedal, gold: goldCleopatraMedal },
   boss8: { bronze: bronzeShkrabanMedal, silver: silverShkrabanMedal, gold: goldShkrabanMedal },
 };
 const DEFAULT_MEDAL_ASSETS = {
@@ -43,10 +47,12 @@ const DEFAULT_MEDAL_ASSETS = {
   silver: silverMedal,
   gold: goldMedal,
 };
+const SHIP_BOSSES = ['Турбінний Черв’як','Митник виміру','Орбітальний нокаут','Буба-Шмуба, королева жуйок','Професор-експеримент','Салат-Людожер','Реакторний Кліщ','Космічний Сквотер','Автопілот-Божество','Антенний Паразит','Унітазний Адмірал','Медузний Пастух','Бармен Чорної Діри','Капітан Паразитів'];
 export default function AdminBossMedals({player, language='uk'}) {
  const labels={uk:{kills:'Перемог',bronze:'Бронза',silver:'Срібло',gold:'Золото'},ru:{kills:'Побед',bronze:'Бронза',silver:'Серебро',gold:'Золото'},en:{kills:'Wins',bronze:'Bronze',silver:'Silver',gold:'Gold'}}[language] || {kills:'Wins',bronze:'Bronze',silver:'Silver',gold:'Gold'};
+ const shipKills=player?.clan_ship_boss_kills_by_id||{};
  return <div className="mt-4 grid gap-3 sm:grid-cols-2">{GAME_CONFIG.BOSSES.map(boss=>{
   const kills=getBossKillCount(player,boss.id), images=BOSS_MEDAL_ASSETS[boss.id]||DEFAULT_MEDAL_ASSETS;
-  return <div key={boss.id} className="rounded-xl border border-white/10 bg-black/15 p-3"><div className="flex justify-between gap-2"><strong>{getLocalizedBossName(boss,language)}</strong><span>{labels.kills}: <b className="text-cyan-300">{kills}</b></span></div><div className="mt-3 flex justify-around gap-2">{Object.entries(BOSS_MEDAL_THRESHOLDS).map(([tier,threshold])=><div key={tier} className="text-center"><img src={images[tier]} alt={labels[tier]} className={'mx-auto h-14 w-14 object-contain '+(kills>=threshold?'':'opacity-25 grayscale')}/><div className="mt-1 text-xs">{labels[tier]} · {kills>=threshold?'✓':kills+'/'+threshold}</div></div>)}</div></div>
- })}</div>;
+  return <div key={boss.id} className="rounded-xl border border-white/10 bg-black/15 p-3"><div className="flex justify-between gap-2"><strong>{getLocalizedBossName(boss,language)}</strong><span>{labels.kills}: <b className="text-cyan-300">{kills}</b></span></div><div className="mt-3 flex justify-around gap-2">{Object.entries(BOSS_MEDAL_THRESHOLDS).map(([tier,threshold])=><div key={tier} className="text-center"><img data-medal-tier={tier} src={images[tier]} alt={labels[tier]} className={'mx-auto h-14 w-14 object-contain '+(kills>=threshold?'':'opacity-25 grayscale')}/><div className="mt-1 text-xs">{labels[tier]} · {kills>=threshold?'✓':kills+'/'+threshold}</div></div>)}</div></div>
+ })}{SHIP_BOSSES.map((name,index)=>{const kills=Math.max(0,Number(shipKills[`sector_${index+1}`]||0));if(!kills)return null;return <div key={`ship-${index}`} className="rounded-xl border border-cyan-300/20 bg-black/15 p-3"><div className="flex justify-between gap-2"><strong>{name}</strong><span>{labels.kills}: <b className="text-cyan-300">{kills}</b></span></div><div className="mt-3 flex justify-around gap-2">{Object.entries(BOSS_MEDAL_THRESHOLDS).map(([tier,threshold])=><div key={tier} className="text-center"><img data-medal-tier={tier} src={DEFAULT_MEDAL_ASSETS[tier]} alt={labels[tier]} className={'mx-auto h-14 w-14 object-contain '+(kills>=threshold?'':'opacity-25 grayscale')}/><div className="mt-1 text-xs">{labels[tier]} · {kills>=threshold?'✓':kills+'/'+threshold}</div></div>)}</div></div>})}</div>;
 }

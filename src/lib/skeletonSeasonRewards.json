@@ -1,0 +1,1472 @@
+[
+  {
+    "level": 1,
+    "free": [
+      {
+        "type": "large",
+        "amount": 2
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 1
+      }
+    ],
+    "legendary": [
+      {
+        "type": "gum",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "level": 2,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 50000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 75000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 150000
+      }
+    ]
+  },
+  {
+    "level": 3,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 100
+      }
+    ],
+    "epic": [
+      {
+        "type": "energy",
+        "amount": 150
+      }
+    ],
+    "legendary": [
+      {
+        "type": "energy",
+        "amount": 300
+      }
+    ]
+  },
+  {
+    "level": 4,
+    "free": [
+      {
+        "type": "medium",
+        "amount": 3
+      }
+    ],
+    "epic": [
+      {
+        "type": "large",
+        "amount": 3
+      }
+    ],
+    "legendary": [
+      {
+        "type": "large",
+        "amount": 6
+      }
+    ]
+  },
+  {
+    "level": 5,
+    "free": [
+      {
+        "type": "large",
+        "amount": 3
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 1
+      }
+    ],
+    "legendary": [
+      {
+        "type": "better",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "level": 6,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 75000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 110000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 220000
+      }
+    ]
+  },
+  {
+    "level": 7,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 125
+      }
+    ],
+    "epic": [
+      {
+        "type": "energy",
+        "amount": 175
+      }
+    ],
+    "legendary": [
+      {
+        "type": "energy",
+        "amount": 350
+      }
+    ]
+  },
+  {
+    "level": 8,
+    "free": [
+      {
+        "type": "medium",
+        "amount": 3
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 1
+      }
+    ],
+    "legendary": [
+      {
+        "type": "gum",
+        "amount": 3
+      }
+    ]
+  },
+  {
+    "level": 9,
+    "free": [
+      {
+        "type": "cdm",
+        "amount": 2
+      }
+    ],
+    "epic": [
+      {
+        "type": "cdm",
+        "amount": 4
+      }
+    ],
+    "legendary": [
+      {
+        "type": "cdm",
+        "amount": 8
+      }
+    ]
+  },
+  {
+    "level": 10,
+    "free": [
+      {
+        "type": "spin",
+        "amount": 2
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 1
+      }
+    ],
+    "legendary": [
+      {
+        "type": "boots",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "level": 11,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 150
+      }
+    ],
+    "epic": [
+      {
+        "type": "energy",
+        "amount": 200
+      }
+    ],
+    "legendary": [
+      {
+        "type": "energy",
+        "amount": 400
+      }
+    ]
+  },
+  {
+    "level": 12,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 100000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 150000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 300000
+      }
+    ]
+  },
+  {
+    "level": 13,
+    "free": [
+      {
+        "type": "large",
+        "amount": 2
+      }
+    ],
+    "epic": [
+      {
+        "type": "large",
+        "amount": 4
+      }
+    ],
+    "legendary": [
+      {
+        "type": "large",
+        "amount": 8
+      }
+    ]
+  },
+  {
+    "level": 14,
+    "free": [
+      {
+        "type": "medium",
+        "amount": 4
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 1
+      }
+    ],
+    "legendary": [
+      {
+        "type": "better",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "level": 15,
+    "free": [
+      {
+        "type": "spin",
+        "amount": 2
+      }
+    ],
+    "epic": [
+      {
+        "type": "spin",
+        "amount": 3
+      }
+    ],
+    "legendary": [
+      {
+        "type": "spin",
+        "amount": 6
+      }
+    ]
+  },
+  {
+    "level": 16,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 175
+      }
+    ],
+    "epic": [
+      {
+        "type": "energy",
+        "amount": 225
+      }
+    ],
+    "legendary": [
+      {
+        "type": "energy",
+        "amount": 450
+      }
+    ]
+  },
+  {
+    "level": 17,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 150000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 225000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 450000
+      }
+    ]
+  },
+  {
+    "level": 18,
+    "free": [
+      {
+        "type": "cdm",
+        "amount": 4
+      }
+    ],
+    "epic": [
+      {
+        "type": "cdm",
+        "amount": 8
+      }
+    ],
+    "legendary": [
+      {
+        "type": "cdm",
+        "amount": 16
+      }
+    ]
+  },
+  {
+    "level": 19,
+    "free": [
+      {
+        "type": "large",
+        "amount": 3
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 1
+      }
+    ],
+    "legendary": [
+      {
+        "type": "gum",
+        "amount": 3
+      }
+    ]
+  },
+  {
+    "level": 20,
+    "free": [
+      {
+        "type": "large",
+        "amount": 4
+      }
+    ],
+    "epic": [
+      {
+        "type": "large",
+        "amount": 5
+      }
+    ],
+    "legendary": [
+      {
+        "type": "legs",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "level": 21,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 200
+      }
+    ],
+    "epic": [
+      {
+        "type": "energy",
+        "amount": 250
+      }
+    ],
+    "legendary": [
+      {
+        "type": "energy",
+        "amount": 500
+      }
+    ]
+  },
+  {
+    "level": 22,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 200000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 300000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 600000
+      }
+    ]
+  },
+  {
+    "level": 23,
+    "free": [
+      {
+        "type": "spin",
+        "amount": 2
+      }
+    ],
+    "epic": [
+      {
+        "type": "spin",
+        "amount": 3
+      }
+    ],
+    "legendary": [
+      {
+        "type": "spin",
+        "amount": 6
+      }
+    ]
+  },
+  {
+    "level": 24,
+    "free": [
+      {
+        "type": "medium",
+        "amount": 4
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 1
+      }
+    ],
+    "legendary": [
+      {
+        "type": "better",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "level": 25,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 200
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 300000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "cdm",
+        "amount": 60
+      }
+    ]
+  },
+  {
+    "level": 26,
+    "free": [
+      {
+        "type": "large",
+        "amount": 3
+      }
+    ],
+    "epic": [
+      {
+        "type": "large",
+        "amount": 5
+      }
+    ],
+    "legendary": [
+      {
+        "type": "large",
+        "amount": 10
+      }
+    ]
+  },
+  {
+    "level": 27,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 250000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 375000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 750000
+      }
+    ]
+  },
+  {
+    "level": 28,
+    "free": [
+      {
+        "type": "cdm",
+        "amount": 6
+      }
+    ],
+    "epic": [
+      {
+        "type": "cdm",
+        "amount": 12
+      }
+    ],
+    "legendary": [
+      {
+        "type": "cdm",
+        "amount": 24
+      }
+    ]
+  },
+  {
+    "level": 29,
+    "free": [
+      {
+        "type": "medium",
+        "amount": 5
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 1
+      }
+    ],
+    "legendary": [
+      {
+        "type": "gum",
+        "amount": 4
+      }
+    ]
+  },
+  {
+    "level": 30,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 400000
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 1
+      }
+    ],
+    "legendary": [
+      {
+        "type": "hands",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "level": 31,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 250
+      }
+    ],
+    "epic": [
+      {
+        "type": "energy",
+        "amount": 300
+      }
+    ],
+    "legendary": [
+      {
+        "type": "energy",
+        "amount": 600
+      }
+    ]
+  },
+  {
+    "level": 32,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 300000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 450000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 900000
+      }
+    ]
+  },
+  {
+    "level": 33,
+    "free": [
+      {
+        "type": "large",
+        "amount": 3
+      }
+    ],
+    "epic": [
+      {
+        "type": "large",
+        "amount": 5
+      }
+    ],
+    "legendary": [
+      {
+        "type": "large",
+        "amount": 10
+      }
+    ]
+  },
+  {
+    "level": 34,
+    "free": [
+      {
+        "type": "medium",
+        "amount": 5
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 2
+      }
+    ],
+    "legendary": [
+      {
+        "type": "better",
+        "amount": 3
+      }
+    ]
+  },
+  {
+    "level": 35,
+    "free": [
+      {
+        "type": "spin",
+        "amount": 3
+      }
+    ],
+    "epic": [
+      {
+        "type": "spin",
+        "amount": 4
+      }
+    ],
+    "legendary": [
+      {
+        "type": "spin",
+        "amount": 8
+      }
+    ]
+  },
+  {
+    "level": 36,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 275
+      }
+    ],
+    "epic": [
+      {
+        "type": "energy",
+        "amount": 350
+      }
+    ],
+    "legendary": [
+      {
+        "type": "energy",
+        "amount": 700
+      }
+    ]
+  },
+  {
+    "level": 37,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 350000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 525000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 1050000
+      }
+    ]
+  },
+  {
+    "level": 38,
+    "free": [
+      {
+        "type": "cdm",
+        "amount": 8
+      }
+    ],
+    "epic": [
+      {
+        "type": "cdm",
+        "amount": 16
+      }
+    ],
+    "legendary": [
+      {
+        "type": "cdm",
+        "amount": 32
+      }
+    ]
+  },
+  {
+    "level": 39,
+    "free": [
+      {
+        "type": "large",
+        "amount": 4
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 2
+      }
+    ],
+    "legendary": [
+      {
+        "type": "gum",
+        "amount": 4
+      }
+    ]
+  },
+  {
+    "level": 40,
+    "free": [
+      {
+        "type": "large",
+        "amount": 5
+      }
+    ],
+    "epic": [
+      {
+        "type": "large",
+        "amount": 8
+      }
+    ],
+    "legendary": [
+      {
+        "type": "armor",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "level": 41,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 300
+      }
+    ],
+    "epic": [
+      {
+        "type": "energy",
+        "amount": 400
+      }
+    ],
+    "legendary": [
+      {
+        "type": "energy",
+        "amount": 800
+      }
+    ]
+  },
+  {
+    "level": 42,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 400000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 600000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 1200000
+      }
+    ]
+  },
+  {
+    "level": 43,
+    "free": [
+      {
+        "type": "spin",
+        "amount": 3
+      }
+    ],
+    "epic": [
+      {
+        "type": "spin",
+        "amount": 4
+      }
+    ],
+    "legendary": [
+      {
+        "type": "spin",
+        "amount": 8
+      }
+    ]
+  },
+  {
+    "level": 44,
+    "free": [
+      {
+        "type": "medium",
+        "amount": 6
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 2
+      }
+    ],
+    "legendary": [
+      {
+        "type": "better",
+        "amount": 3
+      }
+    ]
+  },
+  {
+    "level": 45,
+    "free": [
+      {
+        "type": "cdm",
+        "amount": 10
+      }
+    ],
+    "epic": [
+      {
+        "type": "cdm",
+        "amount": 20
+      }
+    ],
+    "legendary": [
+      {
+        "type": "cdm",
+        "amount": 40
+      }
+    ]
+  },
+  {
+    "level": 46,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 325
+      }
+    ],
+    "epic": [
+      {
+        "type": "energy",
+        "amount": 425
+      }
+    ],
+    "legendary": [
+      {
+        "type": "energy",
+        "amount": 850
+      }
+    ]
+  },
+  {
+    "level": 47,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 500000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 750000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 1500000
+      }
+    ]
+  },
+  {
+    "level": 48,
+    "free": [
+      {
+        "type": "large",
+        "amount": 4
+      }
+    ],
+    "epic": [
+      {
+        "type": "large",
+        "amount": 6
+      }
+    ],
+    "legendary": [
+      {
+        "type": "large",
+        "amount": 12
+      }
+    ]
+  },
+  {
+    "level": 49,
+    "free": [
+      {
+        "type": "medium",
+        "amount": 6
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 2
+      }
+    ],
+    "legendary": [
+      {
+        "type": "gum",
+        "amount": 4
+      }
+    ]
+  },
+  {
+    "level": 50,
+    "free": [
+      {
+        "type": "large",
+        "amount": 6
+      }
+    ],
+    "epic": [
+      {
+        "type": "spin",
+        "amount": 5
+      }
+    ],
+    "legendary": [
+      {
+        "type": "head",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "level": 51,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 350
+      }
+    ],
+    "epic": [
+      {
+        "type": "energy",
+        "amount": 450
+      }
+    ],
+    "legendary": [
+      {
+        "type": "energy",
+        "amount": 900
+      }
+    ]
+  },
+  {
+    "level": 52,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 600000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 900000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 1800000
+      }
+    ]
+  },
+  {
+    "level": 53,
+    "free": [
+      {
+        "type": "cdm",
+        "amount": 12
+      }
+    ],
+    "epic": [
+      {
+        "type": "cdm",
+        "amount": 24
+      }
+    ],
+    "legendary": [
+      {
+        "type": "cdm",
+        "amount": 48
+      }
+    ]
+  },
+  {
+    "level": 54,
+    "free": [
+      {
+        "type": "large",
+        "amount": 4
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 2
+      }
+    ],
+    "legendary": [
+      {
+        "type": "better",
+        "amount": 4
+      }
+    ]
+  },
+  {
+    "level": 55,
+    "free": [
+      {
+        "type": "spin",
+        "amount": 3
+      }
+    ],
+    "epic": [
+      {
+        "type": "spin",
+        "amount": 5
+      }
+    ],
+    "legendary": [
+      {
+        "type": "spin",
+        "amount": 10
+      }
+    ]
+  },
+  {
+    "level": 56,
+    "free": [
+      {
+        "type": "medium",
+        "amount": 8
+      }
+    ],
+    "epic": [
+      {
+        "type": "large",
+        "amount": 8
+      }
+    ],
+    "legendary": [
+      {
+        "type": "large",
+        "amount": 16
+      }
+    ]
+  },
+  {
+    "level": 57,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 700000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 1050000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 2100000
+      }
+    ]
+  },
+  {
+    "level": 58,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 400
+      }
+    ],
+    "epic": [
+      {
+        "type": "energy",
+        "amount": 500
+      }
+    ],
+    "legendary": [
+      {
+        "type": "energy",
+        "amount": 1000
+      }
+    ]
+  },
+  {
+    "level": 59,
+    "free": [
+      {
+        "type": "large",
+        "amount": 5
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 2
+      }
+    ],
+    "legendary": [
+      {
+        "type": "gum",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "level": 60,
+    "free": [
+      {
+        "type": "cdm",
+        "amount": 15
+      }
+    ],
+    "epic": [
+      {
+        "type": "cdm",
+        "amount": 30
+      }
+    ],
+    "legendary": [
+      {
+        "type": "weapon",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "level": 61,
+    "free": [
+      {
+        "type": "medium",
+        "amount": 8
+      }
+    ],
+    "epic": [
+      {
+        "type": "large",
+        "amount": 9
+      }
+    ],
+    "legendary": [
+      {
+        "type": "large",
+        "amount": 18
+      }
+    ]
+  },
+  {
+    "level": 62,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 800000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 1200000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 2400000
+      }
+    ]
+  },
+  {
+    "level": 63,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 450
+      }
+    ],
+    "epic": [
+      {
+        "type": "energy",
+        "amount": 550
+      }
+    ],
+    "legendary": [
+      {
+        "type": "energy",
+        "amount": 1100
+      }
+    ]
+  },
+  {
+    "level": 64,
+    "free": [
+      {
+        "type": "large",
+        "amount": 5
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 2
+      }
+    ],
+    "legendary": [
+      {
+        "type": "better",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "level": 65,
+    "free": [
+      {
+        "type": "spin",
+        "amount": 4
+      }
+    ],
+    "epic": [
+      {
+        "type": "spin",
+        "amount": 6
+      }
+    ],
+    "legendary": [
+      {
+        "type": "spin",
+        "amount": 12
+      }
+    ]
+  },
+  {
+    "level": 66,
+    "free": [
+      {
+        "type": "cdm",
+        "amount": 18
+      }
+    ],
+    "epic": [
+      {
+        "type": "cdm",
+        "amount": 36
+      }
+    ],
+    "legendary": [
+      {
+        "type": "cdm",
+        "amount": 72
+      }
+    ]
+  },
+  {
+    "level": 67,
+    "free": [
+      {
+        "type": "dm",
+        "amount": 1000000
+      }
+    ],
+    "epic": [
+      {
+        "type": "dm",
+        "amount": 1500000
+      }
+    ],
+    "legendary": [
+      {
+        "type": "dm",
+        "amount": 3000000
+      }
+    ]
+  },
+  {
+    "level": 68,
+    "free": [
+      {
+        "type": "energy",
+        "amount": 500
+      }
+    ],
+    "epic": [
+      {
+        "type": "energy",
+        "amount": 600
+      }
+    ],
+    "legendary": [
+      {
+        "type": "energy",
+        "amount": 1200
+      }
+    ]
+  },
+  {
+    "level": 69,
+    "free": [
+      {
+        "type": "large",
+        "amount": 6
+      }
+    ],
+    "epic": [
+      {
+        "type": "large",
+        "amount": 10
+      }
+    ],
+    "legendary": [
+      {
+        "type": "large",
+        "amount": 20
+      }
+    ]
+  },
+  {
+    "level": 70,
+    "free": [
+      {
+        "type": "spin",
+        "amount": 5
+      }
+    ],
+    "epic": [
+      {
+        "type": "gum",
+        "amount": 2
+      }
+    ],
+    "legendary": [
+      {
+        "type": "season_pet",
+        "amount": 1
+      }
+    ]
+  }
+]

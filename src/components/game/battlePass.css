@@ -36,7 +36,7 @@
 .bp-task>.bp-task-action{flex:0 0 76px;width:76px}
 
 /* Keep the Battle Pass as one continuous scroll area; the header must not consume fixed viewport space. */
-.bp-scene{overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:none;touch-action:pan-y;-webkit-overflow-scrolling:touch}.bp-scroll{flex:0 0 auto;min-height:auto;overflow:visible;touch-action:pan-y}
+.bp-scene{overflow:hidden}.bp-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch}
 @media(max-width:360px){.bp-grid{gap:6px;grid-template-columns:minmax(0,1fr) 26px minmax(0,1fr) minmax(0,1fr)}.bp-scroll{padding:0 8px 15px}.bp-season-art{min-height:95px}.bp-reward-item>span{font-size:8px}.bp-road-head{font-size:8px}}
 
 /* Unclaimed rewards: a continuous animated flame rim, not isolated particles. */
@@ -60,3 +60,37 @@
 @keyframes bp-beacon-pulse{0%,100%{transform:scale(.9);opacity:.8}50%{transform:scale(1.15);opacity:1}}
 
 .bp-scene.bp-animations-off *, .bp-scene.bp-animations-off *::before, .bp-scene.bp-animations-off *::after { animation: none !important; }
+.bp-header-compact{padding:5px 10px 0}
+.bp-header-compact .bp-topline{gap:7px;min-height:28px}
+.bp-header-compact .bp-topline>button{padding:3px;flex-shrink:0}
+.bp-header-compact .bp-stats{flex:1;gap:6px;font-size:9px}
+.bp-header-compact .bp-stats strong{font-size:12px;white-space:nowrap}
+.bp-header-compact .bp-stats>span:last-child{display:none}
+.bp-header-compact .bp-xp{height:13px;margin:4px 0}
+.bp-header-compact .bp-xp progress{height:13px;border-radius:3px}
+.bp-header-compact .bp-xp span{font-size:8px;line-height:13px}
+.bp-header-compact .bp-tabs{padding:4px 0 6px;gap:8px}
+.bp-header-compact .bp-tabs .bp-tab-button{height:29px}
+.bp-help{font-size:9px;color:#9dbb9f;margin:0 0 8px;border-bottom:1px solid #294533}
+.bp-help summary{cursor:pointer;padding:5px 2px}
+.bp-scroll>.bp-season-art{margin:0 -12px 6px;min-height:100px;padding:12px}
+.game-shell:has(.bp-scene) .void-flush-profile-row,.game-shell:has(.bp-scene) .void-flush-profile-xp{display:none}
+
+.bp-equipment-preview-art {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  min-height: 11rem;
+  overflow: hidden;
+  border: 1px solid #536c47;
+  border-radius: 10px;
+  background: radial-gradient(ellipse at center, #305746 0%, #1b3025 55%, #101910 100%);
+}
+.bp-equipment-preview-art img { filter: drop-shadow(0 6px 9px #09130b); }
+.bp-equipment-preview-art > .bp-bone-effect {
+  --bone-rgb: 150, 213, 182;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}

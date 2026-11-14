@@ -129,31 +129,39 @@ export function initializeTelegramMiniApp() {
   if (!webApp) return null;
 
   try {
-    webApp.ready();
-    webApp.expand();
     // CSS overscroll only controls the page, not Telegram's native sheet.
     if (webApp.isVersionAtLeast?.('7.7')) {
       webApp.disableVerticalSwipes?.();
     }
-    if (webApp.isVersionAtLeast?.('8.0') && typeof webApp.requestFullscreen === 'function') {
-      webApp.requestFullscreen();
+    if (webApp.isVersionAtLeast?.('6.1')) {
+      webApp.setHeaderColor?.(webApp.isVersionAtLeast?.('6.9') ? '#0d0a07' : 'bg_color');
+      webApp.setBackgroundColor?.('#0d0a07');
     }
-    webApp.setHeaderColor?.('#0d0a07');
-    webApp.setBackgroundColor?.('#0d0a07');
-    webApp.enableClosingConfirmation?.();
+    // Closing confirmation is switched on only while a save is in flight (gameBuildRefresh.js).
+    if (webApp.isVersionAtLeast?.('6.2')) webApp.disableClosingConfirmation?.();
     applyTelegramCssVars(webApp);
     const syncLayout = () => applyTelegramCssVars(webApp);
     webApp.onEvent?.('viewportChanged', syncLayout);
     webApp.onEvent?.('safeAreaChanged', syncLayout);
     webApp.onEvent?.('contentSafeAreaChanged', syncLayout);
     webApp.onEvent?.('fullscreenChanged', syncLayout);
-    webApp.onEvent?.('fullscreenFailed', syncLayout);
+    webApp.onEvent?.('fullscreenFailed', () => {
+      if (!webApp.isFullscreen && !webApp.isExpanded) webApp.expand();
+      syncLayout();
+    });
     webApp.onEvent?.('activated', syncLayout);
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', syncLayout);
     }
+    if (webApp.isVersionAtLeast?.('8.0') && typeof webApp.requestFullscreen === 'function') {
+      if (!webApp.isFullscreen) webApp.requestFullscreen();
+    } else {
+      webApp.expand();
+    }
   } catch (error) {
     console.warn('Telegram WebApp initialization warning:', error);
+  } finally {
+    webApp.ready?.();
   }
 
   return webApp;
@@ -169,6 +177,10 @@ export function getTelegramSession() {
     }, 'telegram');
   }
 
+  // Local market test: ?mockUserId=… uses a mock player; without it the real web sign-in page (guest play) is shown.
+  if (platformConfig.localMarketTest && !webApp?.initData && new URLSearchParams(window.location.search).has('mockUserId')) {
+    return buildTelegramSessionFromUser(getMockTelegramUser(), 'mock');
+  }
   if (platformConfig.platform === 'web') {
     // The server authenticates the HttpOnly cookie; no browser-supplied ID.
     return { id: 'web-session', provider: 'telegram', source: 'web', initData: '' };

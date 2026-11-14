@@ -1,0 +1,185 @@
+.pvp-lobby {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+}
+.pvp-lobby-modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.pvp-lobby-modes button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 1px solid #57705a;
+  border-radius: 5px;
+  background: linear-gradient(#26362b, #101711);
+  color: #ecf3d4;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.pvp-lobby-modes button[aria-pressed=true] {
+  border-color: #adce54;
+  background: linear-gradient(#c3e45b, #86a829);
+  color: #152008;
+}
+.pvp-lobby-modes img { width: 22px; height: 22px; }
+.pvp-preview .pvp-title.pvp-lobby-title {
+  min-height: 46px;
+  border: 1px solid #46765c;
+  border-left: 3px solid #6bdb92;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #07100945, #07100985), url('/pvp/duel-header-v1.webp') center / cover;
+  padding: 0 8px 0 12px;
+}
+.pvp-preview .pvp-title.pvp-lobby-title h1 {
+  flex: 1;
+  margin-left: 9px;
+  font: 900 clamp(12px, 3.5vw, 18px)/1.15 Rubik, sans-serif;
+}
+.pvp-preview .pvp-lobby-title > svg { color: #b4ec71; }
+.pvp-preview .pvp-lobby-title button {
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #5b7251;
+  border-radius: 50%;
+  color: #e1edbf;
+}
+.pvp-lobby-attempts { display: grid; gap: 3px; margin: 0 7px; flex-shrink: 0; }
+.pvp-lobby-attempts span { display: flex; align-items: center; gap: 4px; color: #e1efa9; font: 800 11px/1 Rubik, sans-serif; font-variant-numeric: tabular-nums; }
+.pvp-lobby-rank-card {
+  display: grid;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1px solid #638355;
+  background: linear-gradient(90deg, #09120865, #09120870),
+    url('/pvp/rank-panel-v1.webp') center / 100% 100%;
+  box-shadow: inset 0 0 0 2px #0e160e, 0 4px 12px #0005;
+}
+.pvp-lobby-rating {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+}
+.pvp-lobby-rating > div { display: grid; gap: 1px; min-width: 0; }
+.pvp-lobby-rating > div span { color: #c3d0a9; font-size: 11px; font-weight: 700; }
+.pvp-lobby-next { color: #c6f47a; font: inherit; white-space: nowrap; }
+.pvp-lobby-rating > div b { color: #f4dc93; font-size: 13px; text-transform: uppercase; }
+.pvp-lobby-rating strong { font: 900 23px/1 Rubik, sans-serif; color: #f5f0cc; font-variant-numeric: tabular-nums; }
+.pvp-lobby-emblem {
+  flex: 0 0 76px;
+  width: 76px;
+  height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 4px #000a);
+}
+.pvp-lobby-progress {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 5px;
+  color: #e9edcd;
+  font-size: 11px;
+}
+.pvp-rank-meter {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 20px;
+  padding: 2px;
+  border: 1px solid #78954e;
+  border-radius: 5px;
+  background: linear-gradient(#070d08, #192719);
+  box-shadow: inset 0 2px 5px #000b, 0 1px #b0cc4e26;
+  overflow: hidden;
+}
+.pvp-rank-meter-fill {
+  height: 100%;
+  transition: width .85s cubic-bezier(.2,.75,.25,1);
+}
+.pvp-rank-meter-energy {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 3px;
+  transform-origin: left center;
+  animation: pvpRankFill .85s cubic-bezier(.2,.75,.25,1) both;
+  background: repeating-linear-gradient(115deg, transparent 0 12px, #e4ff7a20 12px 17px),
+    linear-gradient(#e0ff8b, #a8d940 40%, #69a32c 85%, #3f7119);
+  box-shadow: inset 0 1px #f1ffb1b3, inset -2px 0 #ecffa2, 0 0 8px #a3ed4273;
+}
+.pvp-rank-meter-energy i {
+  position: absolute;
+  inset: 0 auto 0 -45%;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, #f1ffd8a6, transparent);
+  animation: pvpRankShine 3.8s ease-in-out .85s infinite;
+}
+@keyframes pvpRankFill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes pvpRankShine { 0%, 20% { left: -45%; } 65%, 100% { left: 110%; } }
+@media (prefers-reduced-motion: reduce) {
+  .pvp-rank-meter-fill { transition: none; }
+  .pvp-rank-meter-energy { animation: none; }
+  .pvp-rank-meter-energy i { display: none; }
+}
+.pvp-lobby-rank-track {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(44px, 1fr));
+  gap: 4px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #68874b transparent;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pvp-lobby-rank-track li {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: 2px 0;
+}
+.pvp-lobby-rank-track img, .pvp-lobby-rank-locked { width: 100%; max-width: 48px; aspect-ratio: 1; object-fit: contain; }
+.pvp-lobby-rank-track li[aria-current=step] > img { filter: drop-shadow(0 0 3px #a3de49a0); }
+.pvp-lobby-rank-locked > div > span:last-child { font-size: clamp(12px, 3.5vw, 20px); }
+.pvp-lobby-queue { display: grid; gap: 7px; }
+.pvp-lobby-queue button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 47px; }
+.pvp-lobby-history-toggle { margin-left: auto; padding: 5px 8px; border: 1px solid #647951; color: #e1edbf; background: #142019; border-radius: 4px; font-size: 11px; }
+.pvp-lobby-leaderboard { scroll-margin: 8px; }
+.pvp-preview .pvp-lobby-leaderboard button:disabled { opacity: 1; filter: none; cursor: default; }
+.pvp-lobby-leaderboard h2 { display: flex; gap: 7px; align-items: center; margin: 0 0 6px; color: #e3cd7e; font-size: 14px; font-weight: 900; text-transform: uppercase; }
+.pvp-lobby-rows { margin: 0; padding: 0; list-style: none; }
+.pvp-lobby-rows li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 6px 5px; border-top: 1px solid #354337; color: #dbe5c6; font-size: 12px; }
+.pvp-lobby-empty { padding: 6px 0; color: #b9c8a4; font-size: 11px; }
+.pvp-preview .pvp-footer.pvp-lobby-footer { margin-top: auto; position: sticky; bottom: 0; z-index: 10; background: #0e170ff5; border-top: 1px solid #56724b; }
+.pvp-lobby-footer button { display: grid; place-items: center; gap: 3px; min-height: 45px; }
+.pvp-lobby-footer button > svg { color: #e3cd7e; }
+.pvp-lobby-challenges {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 28px 12px;
+  border: 1px solid #45d68b;
+  background: #10180fee;
+  text-align: center;
+}
+.pvp-lobby-challenges h2 { font-size: 17px; font-weight: 900; text-transform: uppercase; }
+.pvp-lobby-challenges small { color: #bdc8a7; }
+.pvp-lobby-challenge-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 12px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #57705a;
+  background: #1c2a1b;
+  text-align: left;
+}
+.pvp-lobby-challenge-card > :not(button) { grid-column: 1; }
+.pvp-lobby-challenge-card span { color: #d2dfac; font-size: 12px; }
+.pvp-lobby-challenge-card button { grid-column: 2; grid-row: 1 / 4; }

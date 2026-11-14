@@ -13,3 +13,12 @@ for(const [width,height] of [[320,568],[360,640],[393,852],[412,915],[480,960]])
  app.contentSafeAreaInset.top=72;events.get('contentSafeAreaChanged')();assert.equal(values.get('--tg-content-safe-area-inset-top'),'72px');
  app.isFullscreen=false;app.contentSafeAreaInset.top=0;events.get('fullscreenChanged')();assert.ok(events.has('activated'));assert.equal(values.get('--tg-content-safe-area-inset-top'),'0px');
 });
+
+test('Telegram 6.0 skips unsupported appearance and closing APIs', () => {
+ const calls = [];
+ const app = { ready(){}, expand(){}, isVersionAtLeast(){return false;}, setHeaderColor(){calls.push('header');}, setBackgroundColor(){calls.push('background');}, enableClosingConfirmation(){calls.push('closing');}, onEvent(){} };
+ const context = {module:{exports:{}},exports:{},console,document:{documentElement:{style:{setProperty(){}}}},window:{Telegram:{WebApp:app},innerHeight:640,innerWidth:360,location:{hostname:'localhost',origin:'http://localhost'},addEventListener(){},getComputedStyle(){return {getPropertyValue(){return '';}};}}};
+ vm.runInNewContext(result.outputFiles[0].text, context);
+ context.module.exports.initializeTelegramMiniApp();
+ assert.deepEqual(calls, []);
+});

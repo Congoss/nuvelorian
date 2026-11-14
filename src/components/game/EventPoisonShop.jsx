@@ -8,7 +8,7 @@ import tentacles from '@/assets/optimized/cosmohand.webp';
 
 const icons = { small, medium, large };
 const names = { uk: ['Магазин ядів', 'Купити', 'Залишок', 'Великий', 'Середній', 'Малий', 'Куплено'], ru: ['Магазин ядов', 'Купить', 'Остаток', 'Большой', 'Средний', 'Малый', 'Куплено'], en: ['Poison shop', 'Buy', 'Remaining', 'Large', 'Medium', 'Small', 'Purchased'] };
-export default function EventPoisonShop({ profile, onRefreshProfile, lang = 'uk' }) {
+export default function EventPoisonShop({ profile, onRefreshProfile, onSyncProfile, lang = 'uk' }) {
   const [shop, setShop] = useState(null);
   const [quantities, setQuantities] = useState({ large: 1, medium: 1, small: 1 });
   const [now, setNow] = useState(serverNow());
@@ -35,7 +35,8 @@ export default function EventPoisonShop({ profile, onRefreshProfile, lang = 'uk'
     try {
       const result = await gameApi.buyEventPoison(body);
       setShop(result.shop); setPending(null); setMessage(text[6]);
-      await onRefreshProfile?.();
+      if (result.player && onSyncProfile) onSyncProfile(result.player);
+      else await onRefreshProfile?.();
     } catch (error) { setMessage(error.message); }
     finally { setBusy(false); }
   }

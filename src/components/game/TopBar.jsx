@@ -1,4 +1,12 @@
+import { useFriday13Reminder } from '@/lib/useFriday13Reminder';
+import AvatarWithFrame from './AvatarWithFrame';
+import './profileHeaderLayout.css';
+import React, { useEffect } from 'react';
+import { FRIDAY13_END_AT, isFriday13SaleActive } from '@/lib/friday13Event.js';
 import { useTranslation } from 'react-i18next';
+import { useLocalProfileHeaderSkin, rememberLocalHeaderOwner } from '@/lib/localProfileHeaderSkin';
+import ProfileHeaderSkin from './ProfileHeaderSkin';
+import ProfileHeaderSkinPreview from './ProfileHeaderSkinPreview';
 import { getUnreadMailCount } from '@/lib/mailNotifications';
 import heroIcon from '@/assets/optimized/nav-hero.webp';
 import PlayerName from './PlayerName';
@@ -7,6 +15,12 @@ import premiumIcon from '@/assets/optimized/paper.webp';
 import strengthIcon from '@/assets/optimized/level.webp';
 import { getXpForLevel } from '@/lib/gameConfig';
 import { DEFAULT_GUILD_LOGO, GUILD_LOGOS } from '@/lib/clanLogos';
+function formatFriday13Countdown(endAt, now) {
+  const seconds = Math.max(0, Math.floor((Date.parse(endAt) - now) / 1000));
+  const days = Math.floor(seconds / 86400);
+  const clock = [Math.floor(seconds / 3600) % 24, Math.floor(seconds / 60) % 60, seconds % 60].map((value) => String(value).padStart(2, '0')).join(':');
+  return days ? `${days}d ${clock}` : clock;
+}
 const getResourceIcon = (key) => {
   if (key === 'tentacles') return tentaclesIcon;
   if (key === 'premium') return premiumIcon;
@@ -44,32 +58,32 @@ function SettingsChip({ onClick, t }) {
   );
 }
 
-function ShopChip({ onClick }) {
+function ShopChip({ onClick, dimmed = false }) {
   return (
-    <button type="button" onClick={onClick} className="shrink-0 transition hover:brightness-110">
+    <button type="button" onClick={onClick} className="relative z-10 shrink-0 transition hover:brightness-110">
       <svg
         viewBox="0 0 24 24"
         aria-hidden="true"
-        className="h-[34px] w-[34px] drop-shadow-[0_0_4px_rgba(40,238,144,0.45)] sm:h-[38px] sm:w-[38px]"
+        className={`h-[34px] w-[34px] sm:h-[38px] sm:w-[38px] ${dimmed ? 'text-[#8cae8d]' : 'text-[#28ee90] drop-shadow-[0_0_4px_rgba(40,238,144,0.45)]'}`}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <path d="M5 9h14l-1.2 8.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9Z" stroke="#28ee90" strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M9 9V7.5a3 3 0 0 1 6 0V9" stroke="#28ee90" strokeWidth="1.8" strokeLinecap="round" />
-        <path d="M8.2 12.2h7.6M7.7 15.2h8.6" stroke="#28ee90" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M5 9h14l-1.2 8.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+        <path d="M9 9V7.5a3 3 0 0 1 6 0V9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        <path d="M8.2 12.2h7.6M7.7 15.2h8.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     </button>
   );
 }
 
-function MailChip({ onClick, t, unread = 0 }) {
+function MailChip({ onClick, t, unread = 0, dimmed = false }) {
   return (
-    <button type="button" onClick={onClick} className="relative shrink-0 transition hover:brightness-110">
+    <button type="button" onClick={onClick} className="relative z-10 shrink-0 transition hover:brightness-110">
       <span className="sr-only">{t('topbar.mail')}</span>
       <svg
         viewBox="0 0 24 24"
         aria-hidden="true"
-        className="h-[34px] w-[34px] text-[#28ee90] drop-shadow-[0_0_4px_rgba(40,238,144,0.55)] sm:h-[38px] sm:w-[38px]"
+        className={`h-[34px] w-[34px] sm:h-[38px] sm:w-[38px] ${dimmed ? 'text-[#8cae8d]' : 'text-[#28ee90] drop-shadow-[0_0_4px_rgba(40,238,144,0.55)]'}`}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -205,10 +219,10 @@ function EnergyGlyph() {
 
 function PowerChip({ value }) {
   return (
-    <div className="relative h-[28px] min-w-[108px]">
-      <div className="absolute inset-y-[4px] left-[20px] right-[6px] border border-[#28ee90] bg-[#10170d]" />
+    <div className="relative h-[28px] w-full min-w-0">
+      <div className="pointer-events-none absolute inset-y-[2px] left-[16px] right-[2px] rounded-full bg-[radial-gradient(ellipse,rgba(5,10,8,0.86)_25%,rgba(5,10,8,0.55)_60%,transparent_80%)]" />
       <img src={getResourceIcon('strength')} alt="" aria-hidden="true" className="absolute left-0 top-[-4px] z-[2] h-[36px] w-[36px] object-contain" />
-      <span className="absolute inset-y-[4px] left-[32px] right-[6px] z-[3] flex min-w-[50px] items-center justify-center px-2 font-sans text-[clamp(11px,3vw,13px)] font-black leading-none text-[#fff5ba] [text-shadow:0_2px_0_rgba(0,0,0,0.85)]">
+      <span className="absolute inset-y-[4px] left-[32px] right-[6px] z-[3] flex min-w-0 items-center justify-center px-0.5 font-sans text-[clamp(11px,3vw,13px)] font-black leading-none text-[#fff5ba] [text-shadow:0_2px_0_rgba(0,0,0,0.85)]">
         {value.toLocaleString()}
       </span>
     </div>
@@ -237,8 +251,13 @@ function XpBar({ profile, onClick = null }) {
   );
 }
 
-export default function TopBar({ profile, resourceProfile = profile, onOpenShop, onOpenEnergyPurchase, onOpenSettings, onOpenProfile, onOpenMail, hideActions = false, showSettings = !hideActions, mode = 'full' }) {
+export default function TopBar({ profile, resourceProfile = profile, onOpenShop, onOpenEnergyPurchase, onOpenSettings, onOpenProfile, onOpenMail, hideActions = false, showSettings = !hideActions, mode = 'full', previewHeaderSkin = false }) {
   const { t, i18n } = useTranslation();
+  const friday13ReminderVisible = useFriday13Reminder(profile?.id);
+  const [saleNow, setSaleNow] = React.useState(Date.now());
+  useEffect(() => { const timer = window.setInterval(() => setSaleNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
+  const headerSkin = useLocalProfileHeaderSkin(profile?.id);
+  useEffect(()=>{if(!previewHeaderSkin&&!hideActions&&onOpenShop)rememberLocalHeaderOwner(profile?.id);},[profile?.id,previewHeaderSkin,hideActions,onOpenShop]);
   if (!profile) return <div className="relative z-30 shrink-0" />;
 
   const playerName = profile.nickname || profile.username || 'Player';
@@ -246,14 +265,16 @@ export default function TopBar({ profile, resourceProfile = profile, onOpenShop,
   const clanLogo = clanName ? GUILD_LOGOS.find((logo) => logo.id === profile.clan_logo_id)?.src || DEFAULT_GUILD_LOGO : null;
   const powerValue = Math.floor(profile.stat_strength || profile.power || profile.attack_power || 0);
   const avatarSrc = profile.avatar || profile.photoUrl || profile.photo_url || profile.avatar_url || profile.profile_photo_url || profile.telegram_photo_url || heroIcon;
-  const selectedBanner = null;
+  const candidate = import.meta.env.DEV && previewHeaderSkin;
+  const equippedTheme = profile?.profile_header_theme;
+  const selectedBanner = Boolean(equippedTheme || headerSkin.hasEquipped || candidate);
   const unreadMail = getUnreadMailCount(profile);
 
   return (
     <>
-      <style>{'html[data-void-flush-scene="true"] .void-flush-profile-row, html[data-void-flush-scene="true"] .void-flush-profile-xp { display: none !important; }'}</style>
+      {!hideActions ? <style>{'html[data-void-flush-scene="true"] .void-flush-profile-row, html[data-void-flush-scene="true"] .void-flush-profile-xp { display: none !important; }'}</style> : null}
     <div
-      className="relative z-30 shrink-0 overflow-hidden bg-[linear-gradient(180deg,#10170d_0%,#090d08_48%,#040604_100%)] px-1.5 pb-1 pt-1 shadow-[0_8px_14px_rgba(0,0,0,0.28)] sm:px-2 sm:pb-1.5 sm:pt-1.5"
+      className="gold-profile-layout relative z-30 shrink-0 overflow-hidden bg-[linear-gradient(180deg,#10170d_0%,#090d08_48%,#040604_100%)] px-1.5 pb-1 pt-1 shadow-[0_8px_14px_rgba(0,0,0,0.28)] sm:px-2 sm:pb-1.5 sm:pt-1.5"
     >
       <div className="mb-[3px] grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_34px] gap-[3px] overflow-hidden sm:mb-[4px] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_38px] sm:gap-[4px]">
       <div className={`grid min-w-0 ${!hideActions && onOpenEnergyPurchase ? 'grid-cols-[minmax(0,1fr)_28px] gap-[3px]' : 'grid-cols-1'}`}>
@@ -293,24 +314,17 @@ export default function TopBar({ profile, resourceProfile = profile, onOpenShop,
 
       {mode === 'full' ? (
         <>
-          <div className={`void-flush-profile-row relative grid min-w-0 items-center gap-[3px] overflow-hidden border border-[#28ee90] px-1 py-1 sm:gap-[6px] ${hideActions ? 'grid-cols-[44px_minmax(0,1fr)_minmax(84px,auto)] sm:grid-cols-[50px_minmax(0,1fr)_minmax(92px,auto)]' : 'grid-cols-[44px_minmax(0,1fr)_minmax(84px,auto)_34px_34px] sm:grid-cols-[50px_minmax(0,1fr)_minmax(92px,auto)_38px_38px]'}`}>
-            {selectedBanner ? (
-              <img
-                src={selectedBanner}
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 h-full w-full object-cover opacity-85"
-              />
-            ) : null}
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,10,7,0.82)_0%,rgba(7,10,7,0.58)_35%,rgba(7,10,7,0.48)_65%,rgba(7,10,7,0.82)_100%)]" />
-            <button type="button" onClick={onOpenProfile} className="relative z-20 -my-1.5 -ml-1 shrink-0 transition hover:brightness-110">
-              <img src={avatarSrc} alt="" className="h-[52px] w-[52px] rounded-[8px] object-cover sm:h-[58px] sm:w-[58px]" />
+          <div className={`void-flush-profile-row ${selectedBanner ? 'gold-profile-equipped' : ''} relative grid min-w-0 items-center gap-[3px] overflow-hidden border ${selectedBanner ? 'border-transparent' : 'border-[#28ee90]'} px-1 py-1 sm:gap-[6px] ${hideActions ? 'grid-cols-[44px_minmax(0,1fr)_minmax(84px,auto)] sm:grid-cols-[50px_minmax(0,1fr)_minmax(92px,auto)]' : 'grid-cols-[44px_minmax(0,1fr)_minmax(84px,auto)_34px_34px] sm:grid-cols-[50px_minmax(0,1fr)_minmax(92px,auto)_38px_38px]'}`}>
+            {candidate ? <ProfileHeaderSkinPreview bossId={typeof previewHeaderSkin === 'string' ? previewHeaderSkin : 'heli'}/> : equippedTheme ? <ProfileHeaderSkinPreview bossId={equippedTheme}/> : <ProfileHeaderSkin ownerId={profile.id}/>}
+            <div className={`absolute inset-0 ${selectedBanner ? 'bg-transparent' : 'bg-[linear-gradient(90deg,rgba(7,10,7,0.82)_0%,rgba(7,10,7,0.58)_35%,rgba(7,10,7,0.48)_65%,rgba(7,10,7,0.82)_100%)]'}`} />
+            <button type="button" onClick={onOpenProfile} className="profile-avatar relative z-20 -my-1.5 -ml-1 shrink-0 transition hover:brightness-110">
+              <AvatarWithFrame src={avatarSrc} frameId={profile.avatar_frame_id || profile.selected_avatar_frame} className="h-[52px] w-[52px] sm:h-[58px] sm:w-[58px]" />
             </button>
 
-            <div className="relative z-10 flex min-w-0 items-center gap-1.5 text-left">
+            <div className="profile-identity relative z-10 flex min-w-0 items-center gap-1.5 text-left">
               {clanLogo ? <img src={clanLogo} alt="" aria-hidden="true" className="h-[52px] w-[52px] shrink-0 object-contain sm:h-[58px] sm:w-[58px]" loading="lazy" decoding="async" /> : null}
               <div className="min-w-0">
-                <PlayerName player={profile} name={playerName} className="truncate font-sans text-[clamp(13px,3.65vw,16px)] font-black leading-none text-[#fff7d5] [text-shadow:0_2px_0_rgba(0,0,0,0.9)]" />
+                <PlayerName player={profile} name={playerName} className="block truncate font-sans text-[clamp(13px,3.65vw,16px)] font-black leading-none text-[#fff7d5] [text-shadow:0_2px_0_rgba(0,0,0,0.9)]" />
                 {clanName ? (
                   <p className="mt-[3px] truncate font-sans text-[clamp(8px,2.25vw,10px)] font-black leading-none text-[#b8df89] [text-shadow:0_1px_0_rgba(0,0,0,0.85)]">
                     {clanName}
@@ -319,16 +333,17 @@ export default function TopBar({ profile, resourceProfile = profile, onOpenShop,
               </div>
             </div>
 
-            <div className="relative z-10">
+            <div className="profile-power relative z-10">
               <PowerChip value={powerValue} />
             </div>
             {!hideActions ? (
-              <div className="relative z-10">
+              <div className="profile-shop relative z-10">
                 <ShopChip onClick={onOpenShop} />
+                {friday13ReminderVisible && isFriday13SaleActive(saleNow) && <div className="friday13-bubble friday13-shop-bubble" aria-label="NEAR and Stars purchases 50 percent off"><svg className="friday13-balloon-outline" viewBox="0 0 140 100" preserveAspectRatio="none" aria-hidden="true"><path d="M4 4H104L132 -25L122 4H136V96H4Z"/></svg><b>{i18n.language?.startsWith('en')?'FLASH SALE!':i18n.language?.startsWith('ru')?'СКИДКА!':'ЗНИЖКА!'}</b><strong>−50%</strong></div>}
               </div>
             ) : null}
             {!hideActions ? (
-              <div className="relative z-10">
+              <div className="profile-mail relative z-10">
                 <MailChip onClick={onOpenMail} t={t} unread={unreadMail} />
               </div>
             ) : null}

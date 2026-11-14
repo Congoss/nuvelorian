@@ -1,0 +1,3 @@
+Built-in ImageGen. Output: public/ship-soldier-boss/head-clean-v2.webp
+
+Precise edit of this transparent soldier HEAD sprite. REMOVE the tiny black pupil dot inside the SMALL eyeball on IMAGE RIGHT. BOTH eyes must be completely blank pale cream, with their original dark outline, shading and shape. Preserve absolutely every other pixel: helmet, radio, antenna, green face, neck, dripping tendrils, silhouette, original crop dimensions and transparent background. Do not redraw, restyle or move anything. No added pupils, no added parts.

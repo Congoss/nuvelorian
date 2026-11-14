@@ -1,0 +1,11 @@
+.trophy-ranking-background {
+  background-color: #0b100a !important;
+  background-image: linear-gradient(rgba(5,10,7,.03),rgba(5,10,7,.16)), url('../../assets/leaderboard/trophy-hall-v1.webp') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+.trophy-ranking-background .leaderboard-top { background-color:rgba(11,16,10,.25); }
+.trophy-ranking-background [data-ranking-row] { background-color:rgba(9,13,9,.78); }
+.trophy-ranking-background [data-ranking-row]:hover { background-color:rgba(16,23,16,.88); }
+.trophy-ranking-background [data-leaderboard-position] { background-color:rgba(7,16,7,.72); }

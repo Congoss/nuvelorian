@@ -10,7 +10,7 @@ const runtimeText = (await Promise.all(textFiles.map((name) => readFile(path.joi
 let removed = 0;
 for (const source of await listRasters(publicRoot)) {
   const relative = path.relative(publicRoot, source).replaceAll('\\', '/');
-  if (/^referral-card(?:-v2)?\.jpg$/.test(relative)) continue; // Telegram preview image is referenced by server HTML.
+  if (/^(?:referral-card(?:-v2)?|social-preview)\.jpg$/.test(relative)) continue; // Telegram preview image is referenced by server HTML.
   const target = path.resolve(distRoot, relative);
   const withinDist = path.relative(distRoot, target);
   if (withinDist.startsWith('..') || path.isAbsolute(withinDist)) throw new Error('Invalid build asset path');

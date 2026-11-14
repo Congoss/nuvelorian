@@ -1,0 +1,27 @@
+[
+  {
+    "key": "background",
+    "transparent": false,
+    "refs": [
+      "E:/testbase44/src/assets/boss/boss_1/boss1_bck/background.png",
+      "C:/Users/admin/Desktop/photo_2026-10-16_11-22-29.jpg"
+    ],
+    "prompt": "Create ONE portrait 9:16 game boss arena background. Image1 is STYLE ONLY: match its fine dark hand drawn outlines, muted olive/teal/purple rusty palette, flat textured cel shading, comedic adult sci-fi cartoon like Rick and Morty / Futurama. Image2 supplies cheese contamination theme only. Scene INSIDE a derelict spaceship cargo hold: angular riveted walls, exposed pipes and wires, battered crates and trash at both edges, small rear porthole to space, dim overhead lamps, yellow melted cheese leaks and small puddles on the floor. NO monster, NO rats, no characters, no eyes, no tongue, no foreground central obstruction. Leave broad empty central floor and wall area for separately composited tall boss, centered from 20% to 90% height. Readable environment, subdued diffuse lighting, not black, no cinematic glossy rendering. No text, no lettering, no logos. Full bleed opaque illustration."
+  },
+  {
+    "key": "body",
+    "transparent": true,
+    "refs": [
+      "C:/Users/admin/Desktop/photo_2026-10-16_11-22-29.jpg"
+    ],
+    "prompt": "Extract and reconstruct ONLY the giant yellow melted Swiss cheese monster from this reference as a standalone animation BASE BODY on true transparent background. Preserve reference character identity, fine dark scratchy outlines, flat warm yellow ochre cel shading, humorous grotesque adult sci-fi cartoon, Rick and Morty / Futurama spirit. Wide dripping cheese base narrowing to four asymmetrical long eye stalks, porous irregular cheese holes, huge open dark red mouth in lower center. NO rats, NO background, NO floor, NO objects. Remove the long pink tongue entirely, leaving a clean dark empty mouth so a separate tongue can be animated. Replace the four eyeballs with dark empty round sockets in the SAME positions, for separate eyeball layers. Full body fits entirely with 8% transparent padding. Tall portrait 3:4 silhouette. Four sockets: highest stalk slightly right of center; second stalk upper left; large right shoulder socket; lower left shoulder socket. No glow, no neon, no rendered lighting. True transparent cutout."
+  },
+  {
+    "key": "parts",
+    "transparent": true,
+    "refs": [
+      "C:/Users/admin/Desktop/photo_2026-10-16_11-22-29.jpg"
+    ],
+    "prompt": "Create ONE transparent 2x2 animation parts atlas, four equally sized square cells, no lines, no labels. Match reference cheese monster illustration exactly: fine irregular dark outlines, muted flat textured cel shading, hand drawn adult sci-fi cartoon Rick and Morty / Futurama spirit. Each piece centered inside its cell with 12% padding, no overlap. Top left: ONE large round cream yellow eyeball with tiny black pupil and thin dark ochre outline, facing viewer, no surrounding flesh or stalk. Top right: ONE long hanging pink tongue, narrow attachment at upper left, broad drooping curved length down to lower right with curled tip; cheese smear on tongue; no mouth, no body. Bottom left: ONE full fat gray-brown cartoon rat facing right, bulging cream eyes, pink ears and feet, long curved pink tail, holding and biting a yellow cheese wedge. Bottom right: another full matching gray-brown rat facing left with a different hunched eating pose and pink curled tail, holding cheese. No monster body, no scene, no floor, no shadows, no text. All four cells genuinely transparent background."
+  }
+]

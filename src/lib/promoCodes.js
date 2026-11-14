@@ -46,7 +46,7 @@ export function resolvePromoCode(code, additionalCodes = []) {
     return { label: dynamic.label || dynamic.code, rewards, dynamic: true };
   }
   if (dynamic?.field && Number(dynamic.amount) > 0) {
-    const fieldTypes = { tentacles: 'tentacles', xp: 'xp', energy: 'energy', premium: 'premium', small_poison: 'item', medium_poison: 'item', large_poison: 'item' };
+    const fieldTypes = { tentacles: 'tentacles', xp: 'xp', energy: 'energy', premium: 'premium', spin: 'spin', small_poison: 'item', medium_poison: 'item', large_poison: 'item' };
     const itemIds = { small_poison: 'small-poison', medium_poison: 'medium-poison', large_poison: 'large-poison' };
     const type = fieldTypes[dynamic.field];
     if (!type) return null;
@@ -105,6 +105,11 @@ export function buildPromoUpdates(profile, code, additionalCodes = []) {
 
     if (reward.type === 'energy') {
       updates.energy = Number(updates.energy ?? profile?.energy ?? 0) + amount;
+      continue;
+    }
+
+    if (reward.type === 'spin') {
+      updates.roulette_bonus_spins = Number(updates.roulette_bonus_spins ?? profile?.roulette_bonus_spins ?? 0) + amount;
       continue;
     }
 

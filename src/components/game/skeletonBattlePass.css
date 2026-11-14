@@ -1,0 +1,20 @@
+.skeleton-bp-effects { position: relative; height: 100%; max-width: 100%; aspect-ratio: 500 / 896; }
+.skeleton-bp-contour { position: absolute; inset: 0; mask-size: 100% 100%; mask-repeat: no-repeat; }
+.skeleton-bp-tongues {
+  position: absolute; transform-origin: center 85%;
+  background: linear-gradient(0deg,transparent,#00a89022 15%,#15dabc8c 36%,#74ffddcc 66%,#e1fff0bb 86%,transparent);
+  clip-path: polygon(0 100%,4% 72%,13% 85%,17% 36%,25% 62%,32% 9%,38% 54%,44% 74%,51% 25%,57% 55%,63% 0,67% 57%,75% 77%,82% 34%,87% 65%,96% 55%,100% 100%);
+  animation: skeleton-contour-flow 3.8s ease-in-out infinite;
+}
+.skeleton-bp-eye {
+  position: absolute; width: 4.7%; height: 2.15%; top: 10.17%; border-radius: 50%; overflow: hidden;
+  background: repeating-linear-gradient(0deg,#008d89 0px,#19d9c6 3px,#9affdf 6px,#eefff4 8px,#0fcdb9 11px);
+  background-size: 100% 23px; box-shadow: 0 0 4px #20e9cf99;
+  animation: skeleton-eye-flow 2.8s linear infinite;
+}
+@keyframes skeleton-eye-flow { from { background-position: 0 23px; } to { background-position: 0 0; } }
+@keyframes skeleton-contour-flow {
+  0%,100% { transform: translateY(1%) scaleY(.85); opacity: .48; }
+  40% { transform: translateY(-5%) scaleY(1.05); opacity: .85; }
+  70% { transform: translateY(-2%) scaleY(.94); opacity: .62; }
+}

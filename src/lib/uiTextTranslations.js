@@ -8,6 +8,8 @@ const TEXT = {
  "Гараж":["Garage","Гараж"],
  "Сцена бою з босом":["Boss Battle Scene","Сцена боя с боссом"],
  "Стартовий фон":["Starter background","Стартовый фон"],
+ "Legendary Battle Pass · рівень 40":["Legendary Battle Pass · level 40","Legendary Battle Pass · уровень 40"],
+ "Epic Battle Pass · рівень 40":["Epic Battle Pass · level 40","Epic Battle Pass · уровень 40"],
  "Legendary Battle Pass · рівень 50":["Legendary Battle Pass · level 50","Legendary Battle Pass · уровень 50"],
  "Epic Battle Pass · рівень 50":["Epic Battle Pass · level 50","Epic Battle Pass · уровень 50"],
  "Перша зміна безкоштовна":["First change is free","Первое изменение бесплатно"],

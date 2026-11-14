@@ -1,3 +1,4 @@
+import { kyivDayKey } from "../../src/lib/kyivDay.js";
 const DAILY_ITEM_LIMITS = Object.freeze({
   energy_25: 3,
   daily_toxic_pack: 1,
@@ -8,7 +9,7 @@ const DAILY_ITEM_LIMITS = Object.freeze({
   spin_20: 5,
 });
 
-export function validateDailyShopPatch(player, body, today = new Date().toISOString().slice(0, 10)) {
+export function validateDailyShopPatch(player, body, today = kyivDayKey()) {
   const patch = {};
 
   if (Object.hasOwn(body, 'daily_shop_date') || Object.hasOwn(body, 'daily_shop_purchases')) {

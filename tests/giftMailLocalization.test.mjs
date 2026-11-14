@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-const source = fs.readFileSync('src/components/game/MailPanel.jsx', 'utf8');
+const source = fs.readFileSync('src/components/game/MailPanel.jsx', 'utf8').replace(/\r\n/g, '\n');
 const start = source.indexOf('function localizedGiftText(');
 const end = source.indexOf('\n}\n\nfunction buildMailItems', start) + 2;
 assert.ok(start >= 0 && end > start, 'localized mail helper should be present');

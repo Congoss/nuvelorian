@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {getChatMessageAvatar} from '../src/lib/chatMessageAvatar.js';
 process.env.NODE_ENV = 'test';
 for (const key of ['DATABASE_URL','POSTGRES_URL','POSTGRES_PRISMA_URL','POSTGRES_URL_NON_POOLING']) process.env[key]='';
 const {createApp}=await import('../server/app.js');
@@ -34,7 +35,13 @@ test('chat replies are scoped and clan invitations are server owned and rate lim
  store.bossFights=[{id:'boss-fight-1',boss_id:'boss4',boss_name:'Worm',status:'active',current_hp:100,opened_by_email:store.players[0].created_by}];
  const bossInvite=await send({channel:'clan',text:'Help!',kind:'boss_fight_invite',bossFightInvite:{fightId:'boss-fight-1'}});
  assert.equal(bossInvite.status,201);
- assert.deepEqual({...bossInvite.data.bossFightInvite},{fightId:'boss-fight-1',bossId:'boss4',bossName:'Worm',clanLogoId:'planet4'});
+ assert.deepEqual({...bossInvite.data.bossFightInvite},{clanId:'chat-clan',fightId:'boss-fight-1',bossId:'boss4',bossName:'Worm',clanLogoId:'planet4'});
+ // The original invitation remains valid even after chat pruning and a clan rename.
+ const join=async()=>fetch(`http://127.0.0.1:${server.address().port}/boss-fights/boss-fight-1/join`,{method:'POST',headers:{'x-telegram-user-id':'99002'}});
+ const savedMessages=store.chatMessages;store.chatMessages=[];
+ store.players[1].clan_name='Renamed clan';
+ assert.equal((await join()).status,200);
+ store.players[1].clan_name='ChatClan';store.chatMessages=savedMessages;
  assert.equal((await send({channel:'clan',text:'Help again!',kind:'boss_fight_invite',bossFightInvite:{fightId:'boss-fight-1'}})).status,409);
  assert.equal((await send({channel:'clan',text:'Mate invite',kind:'boss_fight_invite',bossFightInvite:{fightId:'boss-fight-1'}},'99002')).status,403);
  store.bossFights.push({id:'boss-fight-next',boss_id:'boss5',boss_name:'Sporgol',status:'active',current_hp:100,opened_by_email:store.players[0].created_by});
@@ -55,9 +62,9 @@ test('chat replies are scoped and clan invitations are server owned and rate lim
 test('chat message mapping keeps boss invite actions attached to the rendered message', () => {
  const source=fs.readFileSync('src/components/game/ChatPanel.jsx','utf8');
  const start=source.indexOf('  const mapApiMessage =');
- const end=source.indexOf('\n\n  const loadMessages',start);
+ const end=source.indexOf('  const loadMessages',start);
  assert.ok(start>=0&&end>start);
- const context=vm.createContext({channel:'clan',selfAvatar:'avatar',profile:{language:'en'},t:key=>key,Date});
+ const context=vm.createContext({channel:'clan',selfAvatar:'avatar',heroIcon:'default-avatar',getChatMessageAvatar,profile:{language:'en'},t:key=>key,Date});
  vm.runInContext(`${source.slice(start,end)}\nglobalThis.mapApiMessage=mapApiMessage;`,context);
  const invite={fightId:'fight-1',bossName:'SHORK'};
  const mapped=context.mapApiMessage({id:'message-1',bossFightInvite:invite,text:'Help'},'clan');

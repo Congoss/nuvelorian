@@ -1,0 +1,5 @@
+Built-in image_gen, four separate opaque static 4:3 broadcast artworks. Large subjects, short high-contrast English captions, composed for approximately 80px-wide display, no external bezel/game character/UI/atlas.
+WANTED: giant Doge face wearing battered cowboy hat and red neckerchief on torn sepia saloon wanted poster, warm copper/sand painted western style, sheriff star. Huge WANTED and $1.
+ALIEN: grinning green alien face with huge black eyes holding Earth for sale, purple space, neon magenta rim light, glossy surreal sci-fi commercial. Giant diagonal red SOLD price tag, small ALIEN SHOP logo.
+COURT: stern older judge, black robe and curled white wig, huge wooden gavel poised over giant green BUY button, dramatic burgundy/amber close-up. Big GUILTY!, small COURT TV logo.
+RETRO: chunky authentic 8-bit pixel Wojak crying, bandage, giant red falling zigzag behind him, navy/white/red/cyan NES palette, empty/broken hearts. Large two-line GAME OVER.

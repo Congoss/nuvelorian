@@ -1,0 +1,14 @@
+.profile-gold-frame{position:absolute;inset:0;pointer-events:none;isolation:isolate;background:transparent}
+.profile-cartoon-outline{position:absolute;inset:0;width:100%;height:100%;display:block}
+.profile-planet-background{position:absolute;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);object-fit:cover;object-position:center 48%;display:block}
+.profile-gold-frame:after{content:'';position:absolute;inset:5px;pointer-events:none;background:linear-gradient(90deg,transparent 0%,#081118b3 18%,#081118cc 29%,#08111880 43%,transparent 58%),linear-gradient(270deg,#081118c9 0%,#08111891 13%,transparent 30%)}
+.profile-cartoon-outline,.profile-cartoon-tape,.profile-cartoon-staple{z-index:1}
+.profile-parcel-scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+.profile-customs-planet{position:absolute;left:53%;top:50%;width:78px;height:56px;transform:translate(-50%,-50%);color:#b191532b}
+.profile-parcel-backdrop{position:absolute;inset:0;width:100%;height:100%;display:block}
+.profile-parcel-stamp{position:absolute;left:53%;top:50%;width:96px;height:72px;transform:translate(-50%,-50%);color:#ba9b5630}
+.profile-parcel-label{position:absolute;right:3%;bottom:7px;width:58px;height:21px;transform:rotate(-6deg)}
+.profile-cartoon-tape{position:absolute;width:24px;height:6px;background:#d8c38a;border:1.5px solid #1a2115;clip-path:polygon(0 0,93% 8%,100% 35%,93% 60%,100% 100%,4% 92%,0 65%,7% 40%);box-shadow:inset 0 1px #f0deb2}
+.tape-top{top:0;left:22%;transform:rotate(-9deg)}.tape-bottom{bottom:0;left:43%;transform:rotate(7deg)}
+.profile-cartoon-staple{position:absolute;width:9px;height:4px;border:1.5px solid #1b2016;border-top-color:#c3c6ac;border-radius:2px;background:#9a9e88;transform:rotate(80deg)}
+.staple-left{left:-1px;top:43%}.staple-right{right:-1px;top:58%;transform:rotate(100deg)}

@@ -10,6 +10,7 @@ import bossFiveFightBackground from '@/assets/optimized/all/boss/boss_1/boss1_bc
 import bossSixFightBackground from '@/assets/optimized/all/boss/boss_1/boss1_bck/boss4/kosmo/background-kosmo.webp';
 import { GAME_CONFIG, getLocalizedBossName } from '@/lib/gameConfig';
 import { BOSS_BACKGROUND_REWARDS } from '@/lib/lootBoxes';
+import { SHKRABAN_ENABLED, SHKRABAN_BACKGROUND_ID, SHKRABAN_ROOT } from '@/lib/shkrabanContent';
 
 export const CAMP_BACKGROUNDS = {
   'bp-legendary': {id:'bp-legendary',name:'Лавова печера',source:legendaryBackground,unlockLabel:'Legendary Battle Pass · рівень 40'},
@@ -68,6 +69,16 @@ export const CAMP_BACKGROUNDS = {
     animatedScene: 'boss6',
     unlockLabel: 'Рідкісний дроп із Засмокта',
   },
+  'boss-7-fight': {
+    id: 'boss-7-fight', name: 'Храм Клеопатреш', source: '/boss7-scene/arena.webp', bossId: 'boss7', animatedScene: 'boss7', unlockLabel: 'Рідкісний дроп з Клеопатреш',
+  },
+  ...(SHKRABAN_ENABLED ? {
+    [SHKRABAN_BACKGROUND_ID]: {
+      id: SHKRABAN_BACKGROUND_ID, name: 'Дах піратського ефіру',
+      source: `${SHKRABAN_ROOT}/boss-rooftop-city-v2.webp`, bossId: 'boss8',
+      unlockLabel: 'Рідкісний дроп зі Шкрябана',
+    },
+  } : {}),
 };
 
 export function getCampBackgroundById(backgroundId) {

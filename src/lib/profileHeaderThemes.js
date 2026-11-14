@@ -1,0 +1,21 @@
+export const PROFILE_HEADER_THEMES = {
+  friday13_player_1:{uk:'П’ятниця 13 · #1',ru:'Пятница 13 · #1',en:'Friday 13 · #1'},
+  friday13_player_2:{uk:'П’ятниця 13 · #2',ru:'Пятница 13 · #2',en:'Friday 13 · #2'},
+  friday13_player_3:{uk:'П’ятниця 13 · #3',ru:'Пятница 13 · #3',en:'Friday 13 · #3'},
+  friday13_guild_1:{uk:'П’ятниця 13 · #1',ru:'Пятница 13 · #1',en:'Friday 13 · #1'},
+  friday13_guild_2:{uk:'П’ятниця 13 · #2',ru:'Пятница 13 · #2',en:'Friday 13 · #2'},
+  friday13_guild_3:{uk:'П’ятниця 13 · #3',ru:'Пятница 13 · #3',en:'Friday 13 · #3'},
+
+  'ship-engine':{uk:'Карантин назавжди',ru:'Карантин навсегда',en:'Quarantine Forever'},
+  'ship-hangar':{uk:'Спогади окремо',ru:'Воспоминания отдельно',en:'Memories Sold Separately'},
+  'ship-portal':{uk:'Ремонт у чотири руки',ru:'Ремонт в четыре руки',en:'Four-Handed Repairs'},
+  'ship-hull':{uk:'Сирний горизонт',ru:'Сырный горизонт',en:'Cheese Horizon'},
+  heli:{uk:'Митницю пройдено',ru:'Таможня пройдена',en:'Customs Cleared'},
+  tank:{uk:'Повернення кольору',ru:'Возвращение цвета',en:'Color Restored'},
+  chinook:{uk:'Ще потрібне',ru:'Ещё пригодится',en:'Still Useful'},
+  boss4:{uk:'Вид на ребра',ru:'Вид на рёбра',en:'Rib View'},
+  boss5:{uk:'Постійний клієнт',ru:'Постоянный клиент',en:'Regular Customer'},
+  boss6:{uk:'Нічого зайвого',ru:'Ничего лишнего',en:'Nothing Unwanted'},
+  boss7:{uk:'Вічний наречений',ru:'Вечный жених',en:'Eternal Groom'},
+  boss8:{uk:'У прямому ефірі',ru:'В прямом эфире',en:'Live on Air'},
+};

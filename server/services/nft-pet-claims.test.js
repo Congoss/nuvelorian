@@ -2,7 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { store } from '../data/store.js';
 import { playerDb } from '../data/player-db.js';
-import { normalizeHolderDrop, processHolderDrop, checkNftPetStatus, claimNftHolderPet } from './holder-drops.js';
+import { normalizeHolderDrop, processHolderDrop, checkNftPetStatus, claimNftHolderPet, ensureBuiltInHolderDrops } from './holder-drops.js';
+
+test('built-in Legion pet repairs a stale collection contract', () => {
+  const saved = store.nftHolderDrops;
+  try {
+    store.nftHolderDrops = [normalizeHolderDrop({ id: 'old-legion', kind: 'nft', contract: 'nft.herewallet.near', name: 'HERE Early', petRewardId: 'legion_pet' })];
+    const drop = ensureBuiltInHolderDrops().find(item => item.petRewardId === 'legion_pet');
+    assert.equal(drop.contract, 'nearlegion.nfts.tg');
+    assert.equal(drop.name, 'NEAR Legion');
+  } finally { store.nftHolderDrops = saved; }
+});
 
 test('NFT pet receipt survives transfers, recreated drops, wallet changes and serialization; public status is read-only', async () => {
   const saved = { players:store.players,drops:store.nftHolderDrops,claims:store.nftPetClaims,persist:store.persistNow,flush:playerDb.flushDirtyPlayers,fetch:global.fetch };
@@ -28,6 +38,8 @@ test('NFT pet receipt survives transfers, recreated drops, wallet changes and se
     assert.equal((await issue('seller')).sent,1);
     assert.equal(store.nftPetClaims[0].tokenId,'monkey#7');
     assert.equal(seller.holder_pet_grants.hereearlypet.tokenId,'monkey#7');
+    assert.equal(seller.inventory_items[0].nonTransferable,true,'NFT pets cannot be sold or traded');
+    assert.equal(seller.inventory_items[0].sourceTokenId,'monkey#7');
     assert.equal((await checkNftPetStatus(config.contract,'monkey#7')).claimed,true);
     owner='buyer.near';
     store.nftPetClaims=JSON.parse(JSON.stringify(store.nftPetClaims));
