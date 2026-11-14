@@ -1,0 +1,10 @@
+name: Publish audited Planet4 source
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'Audited source bundle is being prepared.'
