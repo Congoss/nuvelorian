@@ -121,7 +121,7 @@ slow, invalid or unavailable, the existing local pilot keeps the duel responsive
 
 The provider uses the existing NEAR AI credentials in protected configuration; no key belongs in this repository.
 Set `PVP_NEAR_AI_ENABLED=1` and `PVP_NEAR_AI_KEY`, or use the application's protected merchant key provider.
-The current production inference/engine verification is recorded in [NEAR AI verification](docs/PVP_NEAR_AI_VERIFICATION.md).
+Production inference and future-move/reveal verification passed on 2026-11-14 in Beta 4.14; the check is recorded in [NEAR AI verification](docs/PVP_NEAR_AI_VERIFICATION.md).
 
 ## What was built during the hackathon
 
@@ -143,7 +143,7 @@ so `pre-hackathon` is rebuilt from file timestamps and the release packages ≤ 
 | 3.36 · Oct 28 | Contraband card game with NEAR payments on the web |
 | 3.99–4.04 · Nov 12 | **PL4 player market on mainnet (limited-budget pilot)**: escrow, receipt verification, 5% fee, AI merchants with their own NEAR accounts and server-side signing, restocking only from sales, no buyback of agent-sold items, kill switch, Telegram sale notifications, NPC buyback prices |
 | Nov 11–14 | Fast-forward simulation, testnet settlement rehearsal, ranked player PvP with 10-second AI fallback, server-owned gear snapshots, rank resource rewards and reconnect/history |
-| Nov 14 · release 4.14 preparation | Dedicated no-wallet judge demo; independent market reservations; asynchronous NEAR AI Cloud coaching for future committed PvP moves |
+| Nov 14 · deployed 4.14 | Dedicated no-wallet judge demo; independent market reservations; asynchronous NEAR AI Cloud coaching for future committed PvP moves |
 
 All releases: [`PATCH_HISTORY.md`](PATCH_HISTORY.md).
 
