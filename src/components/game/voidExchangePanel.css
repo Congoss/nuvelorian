@@ -1,0 +1,79 @@
+.void-exchange-panel { container-type: inline-size; position: relative; isolation: isolate; overflow: hidden; padding: 24px 20px 12px; border: 3px solid #7850c7; border-radius: 30px; background: radial-gradient(ellipse at 95% 0%, #823cce66, transparent 38%), linear-gradient(155deg, #34225bea, #15102cef 55%, #21143bed), url('../../assets/IVENTS/void-flush/background.webp') center / cover; box-shadow: inset 0 0 0 5px #201237, inset 0 8px 16px #b388fc44, 0 0 20px #6c2ce44d; font-family: var(--font-mono); color: #fff4ce; }
+.void-exchange-heading { position: relative; margin-bottom: 20px; }
+.void-exchange-title { position: relative; z-index: 1; font-size: clamp(25px, 8.5cqw, 46px); font-weight: 900; line-height: 1.05; letter-spacing: -.04em; text-shadow: 0 3px 0 #332044; }
+.void-exchange-subtitle { position: relative; z-index: 1; margin-top: 5px; font-size: clamp(12px, 4cqw, 22px); font-weight: 700; color: #c0afe7; }
+.void-exchange-vortex { position: absolute; z-index: 0; width: 125px; height: 70px; top: -42px; right: -35px; border: 5px solid #c780ff; border-radius: 50%; transform: rotate(-25deg); background: radial-gradient(ellipse, #090316 35%, #8025cf 48%, #f3bcff 53%, #7732c4 64%, transparent 72%); box-shadow: 0 0 10px #efbbff, 0 0 28px #b43dff, inset 0 0 14px #9a4cfb; }
+.void-exchange-resources { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.void-exchange-resource { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; height: 40px; min-height: 40px; padding: 1px 6px; border: 2px solid #7150b9; border-radius: 16px; background: linear-gradient(150deg, #342552, #211830); box-shadow: inset 0 2px 0 #b18ce438; font-size: 11px; font-weight: 900; text-shadow: 0 2px 0 #31203f; }
+.void-exchange-resource img { width: 64px; max-width: 34%; height: 36px; flex-shrink: 0; object-fit: contain; filter: drop-shadow(0 3px 3px #090416); }
+.void-exchange-resource.is-selected { border-color: #b697ff; background: linear-gradient(160deg, #9562e6, #6838b7 70%, #492678); box-shadow: inset 0 3px 0 #d9b8ff55, 0 0 17px #bdf43d22; }
+.void-exchange-resource.is-selected::after { content: ''; position: absolute; bottom: -2px; left: 7%; right: 7%; height: 5px; border-radius: 8px; background: #c6ff35; box-shadow: 0 0 9px #c6ff3588; }
+.void-exchange-rate { margin: 20px 0 17px; text-align: center; font-size: clamp(16px, 5.1cqw, 28px); font-weight: 900; }
+.void-exchange-counter { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; align-items: center; gap: 10px; }
+.void-exchange-counter button { display: grid; place-items: center; height: 36px; aspect-ratio: 1; border: 3px solid #7850c1; border-radius: 19px; background: radial-gradient(circle at 20% 15%, #a77bdd44 0 10%, transparent 11%), linear-gradient(160deg, #6c45a1, #30214e); box-shadow: inset 0 3px 0 #c9a1ed33, 0 4px 5px #08041399; color: #e2d6f3; }
+.void-exchange-counter button svg { width: 16px; height: 16px; stroke-width: 3; }
+.void-exchange-counter output { text-align: center; font-size: clamp(36px, 14cqw, 78px); font-weight: 900; line-height: 1.12; letter-spacing: -.05em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; text-shadow: 0 4px 0 #281936; }
+.void-exchange-cost, .void-exchange-available { margin: 12px 0; text-align: center; font-size: clamp(12px, 3.8cqw, 21px); font-weight: 700; color: #b7a2dd; }
+.void-exchange-cost strong, .void-exchange-available strong { color: #fff3cf; font-weight: 900; }
+.void-exchange-presets { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+.void-exchange-presets button { height: 32px; border: 2px solid #7451b5; border-radius: 14px; background: linear-gradient(160deg, #5d3d89, #2c2048); box-shadow: inset 0 2px 0 #b798d833; font-size: 11px; font-weight: 900; color: #d8c9eb; }
+.void-exchange-presets button[aria-pressed="true"] { border-color: #c6f438; color: #c6f438; box-shadow: 0 0 12px #c6f43833, inset 0 0 0 1px #c6f438; }
+.void-exchange-panel .void-exchange-flush { min-height: 40px; border: 3px solid #daf95e; border-radius: 23px; box-shadow: 0 0 20px #b8ff3444, inset 0 0 0 2px #83b01f; }
+.void-exchange-flush-label { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px; font-family: var(--font-mono); font-size: 11px; font-weight: 900; line-height: 1.15; text-transform: uppercase; color: #172506; }
+.void-exchange-flush-label svg { width: 16px; height: 16px; flex-shrink: 0; stroke-width: 3; }
+.void-exchange-panel button:disabled { opacity: .55; cursor: not-allowed; }
+.void-exchange-panel button:focus-visible { outline: 2px solid #d8ff5a; outline-offset: 2px; }
+.void-exchange-feedback { margin-top: 8px; min-height: 12px; font-size: 9px; text-align: center; color: #afa0c5; }
+.void-ap-flight { position: fixed; z-index: 10000; pointer-events: none; display: block; width: 40px; height: 40px; filter: drop-shadow(0 0 9px #bdf43d88); animation: void-ap-fly 1.35s ease-in-out .7s both; }
+@keyframes void-ap-fly { 0% { transform: translate(-50%, -50%) scale(.3); opacity: 0; } 20% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; } 85% { opacity: 1; } 100% { transform: translate(calc(-50% + var(--flight-x)), calc(-50% + var(--flight-y))) scale(.4); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .void-ap-flight { animation: none; display: none; } }
+
+.void-exchange-subtitle, .void-exchange-resource { text-transform: uppercase; }
+.void-exchange-presets { margin-top: 24px; }
+.void-exchange-available { margin: 8px 0 16px; font-size: clamp(16px, 5cqw, 27px); font-weight: 900; color: #fff3cf; }
+
+
+/* Shared game texture buttons keep the exchange controls consistent with camp. */
+.void-exchange-panel .void-exchange-resource, .void-exchange-counter button, .void-exchange-presets button, .void-exchange-panel .void-exchange-flush { border: 1px solid #090b04; border-radius: 10px 8px 11px 7px; background: #111608; box-shadow: 0 2px 3px #0009; color: #e9f6d8; text-shadow: 0 1px 1px #17200e; }
+.void-exchange-panel .void-exchange-resource.is-selected, .void-exchange-presets button[aria-pressed="true"] { border-color: #c6ed45; color: #17220e; text-shadow: none; box-shadow: 0 0 8px #b7e53833; }
+.void-exchange-resource.is-selected::after { display: none; }
+.void-exchange-resource-content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; }
+.void-exchange-panel .void-exchange-flush { color: #14200d; text-shadow: none; }
+
+.void-exchange-compact { padding: 8px 2px 2px; border: 0; border-top: 1px solid #49653b; border-radius: 0; background: transparent; box-shadow: none; color: #e9f6d8; }
+.void-exchange-compact .void-exchange-heading { margin-bottom: 7px; }
+.void-exchange-compact .void-exchange-title { font-size: 11px; letter-spacing: .04em; text-shadow: none; }
+.void-exchange-compact .void-exchange-subtitle, .void-exchange-compact .void-exchange-vortex { display: none; }
+.void-exchange-compact .void-exchange-resources { gap: 6px; }
+.void-exchange-compact .void-exchange-rate { margin: 7px 0 4px; font-size: 11px; }
+.void-exchange-compact .void-exchange-counter { gap: 6px; }
+.void-exchange-compact .void-exchange-counter output { font-size: 32px; line-height: 1.1; text-shadow: none; }
+.void-exchange-compact .void-exchange-presets { margin-top: 6px; gap: 6px; }
+.void-exchange-compact .void-exchange-available { margin: 5px 0 7px; font-size: 10px; color: #a6bc92; }
+.void-exchange-compact .void-exchange-feedback { margin-top: 4px; min-height: 0; color: #a6bc92; }
+
+
+.void-resource-flight { position: fixed; z-index: 10000; pointer-events: none; width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0 0 5px #bcf54d88); animation: void-resource-swallow .85s ease-in var(--resource-delay) both; }
+@keyframes void-resource-swallow {
+  0% { opacity: 0; transform: translate(calc(-50% + var(--resource-x)), calc(-50% + var(--resource-y))) scale(.7); }
+  15% { opacity: 1; transform: translate(calc(-50% + var(--resource-x)), calc(-50% + var(--resource-y))) scale(1); }
+  55% { opacity: 1; transform: translate(calc(-50% + var(--resource-x) * .25), calc(-50% + var(--resource-y) * .7)) rotate(35deg) scale(.85); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--resource-turn)) scale(0); }
+}
+@media (prefers-reduced-motion: reduce) { .void-resource-flight { display: none; animation: none; } }
+
+.void-exchange-panel[data-resource="paper"] .void-exchange-resource.is-selected, .void-exchange-panel[data-resource="paper"] .void-exchange-presets button[aria-pressed="true"] { border-color: #ffd0e1; color: #351521; box-shadow: 0 0 8px #ee95b544; }
+.void-exchange-panel[data-resource="paper"] .void-exchange-flush-label { color: #351521; }
+
+
+.void-exchange-panel .void-exchange-presets button { color: #b8bcc2; text-shadow: none; }
+.void-exchange-panel .void-exchange-presets button[aria-pressed="true"] { color: #d8ff5a; }
+.void-exchange-panel[data-resource="paper"] .void-exchange-presets button[aria-pressed="true"] { color: #ffe0ec; }
+
+
+.void-exchange-presets button .void-exchange-preset-label { color: #b8bcc2; text-shadow: 0 1px 2px #0008; }
+.void-exchange-presets button[aria-pressed="true"] .void-exchange-preset-label { color: #d8ff5a; text-shadow: 0 0 5px #b7ef4055; }
+.void-exchange-panel[data-resource="paper"] .void-exchange-presets button[aria-pressed="true"] .void-exchange-preset-label { color: #ffc1da; text-shadow: 0 0 5px #ff8abd55; }
+
+
+.void-exchange-counter output img { height: 1em; width: 1.25em; vertical-align: -0.12em; object-fit: contain; }

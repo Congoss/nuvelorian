@@ -1,0 +1,30 @@
+{
+  "name": "MissionLog",
+  "type": "object",
+  "properties": {
+    "player_email": {
+      "type": "string"
+    },
+    "mission_id": {
+      "type": "string"
+    },
+    "mission_name": {
+      "type": "string"
+    },
+    "success": {
+      "type": "boolean"
+    },
+    "reward": {
+      "type": "number",
+      "default": 0
+    },
+    "xp_earned": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "player_email",
+    "mission_id"
+  ]
+}

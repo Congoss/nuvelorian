@@ -1,0 +1,20 @@
+{
+  "uk": {
+    "welcome": {"title":"ПРИВІТ, КОСМІЧНА ШМАКРЛЯ!","text":"Вітаємо в косморядах — місці, де ми б’ємо босів, стаємо сильнішими й з’ясовуємо, у кого найбільші амбіції в галактиці."},
+    "quests": {"title":"ПОЧНЕМО З КВЕСТІВ","text":"Тут енергія перетворюється на досвід, нагороди та приємну ілюзію, що ти знаєш, що робиш."},
+    "artifacts": {"title":"ЗБИРАЙ КОСМІЧНИЙ МОТЛОХ","text":"У квестах можуть випадати артефакти. На кожній планеті — свій набір дивного барахла."},
+    "boss": {"title":"ТВІЙ ПЕРШИЙ БОС","text":"Ось ця потвора. Тицяй на неї — зараз один із вас отримає корисний життєвий урок."}
+  },
+  "ru": {
+    "welcome": {"title":"ПРИВЕТ, КОСМИЧЕСКАЯ ШМАКРЛЯ!","text":"Добро пожаловать в косморяды — место, где мы бьём боссов и становимся сильнее."},
+    "quests": {"title":"НАЧНЁМ С КВЕСТОВ","text":"Здесь энергия превращается в опыт, награды и приятную иллюзию, что ты знаешь, что делаешь."},
+    "artifacts": {"title":"СОБИРАЙ КОСМИЧЕСКИЙ ХЛАМ","text":"В квестах могут выпадать артефакты. На каждой планете — свой набор странного хлама."},
+    "boss": {"title":"ТВОЙ ПЕРВЫЙ БОСС","text":"Вот эта тварь. Нажми на неё — сейчас один из вас получит полезный жизненный урок."}
+  },
+  "en": {
+    "welcome": {"title":"HELLO, SPACE FREAK!","text":"Welcome to Cosmorads — a place where we beat bosses and get stronger."},
+    "quests": {"title":"LET'S START WITH QUESTS","text":"Here energy becomes experience, rewards, and the pleasant illusion that you know what you're doing."},
+    "artifacts": {"title":"COLLECT SPACE JUNK","text":"Quests can drop artifacts. Each planet has its own set of strange junk."},
+    "boss": {"title":"YOUR FIRST BOSS","text":"That creature over there. Tap it — one of you is about to learn a useful life lesson."}
+  }
+}

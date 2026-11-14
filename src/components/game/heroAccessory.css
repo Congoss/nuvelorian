@@ -1,0 +1,6 @@
+.hero-accessory { position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; }
+.hero-crown-art { animation:hero-crown-glow 3.4s ease-in-out infinite; }
+.hero-crown-spark { stroke:#fff6b5; stroke-width:2; stroke-linecap:round; opacity:0; filter:drop-shadow(0 0 3px #ffe566); animation:hero-crown-spark 2.8s ease-in-out infinite; }
+@keyframes hero-crown-glow { 0%,100% { filter:brightness(1) drop-shadow(0 0 1px #f7c62d66); } 50% { filter:brightness(1.16) drop-shadow(0 0 5px #f7c62d99); } }
+@keyframes hero-crown-spark { 0%,65%,100% { opacity:0; } 80% { opacity:1; } }
+@media(prefers-reduced-motion:reduce) { .hero-crown-art,.hero-crown-spark { animation:none; } }

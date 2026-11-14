@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import { createPartnerVisits } from '../server/utils/partnerVisits.js';
+
+let time = 1000;
+const visits = createPartnerVisits(() => time);
+const partner = { id: 'campaign', link: 'https://x.com/partner' };
+assert.equal(visits.status('player', partner).status, 'VISIT_REQUIRED');
+assert.equal(visits.start('player', partner).readyInSeconds, 10);
+time += 5000;
+assert.equal(visits.start('player', partner).readyInSeconds, 5);
+assert.equal(visits.status('player', partner).status, 'VISIT_WAIT');
+assert.equal(visits.status('other-player', partner).status, 'VISIT_REQUIRED');
+assert.equal(visits.status('player', { ...partner, link: 'https://x.com/other' }).status, 'VISIT_REQUIRED');
+time += 5000;
+assert.equal(visits.status('player', partner).status, 'VISIT_REPEAT_REQUIRED');
+assert.equal(visits.status('player', partner).status, 'VISIT_REPEAT_REQUIRED');
+assert.equal(visits.start('player', partner).readyInSeconds, 10);
+assert.equal(visits.status('player', partner).status, 'VISIT_WAIT');
+time += 10000;
+assert.equal(visits.status('player', partner).status, 'READY');
+visits.consume('player', partner);
+assert.equal(visits.status('player', partner).status, 'VISIT_REQUIRED');
+visits.start('player', partner);
+time += 30 * 60 * 1000;
+assert.equal(visits.status('player', partner).status, 'VISIT_REQUIRED');
+assert.equal(visits.start('player', partner).readyInSeconds, 10);
+console.log('Partner visit checks passed');

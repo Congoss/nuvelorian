@@ -1,0 +1,20 @@
+{
+  "uk": {
+    "tentacles": "Мотлох",
+    "xp": "Досвід",
+    "strength": "Сила",
+    "premium": "Прем валюта"
+  },
+  "en": {
+    "tentacles": "tentacles",
+    "xp": "XP",
+    "strength": "Strength",
+    "premium": "Premium currency"
+  },
+  "ru": {
+    "tentacles": "Лом",
+    "xp": "Опыт",
+    "strength": "Сила",
+    "premium": "Прем валюта"
+  }
+}

@@ -1,0 +1,840 @@
+{
+  "tasks": {
+    "go": "GO",
+    "afkBonus": "АФК БОНУС",
+    "claim": "Забрати",
+    "ready": "Готово",
+    "afkLine1": "Клейм кожні {{hours}} год • {{percent}}% від повного проходження сектора.",
+    "afkLine2": "Кожне нове проходження дає +1% до нагород.",
+    "afkNotReady": "АФК-нагорода ще не готова. Таймер оновлено."
+  },
+  "shop": {
+    "sections": {
+      "popular": "Популярне",
+      "dailyOffer": "Акція дня",
+      "gems": "T-Pape",
+      "paidConsumables": "Енергія та отрути за Stars / NEAR",
+      "energy": "Енергія",
+      "dailyForTentacles": "Щоденне за tentacles",
+      "roulette": "Рулетка",
+      "packs": "Паки",
+      "unopenedPacks": "Невідкриті паки"
+    },
+    "buyEnergy": "Купити енергію",
+    "items": {
+      "energy25": "Енергія +25",
+      "dailyToxicPack": "Щоденний токсичний пак",
+      "bossDamagePack": "Пак шкоди босу",
+      "spin1": "Spin x1",
+      "spin5": "Spin x5",
+      "spin20": "Spin x20",
+      "starterOffer": "Стартова пропозиція",
+      "firstBossOffer": "Пропозиція першого боса",
+      "weeklyOffer": "Тижнева пропозиція",
+      "energy50": "Енергія +50",
+      "fullEnergyRefill": "Повне відновлення енергії",
+      "energy100": "Енергія +100",
+      "poisonPack": "Пак отрути",
+      "weeklyProgressPack": "Пак тижневого прогресу"
+    },
+    "desc": {
+      "forTentacles": "За tentacles",
+      "forPremium": "За T-Pape",
+      "dailyOffer": "Денна пропозиція",
+      "tentacles500": "500 tentacles",
+      "tentacles900": "900 tentacles",
+      "tentacles1500": "1 500 tentacles",
+      "tentacles800": "800 tentacles",
+      "premium30": "30 T-Pape",
+      "premium50": "50 T-Pape",
+      "premium60": "60 T-Pape",
+      "premium120": "120 T-Pape",
+      "premium180": "180 T-Pape",
+      "premium250": "250 T-Pape",
+      "premium1000": "1 000 T-Pape"
+    },
+    "dailyToxicOdds": {
+      "l1": "70% — Малий яд x3",
+      "l2": "20% — Малий яд x5 + Середній яд x1",
+      "l3": "8% — Середній яд x2",
+      "l4": "2% — Фляга з отрутою x1"
+    },
+    "remaining": "Залишилось {{left}}/{{total}}",
+    "noPacks": "Немає паків.",
+    "selectedPayment": "Обрана оплата",
+    "gemPackNote": "Оберіть TON, NEAR або Telegram Stars.",
+    "cancel": "Скасувати",
+    "confirmPayment": "Підтвердити",
+    "openOne": "Відкрити 1",
+    "openAll": "Відкрити всі"
+  },
+  "leaderboard_panel": {
+    "tab_players": "Гравці",
+    "tab_clans": "Клани",
+    "tab_referrals": "Реферали",
+    "top_1": "Топ 1",
+    "top_2": "Топ 2",
+    "top_3": "Топ 3",
+    "no_clan": "Без клану",
+    "empty_players": "Гравців поки немає",
+    "empty_clans": "Кланів поки немає",
+    "empty_referrals": "Рефералів поки немає"
+  },
+  "camp_view": {
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "equip": "Вдягти",
+    "unequip": "Зняти",
+    "no_extra_bonus": "Без додаткового бонусу",
+    "future_locked_hint": "Буде доступно пізніше",
+    "locked_item": "Предмет заблоковано",
+    "shop_price_prefix": "Ціна:",
+    "drop_prefix": "Дроп:",
+    "top": "Топ",
+    "gear": "Екіп",
+    "daily": "Щоденні",
+    "roulette": "Рулетка",
+    "events": "Івенти",
+    "friends_tab": "Друзі",
+    "back_to_ranking": "Назад до рейтингу",
+    "friends_header": "Запроси друзів",
+    "friends_description": "Запрошуй друзів, допомагай їм стартувати та забирай інвайт-бокси.",
+    "copy": "Скопіювати",
+    "invite": "Запросити",
+    "confirm": "Підтвердити",
+    "claim": "Забрати",
+    "claimed": "Забрано",
+    "friends_list": "Запрошені друзі",
+    "rewards_title": "Реферальні нагороди",
+    "reward_line": "{{count}} active friend: {{reward}}",
+    "no_friends": "Ще немає запрошених друзів",
+    "friend_status_joined": "joined",
+    "friend_status_active": "active",
+    "friend_status_reward_ready": "reward_ready",
+    "friend_status_claimed": "claimed"
+  },
+  "chat_panel": {
+    "clan_tab": "Клан",
+    "world_tab": "Світ",
+    "clan_chat_title": "Клановий чат",
+    "world_chat_title": "Світовий чат",
+    "online_count": "Онлайн: {{count}}",
+    "chat_history_24h": "Історія чату за 24 год",
+    "role_deputy": "Заступник",
+    "role_warrior": "Воїн",
+    "role_wasteland": "Пустка",
+    "role_tentacles_yard": "Мотлоховий двір",
+    "role_rift_kids": "Діти Розлому",
+    "message_placeholder": "Напиши повідомлення...",
+    "send_button": "Надіслати",
+    "energy_request": "Запит енергії",
+    "energy_request_mine": "Ваш запит енергії",
+    "request_energy": "Запитати енергію",
+    "energy_requested": "Очікування",
+    "energy_helped": "Допомогли"
+  },
+  "bottom_nav": {
+    "bosses": "Боси",
+    "quests": "Квести",
+    "hero": "Герой",
+    "skills": "Таланти",
+    "clans": "Клани"
+  },
+  "loot_modal": {
+    "tap_to_open": "Натисни, щоб відкрити",
+    "opening": "Відкриваємо...",
+    "loot_in_chest": "Лут у скрині",
+    "open_button": "Відкрити",
+    "claim_button": "Забрати"
+  },
+  "profile": {
+    "personalInfo": "Особиста інформація",
+    "openWebGame": "Вебгра · оплата NEAR",
+    "hideBanners": "Сховати банери профілю",
+    "chooseBanner": "Обрати банер профілю",
+    "openFramePicker": "Відкрити вибір рамки аватара",
+    "nickname": "Нік",
+    "changeNickname": "Змінити нікнейм?",
+    "newNickname": "Новий нікнейм",
+    "firstNicknameFree": "Перша зміна — безкоштовно",
+    "nicknamePrice": "Ціна: 500 T-Pape",
+    "cancel": "Скасувати",
+    "confirm": "Підтвердити",
+    "uid": "UID",
+    "guild": "Клан",
+    "promoCode": "ПРОМОКОД",
+    "ok": "OK",
+    "codeNotFound": "Промокод не знайдено або він неактивний",
+    "codeUsed": "Цей код вже активовано",
+    "activated": "Активовано",
+    "walletLink": "Підключення гаманця",
+    "walletStatus": "TON live / NEAR скоро",
+    "nearSoon": "NEAR скоро",
+    "achievements": "Досягнення",
+    "futureBonuses": "майбутні бонуси",
+    "notifications": "Сповіщення",
+    "later": "пізніше",
+    "copyUid": "Скопіювати UID",
+    "codeLimitReached": "Ліміт активацій промокоду вичерпано",
+    "codeActivationFailed": "Не вдалося активувати промокод. Спробуй ще раз."
+  },
+  "topbar": {
+    "settings": "Налаштування",
+    "shop": "Магазин",
+    "mail": "Пошта"
+  },
+  "upgrades": {
+    "title": "Покращення бази",
+    "level": "Рів.",
+    "current": "Поточне:",
+    "atk": "АТК",
+    "def": "ЗАХ",
+    "hour": "год",
+    "stashShort": "схов.",
+    "statsTitle": "СТАТИ",
+    "attack": {
+      "name": "Зброя",
+      "description": "Підвищує шкоду по босах"
+    },
+    "defense": {
+      "name": "Оборона",
+      "description": "Зменшує втрати під час рейдів"
+    },
+    "income": {
+      "name": "Ферма мотлоху",
+      "description": "Більше мотлоху за годину"
+    },
+    "stash": {
+      "name": "Сховок",
+      "description": "Збільшує захищений резерв"
+    },
+    "stats": {
+      "strength": "CA",
+      "stealth": "Стелс",
+      "endurance": "Витривалість",
+      "craft": "Крафт"
+    }
+  },
+  "boss_panel": {
+    "choose_boss": "Обери боса",
+    "reward_title": "Нагорода",
+    "reward_strength_line": "CA +{{min}}-{{max}}",
+    "reward_xp_line": "EXP +{{min}}-{{max}}",
+    "players": "Гравці",
+    "clans": "Клани",
+    "clan_damage": "Урон клану"
+  },
+  "tasks_panel": {
+    "location_reward_strength_short": "+CA",
+    "location_reward_xp_short": "+EXP",
+    "back_to_locations": "Назад до локацій",
+    "missions_count": "{{count}} місій",
+    "collection": "Колекція",
+    "location_artifacts_title": "Артефакти локації",
+    "location_artifacts_hint": "Кожна місія дає свій артефакт після заповнення шкали. Повний сет міняється на зброю.",
+    "location_unlock_hint": "Переможи {{boss}} або досягни рівня {{level}}",
+    "final_task_unlock_hint": "Відкриється після повного циклу перших 6 місій"
+  },
+  "clan_panel": {
+    "open_clans_title": "Відкрити клани",
+    "available_now": "Доступні зараз",
+    "no_real_clans_hint": "Ще немає реальних кланів. Можеш створити перший.",
+    "clan_list": "Список кланів",
+    "create_clan_tab": "Створити клан",
+    "clan_settings": "Налаштування клану",
+    "create_clan": "Створення клану",
+    "create_requirement": "10 lvl + 10k мотлоху",
+    "clan_name": "Назва клану",
+    "cost": "Вартість",
+    "create": "Створити",
+    "locked": "Заблоковано",
+    "clan_sign": "Знак клану",
+    "guild_logo": "Логотип гільдії",
+    "description": "Опис",
+    "required_trophies": "Потрібні трофеї",
+    "required_level": "Потрібний рівень",
+    "clan_tagline": "Ми ставимося до гравців з повагою.",
+    "clan_power": "Сила клану",
+    "clan_level": "Рівень клану {{level}}",
+    "your_contribution": "Твій внесок",
+    "close_announcement": "Закрити оголошення",
+    "players": "Гравці",
+    "active_players": "Активні гравці",
+    "clan_type": "Тип клану",
+    "last_raid_damage": "Урон у рейд-босі",
+    "achievement_raid": "Рейд",
+    "achievement_power": "Сила",
+    "achievement_team": "Команда",
+    "achievement_legend": "Легенда",
+    "achievement_hunter": "Мисливець",
+    "achievement_guard": "Варта",
+    "achievement_damage": "Урон",
+    "achievement_quests": "Квести",
+    "achievement_helper": "Помічник",
+    "achievement_donations": "Донати",
+    "achievement_how_title": "Як це працює",
+    "achievement_clan_level_rule": "Рівень клану підвищується, коли всі 4 досягнення досягають цього рівня. Для 1 рівня потрібен 1 рівень у кожному досягненні.",
+    "donation_daily_limit": "ліміт відновлюється кожні 12 годин",
+    "achievement_current_level": "Поточний рівень {{level}}",
+    "achievement_level_header": "Рівень",
+    "achievement_requirement_header": "Потрібно",
+    "achievement_bonus_header": "Бонус",
+    "achievement_requirement_damage": "шкоди",
+    "achievement_requirement_quests": "квестів",
+    "achievement_requirement_helper": "допомог",
+    "achievement_requirement_donations": "tentacles",
+    "achievement_bonus_damage": "+{{value}}% шкоди отрутою",
+    "achievement_bonus_quests": "Квести до рівня {{value}}",
+    "achievement_bonus_helper": "до {{value}} енергії",
+    "achievement_bonus_donations": "{{value}} учасників",
+    "achievement_how_damage": "Рахується сумарна шкода, яку учасники клану завдають босам. Кожен рівень збільшує шкоду отрутою на 1%.",
+    "achievement_how_quests": "Рахуються завершені кланові квести. Рівень відкриває квести відповідної складності, максимум — VIII рівень.",
+    "achievement_how_helper": "Рахуються запити енергії, у яких учасники допомогли одне одному. Кожен рівень збільшує ліміт енергії в запиті на 5.",
+    "achievement_how_donations": "Рахуються tentacles, пожертвувані учасниками клану. Кожен рівень збільшує максимальну кількість місць у клані.",
+    "quests": "Квести",
+    "donate": "Донат",
+    "start": "Старт",
+    "go": "GO",
+    "in_progress": "В РОБОТІ",
+    "quest_reward": "+{{tentacles}} tentacles · +{{xp}} XP",
+    "quest_condition": {
+      "damage": "Завдати {{target}} шкоди",
+      "energy": "Витратити {{target}} енергії",
+      "missions": "Виконати {{target}} завдання",
+      "hits": "Завдати {{target}} ударів босу",
+      "tentacles": "Задонатити {{target}} tentacles"
+    },
+    "help": "Допомога",
+    "energy": "Енергія",
+    "request_energy": "Запитати",
+    "donations_locked": "Донати заблоковані",
+    "progress_raids": "Рейди",
+    "progress_power": "Сила",
+    "progress_members": "Учасники",
+    "progress_trophies": "Трофеї",
+    "leave_clan": "Покинути клан",
+    "clan_chat": "Чат клану",
+    "manage": "Керування",
+    "management_title": "Керування кланом",
+    "applications": "Заявки {{count}}",
+    "settings": "Налаштування",
+    "log": "Журнал",
+    "level_short": "Рів.",
+    "role_leader": "Глава",
+    "role_deputy": "Заступник",
+    "role_elder": "Космодід",
+    "role_member": "Стажер",
+    "kick": "Вигнати",
+    "kick_confirm": "Вигнати {{name}} з клану?",
+    "no_applications": "Немає заявок",
+    "save_description": "Зберегти опис",
+    "announcement_subject": "Тема оголошення",
+    "text": "Текст",
+    "send_mail": "Надіслати лист",
+    "pin": "Закріпити",
+    "transfer_member_id": "ID учасника для передачі Космобаті",
+    "transfer_confirm": "Підтвердити передачу ролі?",
+    "transfer_leader": "Передати Космобатю",
+    "dissolve_confirm": "Розпустити клан?",
+    "dissolve": "Розпустити",
+    "empty_log": "Журнал порожній",
+    "log_sent_announcement": "надіслав оголошення: «{{title}}».",
+    "log_joined": "приєднався до клану.",
+    "log_left": "покинув клан.",
+    "log_kicked": "вигнав {{name}} з клану.",
+    "log_changed_description": "змінив опис клану.",
+    "log_removed_announcement": "прибрав закріплене оголошення.",
+    "members": "Учасники",
+    "roster": "Склад клану",
+    "power": "Сила",
+    "join": "Приєднатися",
+    "top": "Топ {{place}}",
+    "role_fighter": "Боєць",
+    "role_solo": "Один",
+    "no_clan_name": "Без клану",
+    "clan_type_request": "По заявці",
+    "not_created": "Не створено",
+    "start_location": "Старт",
+    "clan_description_default": "Клан показує лише реальних учасників.",
+    "clan_description_guest": "Клан ще не створено. Тут показується лише твій реальний профіль.",
+    "clan_row_description_default": "Клан збирає реальних учасників і разом ходить на босів.",
+    "clan_create_description_default": "Концепт ідеї від лідера клану. Ходимо на босів разом і плануємо вікна шкоди.",
+    "clan_create_subtitle": "Збери свою команду. Підкори безодню.",
+    "change_emblem": "Змінити емблему",
+    "clan_emblem": "Емблема клану",
+    "clan_preview": "Прев’ю клану",
+    "cancel": "Скасувати",
+    "confirm": "Підтвердити",
+    "close": "Закрити",
+    "clan_type_open": "Відкритий",
+    "clan_create_type_request": "Запит",
+    "clan_type_invite_only": "Лише запрошення",
+    "clan_type_open_hint": "Приєднатися може кожен.",
+    "clan_type_request_hint": "Потрібне схвалення лідера.",
+    "clan_type_invite_only_hint": "Лише для запрошених гравців.",
+    "log_promoted": "підвищив {{name}}: {{from}} → {{to}}.",
+    "log_demoted": "понизив {{name}}: {{from}} → {{to}}.",
+    "log_accepted": "прийняв {{name}} до клану.",
+    "log_rejected": "відхилив заявку {{name}}.",
+    "log_transferred": "передав звання глави {{name}}.",
+    "log_join_type": "змінив тип вступу: {{from}} → {{to}}.",
+    "log_min_level": "змінив мінімальний рівень: {{from}} → {{to}}."
+  },
+  "mail_panel": {
+    "title": "Пошта",
+    "subtitle": "Тут зберігаються бонуси від гри та адміна.",
+    "from_game": "Лист від гри",
+    "claim": "Отримати",
+    "claimed": "Отримано",
+    "opening": "Відкриваємо",
+    "empty": "Поки немає нових листів",
+    "open_error": "Не вдалося відкрити нагороду",
+    "claimed_fallback": "Нагороду отримано",
+    "rewards_tab": "Нагороди",
+    "gifts_tab": "Подарунки",
+    "counter": "{{current}}/{{max}} листів",
+    "mark_read": "Прочитати",
+    "read": "Прочитано",
+    "delete": "Видалити",
+    "action_error": "Не вдалося оновити повідомлення"
+  },
+  "resource_names": {
+    "dm": {
+      "short": "tentacles",
+      "full": "tentacles",
+      "description": "Основна валюта гри."
+    },
+    "cdm": {
+      "short": "T-Pape",
+      "full": "T-Pape",
+      "description": "Преміум-валюта гри."
+    },
+    "ca": {
+      "short": "CA",
+      "full": "Космо авторитет",
+      "description": "Сила та статус героя."
+    },
+    "exp": {
+      "short": "EXP",
+      "full": "Досвід",
+      "description": "Досвід для підвищення рівня."
+    },
+    "mail": {
+      "short": "Пошта",
+      "full": "Пошта",
+      "description": "Листи та нагороди від гри."
+    }
+  },
+  "skill_names": {
+    "finger": "Палець",
+    "pencil": "Олівець",
+    "small_poison": "Мала отрута",
+    "medium_poison": "Середня отрута",
+    "big_poison": "Фляга з отрутою"
+  },
+  "battle_pass": {
+    "back": "Назад до героя",
+    "season": "СЕЗОН 01 · 28 ДНІВ",
+    "season_title": "ШЛЯХ ВИЖИВАННЯ",
+    "season_subtitle": "50 рівнів. Твоя історія.",
+    "season_art": "АРТ СЕЗОНУ · ЗАГЛУШКА",
+    "level": "РІВЕНЬ {{level}}",
+    "days_left": "{{days}} дн. до кінця",
+    "inactive": "Сезон неактивний",
+    "max_level": "МАКСИМАЛЬНИЙ РІВЕНЬ",
+    "progress_hint": "Бий босів, виконуй щоденні завдання та прокачуй Battle Pass!",
+    "rewards_tab": "НАГОРОДИ",
+    "tasks_tab": "ЗАВДАННЯ",
+    "loading": "Завантаження сезону…",
+    "tasks_aria": "Завдання Battle Pass",
+    "tasks_title": "ЗАВДАННЯ BATTLE PASS",
+    "tasks_hint": "XP зараховується автоматично. Щоденні — 00:00 UTC, тижневі — понеділок 00:00 UTC.",
+    "boss_victory_xp": "10–30 XP за перемогу · до 3/день · власнику бою",
+    "done": "Виконано",
+    "claim": "Забрати",
+    "claimed": "отримано",
+    "locked": "заблоковано",
+    "art_coming": "АРТ ЗГОДОМ",
+    "reward": "Нагорода",
+    "reward_title": "Нагорода Battle Pass",
+    "claim_error": "Не вдалося забрати нагороду",
+    "reward_aria": "{{track}}, рівень {{level}}: {{rewards}}, {{status}}",
+    "finish_title": "ФІНІШ СЕЗОНУ",
+    "finish_text": "Збери квитки для розіграшу призів після сезону.",
+    "tickets": "Твої квитки: {{count}}",
+    "groups": {
+      "bosses": "Боси",
+      "daily": "Щоденні · 150 XP",
+      "weekly": "Тижневі · 500 XP",
+      "season": "Сезонні · 1 800 XP"
+    },
+    "rewards": {
+      "epic_background": "Епічний фон",
+      "legendary_background": "Легендарний фон",
+      "dm": "tentacles",
+      "cdm": "T-Pape",
+      "energy": "Енергія",
+      "large": "Фляга з отрутою",
+      "medium": "Середня отрута",
+      "ticket": "Квиток",
+      "boots": "Взуття",
+      "legs": "Штани",
+      "hands": "Рукавички",
+      "armor": "Броня",
+      "head": "Головний убір",
+      "weapon": "Зброя",
+      "animated": "Анімація",
+      "pet": "Пет сезону",
+      "legendary_boots": "Легендарне взуття",
+      "legendary_legs": "Легендарні штани",
+      "legendary_hands": "Легендарні рукавички",
+      "legendary_armor": "Легендарна броня",
+      "legendary_head": "Легендарний головний убір",
+      "legendary_weapon": "Легендарна зброя",
+      "exclusive_effect": "Ексклюзивний ефект",
+      "season_animation": "Сезонна анімація",
+      "exclusive_animation": "Ексклюзивна анімація",
+      "epic_pet": "Ворон алхіміка"
+    },
+    "go": "GO"
+  },
+  "background_panel": {
+    "section": "Фони",
+    "title": "Декор сховку",
+    "boss_drops": "Дроп з босів",
+    "previous": "Попередній фон",
+    "next": "Наступний фон",
+    "unlocked": "Відкрито",
+    "locked": "Закрито",
+    "selected": "Встановлено",
+    "select": "Поставити фон"
+  },
+  "camp_overlay": {
+    "tasks": "Квести",
+    "leaderboard": "Топ",
+    "settings": "Налаштування",
+    "upgrades": "Завдання",
+    "boss": "Бос",
+    "blackjack": "Карти"
+  },
+  "collection_panel": {
+    "title": "КОЛЕКЦІЇ",
+    "damage_bonus": "БОНУС ДО ШКОДИ",
+    "drop_chance": "ШАНС ДРОПУ",
+    "hint": "Предмети падають при завданнях (8%). Збери сет із 5 — отримай ящик!",
+    "set_bonus": "✓ +10% шкоди",
+    "box": "Ящик",
+    "beach": "🏖️ Пляж",
+    "factory": "🏭 Завод",
+    "oilrig": "🛢️ Нафтова вишка"
+  },
+  "settings_panel": {
+    "title": "Налаштування",
+    "profile": "Профіль",
+    "language": "Мова",
+    "language_desc": "Обери мову інтерфейсу. Мультимовний пакет підв’яжемо далі.",
+    "promo_code": "Промокод",
+    "enter_code": "ВВЕДИ КОД...",
+    "ok": "ОК",
+    "used": "Використано",
+    "ton_wallet": "TON Wallet",
+    "ton_wallet_desc": "Офіційний TonConnect UI вже працює. Backend зберігає прив’язаний гаманець і proof-session для наступного кроку перевірки.",
+    "connected": "підключено",
+    "not_linked": "не підключено",
+    "loading_wallet_state": "Завантаження стану гаманця...",
+    "no_wallet_linked": "TON-гаманець ще не підключено",
+    "network": "Мережа",
+    "provider": "Провайдер",
+    "proof_status": "Статус підтвердження",
+    "manifest": "Маніфест",
+    "preparing_proof": "Підготовка даних підтвердження...",
+    "platform": "Платформа: {{platform}}",
+    "disconnect": "Відключити",
+    "display": "Відображення",
+    "sound": "Звук",
+    "sound_desc": "Ефекти та музика",
+    "vibration": "Вібрація",
+    "vibration_desc": "Тактильний відгук",
+    "logout": "Вийти",
+    "level_line": "Рівень {{level}} • {{tier}}",
+    "invalid_promo_code": "Недійсний промокод",
+    "promo_already_used": "Цей промокод вже використано",
+    "promo_activated": "Активовано: {{label}}",
+    "wallet_disconnected": "TON гаманець відключено",
+    "wallet_disconnect_failed": "Не вдалося відключити TON гаманець",
+    "wallet_load_failed": "Не вдалося завантажити стан гаманця",
+    "proof_prepare_failed": "Не вдалося підготувати TON proof payload",
+    "wallet_connected_proof": "Гаманець підключено через TonConnect. Proof payload збігся і прив’язку збережено.",
+    "wallet_linked": "TON гаманець прив’язано до профілю.",
+    "wallet_sync_failed": "Не вдалося синхронізувати TON гаманець з backend"
+  },
+  "talentTree": {
+    "title": "ТАЛАНТИ",
+    "tree": "ВЕРТИКАЛЬНЕ ДЕРЕВО",
+    "progress": "До наступного очка: {{current}}/{{goal}} · витрачено: {{spent}}",
+    "progressHintLabel": "Пояснення шкали талантів",
+    "progressHint": "Шкала талантів показує прогрес до наступного рівня. Заповнюй її в бою, отримуй очки талантів і витрачай їх у вкладці «Таланти», щоб посилювати героя.",
+    "sector": "СЕКТОР {{id}} · {{name}}",
+    "sectors": [
+      "ДВІР",
+      "ПАЛЕЦЬ",
+      "ОЛІВЕЦЬ",
+      "ХІМІЯ",
+      "РОЗБІРКА",
+      "СУПЕРТАЛАНТИ"
+    ],
+    "keyRequired": "Ключовий талант 10/10",
+    "unlock": "Відкриття: ключовий талант попереднього сектора 10/10 · {{points}} очок загалом",
+    "unlockKeyProgress": "Ключовий талант попереднього сектора: {{level}}/10",
+    "unlockPointsProgress": "Витрачено очок: {{spent}}/{{points}}",
+    "upgrade": "Покращити {{name}}",
+    "level": "Рівень: {{level}}/{{max}}",
+    "nextLevel": "Наступний рівень: {{level}}/{{max}} · ціна 1 ★",
+    "maxLevel": "Максимальний рівень",
+    "requirements": "Вимоги: {{requirements}}",
+    "none": "немає",
+    "locked": "заблоковано",
+    "talents": {
+      "t01": {
+        "name": "Спритний палець",
+        "description": "Збільшує шкоду Пальця на 3 за рівень."
+      },
+      "t02": {
+        "name": "Гострий олівець",
+        "description": "Збільшує шкоду Олівця на 4 за рівень."
+      },
+      "t03": {
+        "name": "Брудна хімія",
+        "description": "Збільшує шкоду Малої отрути на 5 за рівень."
+      },
+      "t04": {
+        "name": "Запас сил",
+        "description": "Збільшує максимальний запас енергії на 10 за рівень таланту."
+      },
+      "t05": {
+        "name": "Приціл двору",
+        "description": "Збільшує шанс критичного удару Пальця й Олівця на 1% за рівень."
+      },
+      "t06": {
+        "name": "Швидкий тичок",
+        "description": "Зменшує час відновлення Пальця на 30 секунд за рівень."
+      },
+      "t07": {
+        "name": "Глибокий графіт",
+        "description": "Кровотеча завдає на 3 більше шкоди щосекунди за рівень."
+      },
+      "t08": {
+        "name": "Чиста доза",
+        "description": "Збільшує шкоду Середньої отрути на 10 за рівень."
+      },
+      "t09": {
+        "name": "Економна булька",
+        "description": "Дає 1% шанс не витратити Малу або Середню отруту за рівень."
+      },
+      "t10": {
+        "name": "Робочі руки",
+        "description": "Збільшує шкоду всіх атак і отрут на 2 за рівень."
+      },
+      "t11": {
+        "name": "Легка рука",
+        "description": "Зменшує час відновлення Пальця ще на 3 секунди за рівень."
+      },
+      "t12": {
+        "name": "Жорсткий тичок",
+        "description": "Збільшує шкоду Пальця на 5 за рівень."
+      },
+      "t13": {
+        "name": "Другий тичок",
+        "description": "Дає 0,5% шанс за рівень завдати Пальцем два удари замість одного."
+      },
+      "t14": {
+        "name": "Точний палець",
+        "description": "Збільшує шанс критичного удару Пальця на 1% за рівень."
+      },
+      "t15": {
+        "name": "Тиць по мітці",
+        "description": "Якщо на босі є 3 токсичні марки, Палець завдає на 10 більше шкоди за рівень. Марки не витрачаються."
+      },
+      "t16": {
+        "name": "Під ребро",
+        "description": "Коли в боса менше половини здоров’я, Палець завдає на 8 більше шкоди за рівень."
+      },
+      "t17": {
+        "name": "Брудний тиць",
+        "description": "Якщо на босі 5 токсичних марок, Палець завдає на 15 більше шкоди за рівень. Марки не витрачаються."
+      },
+      "t18": {
+        "name": "По живому",
+        "description": "Поки бос кровоточить, Палець завдає на 8 більше шкоди за рівень."
+      },
+      "t19": {
+        "name": "Фінальний тичок",
+        "description": "Коли в боса залишилось менше 15% здоров’я, Палець завдає на 15 більше шкоди за рівень."
+      },
+      "t20": {
+        "name": "Удар з розмаху",
+        "description": "Критичний удар Пальця завдає ще на 10 більше шкоди за рівень."
+      },
+      "t21": {
+        "name": "Тонка лінія",
+        "description": "Збільшує шкоду Олівця на 4 за рівень."
+      },
+      "t22": {
+        "name": "Роздертий папір",
+        "description": "Кровотеча завдає на 3 більше шкоди щосекунди за рівень."
+      },
+      "t23": {
+        "name": "Довга кров",
+        "description": "Подовжує кровотечу на 1 секунду за рівень."
+      },
+      "t24": {
+        "name": "По старій рані",
+        "description": "Якщо бос уже кровоточить, Олівець завдає на 8 більше шкоди за рівень."
+      },
+      "t25": {
+        "name": "Рваний штрих",
+        "description": "Кожне оновлення кровотечі Олівцем подовжує її ще на 1 секунду за рівень."
+      },
+      "t26": {
+        "name": "Отруйний грифель",
+        "description": "Якщо на босі є хоча б 1 токсична марка, Олівець завдає на 6 більше шкоди за рівень."
+      },
+      "t27": {
+        "name": "Кривавий почерк",
+        "description": "Якщо на босі 3 токсичні марки, кровотеча завдає на 5 більше шкоди щосекунди за рівень."
+      },
+      "t28": {
+        "name": "Чорний контур",
+        "description": "Збільшує шанс критичного удару Олівця на 1% за рівень."
+      },
+      "t29": {
+        "name": "Останній штрих",
+        "description": "Коли в боса менше 20% здоров’я, Олівець завдає на 12 більше шкоди за рівень."
+      },
+      "t30": {
+        "name": "Не змивай",
+        "description": "Якщо бос кровоточить і має 3 токсичні марки, Олівець завдає на 15 більше шкоди за рівень."
+      },
+      "t31": {
+        "name": "Мала порція",
+        "description": "Збільшує шкоду Малої отрути на 5 за рівень."
+      },
+      "t32": {
+        "name": "Середня справа",
+        "description": "Збільшує шкоду Середньої отрути на 10 за рівень."
+      },
+      "t33": {
+        "name": "Велика доза",
+        "description": "Збільшує шкоду Великої отрути на 25 за рівень."
+      },
+      "t34": {
+        "name": "Не лий дарма",
+        "description": "Дає 1% шанс не витратити будь-яку отруту за рівень."
+      },
+      "t35": {
+        "name": "Липка жижа",
+        "description": "Мала отрута завдає на 3 більше шкоди за рівень."
+      },
+      "t36": {
+        "name": "Жижа прилипла",
+        "description": "Кожна токсична марка додає отрутам 3 шкоди за рівень."
+      },
+      "t37": {
+        "name": "Токсичний слід",
+        "description": "Середня отрута завдає на 5 більше шкоди за рівень."
+      },
+      "t38": {
+        "name": "Передоз",
+        "description": "Фляга з отрутою завдає на 60 більше шкоди за рівень, якщо на босі 5 марок. Після удару марки зникають."
+      },
+      "t39": {
+        "name": "Банка «Не нюхай»",
+        "description": "Збільшує шкоду Великої отрути на 25 за рівень."
+      },
+      "t40": {
+        "name": "Великий токсичний кіпіш",
+        "description": "Фляга з отрутою завдає ще на 80 більше шкоди за рівень, якщо на босі 5 марок. Після удару марки зникають."
+      },
+      "t41": {
+        "name": "Робочий ритм",
+        "description": "Палець, Олівець і всі отрути +3 шкоди."
+      },
+      "t42": {
+        "name": "Кров і хімія",
+        "description": "За активної кровотечі всі отрути +8 шкоди."
+      },
+      "t43": {
+        "name": "Бос нервує",
+        "description": "За HP боса нижче 50% усі атаки +6 шкоди."
+      },
+      "t44": {
+        "name": "Друге дихання",
+        "description": "Збільшує максимальний запас енергії на 13 за рівень таланту."
+      },
+      "t45": {
+        "name": "Тисни далі",
+        "description": "За HP боса нижче 25% усі атаки +10 шкоди."
+      },
+      "t46": {
+        "name": "Добивальний момент",
+        "description": "За HP боса нижче 15% усі атаки +15 шкоди."
+      },
+      "t47": {
+        "name": "Довгий бій",
+        "description": "Час активності кланового боса +30 хвилин."
+      },
+      "t48": {
+        "name": "Перехопити дух",
+        "description": "Критичний удар: +2% шансу відновити 10 енергії."
+      },
+      "t49": {
+        "name": "Робоча концентрація",
+        "description": "Мала, Середня та Фляга з отрутою +10 шкоди."
+      },
+      "t50": {
+        "name": "Тиск без пауз",
+        "description": "Збільшує шкоду всіх атак на 5 за рівень."
+      },
+      "t51": {
+        "name": "Вічний бій",
+        "description": "Кровотеча завдає на 8 більше шкоди щосекунди за рівень."
+      },
+      "t52": {
+        "name": "Адреналін",
+        "description": "Збільшує максимальний запас енергії на 17 за рівень таланту."
+      },
+      "t53": {
+        "name": "Передозований дворик",
+        "description": "Фляга з отрутою завдає на 75 більше шкоди за рівень, якщо на босі 5 марок. Після удару марки зникають."
+      },
+      "t54": {
+        "name": "Кров і хімія",
+        "description": "Якщо бос кровоточить і має 3 токсичні марки, Олівець завдає на 20 більше шкоди за рівень."
+      },
+      "t55": {
+        "name": "Тримай удар",
+        "description": "Поки в боса більше 75% здоров’я, Палець і Олівець завдають на 8 більше шкоди за рівень."
+      },
+      "t56": {
+        "name": "Останній шанс",
+        "description": "Коли в боса менше 10% здоров’я, усі атаки завдають на 25 більше шкоди за рівень."
+      },
+      "t57": {
+        "name": "Зона тисне",
+        "description": "Коли в боса менше половини здоров’я, шанс критичного удару зростає на 2% за рівень."
+      },
+      "t58": {
+        "name": "Авторитет",
+        "description": "Збільшує шкоду всіх атак і отрут на 5 за рівень."
+      },
+      "t59": {
+        "name": "Токсичний авторитет",
+        "description": "Якщо на босі 3 токсичні марки, усі отрути завдають на 15 більше шкоди за рівень."
+      },
+      "t60": {
+        "name": "Закон зони",
+        "description": "Якщо бос кровоточить і має 5 токсичних марок, усі атаки завдають на 20 більше шкоди за рівень. Фляга з отрутою після удару витрачає марки."
+      }
+    }
+  }
+}

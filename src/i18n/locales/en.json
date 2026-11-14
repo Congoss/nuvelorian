@@ -1,0 +1,840 @@
+{
+  "tasks": {
+    "go": "GO",
+    "afkBonus": "AFK BONUS",
+    "claim": "Claim",
+    "ready": "Ready",
+    "afkLine1": "Claim every {{hours}} hours • {{percent}}% of a full sector clear.",
+    "afkLine2": "Each new clear gives +1% to rewards.",
+    "afkNotReady": "AFK reward is not ready yet. Timer updated."
+  },
+  "shop": {
+    "sections": {
+      "popular": "Popular",
+      "dailyOffer": "Daily Offer",
+      "gems": "T-Pape",
+      "paidConsumables": "Energy & Poisons with Stars / NEAR",
+      "energy": "Energy",
+      "dailyForTentacles": "Daily for tentacles",
+      "roulette": "Roulette",
+      "packs": "Packs",
+      "unopenedPacks": "Unopened Packs"
+    },
+    "buyEnergy": "Buy energy",
+    "items": {
+      "energy25": "Energy +25",
+      "dailyToxicPack": "Daily Toxic Pack",
+      "bossDamagePack": "Boss Damage Pack",
+      "spin1": "Spin x1",
+      "spin5": "Spin x5",
+      "spin20": "Spin x20",
+      "starterOffer": "Starter Offer",
+      "firstBossOffer": "First Boss Offer",
+      "weeklyOffer": "Weekly Offer",
+      "energy50": "Energy +50",
+      "fullEnergyRefill": "Full Energy Refill",
+      "energy100": "Energy +100",
+      "poisonPack": "Poison Pack",
+      "weeklyProgressPack": "Weekly Progress Pack"
+    },
+    "desc": {
+      "forTentacles": "For tentacles",
+      "forPremium": "For T-Pape",
+      "dailyOffer": "Daily offer",
+      "tentacles500": "500 tentacles",
+      "tentacles900": "900 tentacles",
+      "tentacles1500": "1,500 tentacles",
+      "tentacles800": "800 tentacles",
+      "premium30": "30 T-Pape",
+      "premium50": "50 T-Pape",
+      "premium60": "60 T-Pape",
+      "premium120": "120 T-Pape",
+      "premium180": "180 T-Pape",
+      "premium250": "250 T-Pape",
+      "premium1000": "1,000 T-Pape"
+    },
+    "dailyToxicOdds": {
+      "l1": "70% — Small poison x3",
+      "l2": "20% — Small poison x5 + Medium poison x1",
+      "l3": "8% — Medium poison x2",
+      "l4": "2% — Poison flask x1"
+    },
+    "remaining": "Remaining {{left}}/{{total}}",
+    "noPacks": "No packs.",
+    "selectedPayment": "Selected payment",
+    "gemPackNote": "Choose TON, NEAR, or Telegram Stars to continue.",
+    "cancel": "Cancel",
+    "confirmPayment": "Confirm",
+    "openOne": "Open 1",
+    "openAll": "Open all"
+  },
+  "leaderboard_panel": {
+    "tab_players": "Players",
+    "tab_clans": "Clans",
+    "tab_referrals": "Referrals",
+    "top_1": "Top 1",
+    "top_2": "Top 2",
+    "top_3": "Top 3",
+    "no_clan": "No clan",
+    "empty_players": "No players yet",
+    "empty_clans": "No clans yet",
+    "empty_referrals": "No referrals yet"
+  },
+  "camp_view": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "equip": "Equip",
+    "unequip": "Unequip",
+    "no_extra_bonus": "No extra bonus",
+    "future_locked_hint": "Available later",
+    "locked_item": "Item locked",
+    "shop_price_prefix": "Price:",
+    "drop_prefix": "Drop:",
+    "top": "Top",
+    "gear": "Gear",
+    "daily": "Daily",
+    "roulette": "Roulette",
+    "events": "Events",
+    "friends_tab": "Friends",
+    "back_to_ranking": "Back to ranking",
+    "friends_header": "Invite friends",
+    "friends_description": "Invite friends, help them start, and claim invite boxes.",
+    "copy": "Copy",
+    "invite": "Invite",
+    "confirm": "Confirm",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "friends_list": "Invited friends",
+    "rewards_title": "Referral rewards",
+    "reward_line": "{{count}} active friend: {{reward}}",
+    "no_friends": "No invited friends yet",
+    "friend_status_joined": "joined",
+    "friend_status_active": "active",
+    "friend_status_reward_ready": "reward_ready",
+    "friend_status_claimed": "claimed"
+  },
+  "chat_panel": {
+    "clan_tab": "Clan",
+    "world_tab": "World",
+    "clan_chat_title": "Clan Chat",
+    "world_chat_title": "World Chat",
+    "online_count": "Online: {{count}}",
+    "chat_history_24h": "Chat history for 24h",
+    "role_deputy": "Deputy",
+    "role_warrior": "Warrior",
+    "role_wasteland": "Wasteland",
+    "role_tentacles_yard": "tentacles Yard",
+    "role_rift_kids": "Rift Kids",
+    "message_placeholder": "Write a message...",
+    "send_button": "Send",
+    "energy_request": "Energy request",
+    "energy_request_mine": "Your energy request",
+    "request_energy": "Request energy",
+    "energy_requested": "Waiting",
+    "energy_helped": "Helped"
+  },
+  "bottom_nav": {
+    "bosses": "Bosses",
+    "quests": "Quests",
+    "hero": "Hero",
+    "skills": "Talents",
+    "clans": "Clans"
+  },
+  "loot_modal": {
+    "tap_to_open": "Tap to open",
+    "opening": "Opening...",
+    "loot_in_chest": "Loot in chest",
+    "open_button": "Open",
+    "claim_button": "Claim"
+  },
+  "profile": {
+    "personalInfo": "Personal Info",
+    "openWebGame": "Web game · pay with NEAR",
+    "hideBanners": "Hide profile banners",
+    "chooseBanner": "Choose profile banner",
+    "openFramePicker": "Open avatar frame picker",
+    "nickname": "Nickname",
+    "changeNickname": "Change nickname?",
+    "newNickname": "New nickname",
+    "firstNicknameFree": "First change — free",
+    "nicknamePrice": "Price: 500 T-Pape",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "uid": "UID",
+    "guild": "Guild",
+    "promoCode": "PROMO CODE",
+    "ok": "OK",
+    "codeNotFound": "Promo code not found or inactive",
+    "codeUsed": "This code is already activated",
+    "activated": "Activated",
+    "walletLink": "Wallet link",
+    "walletStatus": "TON live / NEAR soon",
+    "nearSoon": "NEAR SOON",
+    "achievements": "Achievements",
+    "futureBonuses": "future bonuses",
+    "notifications": "Notifications",
+    "later": "later",
+    "copyUid": "Copy UID",
+    "codeLimitReached": "Promo code activation limit reached",
+    "codeActivationFailed": "Could not activate the promo code. Please try again."
+  },
+  "topbar": {
+    "settings": "Settings",
+    "shop": "Shop",
+    "mail": "Mail"
+  },
+  "upgrades": {
+    "title": "Base Upgrades",
+    "level": "Lvl.",
+    "current": "Current:",
+    "atk": "ATK",
+    "def": "DEF",
+    "hour": "h",
+    "stashShort": "stash",
+    "statsTitle": "STATS",
+    "attack": {
+      "name": "Weapon",
+      "description": "Increases damage to bosses"
+    },
+    "defense": {
+      "name": "Fence",
+      "description": "Reduces losses during raids"
+    },
+    "income": {
+      "name": "tentacles Farm",
+      "description": "More tentacles per hour"
+    },
+    "stash": {
+      "name": "Stash",
+      "description": "Increases protected reserve"
+    },
+    "stats": {
+      "strength": "CA",
+      "stealth": "Stealth",
+      "endurance": "Endurance",
+      "craft": "Craft"
+    }
+  },
+  "boss_panel": {
+    "choose_boss": "Choose Boss",
+    "reward_title": "Reward",
+    "reward_strength_line": "CA +{{min}}-{{max}}",
+    "reward_xp_line": "EXP +{{min}}-{{max}}",
+    "players": "Players",
+    "clans": "Clans",
+    "clan_damage": "Clan damage"
+  },
+  "tasks_panel": {
+    "location_reward_strength_short": "+CA",
+    "location_reward_xp_short": "+EXP",
+    "back_to_locations": "Back to locations",
+    "missions_count": "{{count}} missions",
+    "collection": "Collection",
+    "location_artifacts_title": "Location artifacts",
+    "location_artifacts_hint": "Each mission grants its own artifact after filling the bar. A full set is exchanged for a weapon.",
+    "location_unlock_hint": "Defeat {{boss}} or reach level {{level}}",
+    "final_task_unlock_hint": "Unlocks after completing the full cycle of the first 6 missions"
+  },
+  "clan_panel": {
+    "open_clans_title": "Open Clans",
+    "available_now": "Available now",
+    "no_real_clans_hint": "No real clans yet. You can create the first one.",
+    "clan_list": "Clan List",
+    "create_clan_tab": "Create Clan",
+    "clan_settings": "Clan Settings",
+    "create_clan": "Create Clan",
+    "create_requirement": "10 lvl + 10k tentacles",
+    "clan_name": "Clan Name",
+    "cost": "Cost",
+    "create": "Create",
+    "locked": "Locked",
+    "clan_sign": "Clan Sign",
+    "guild_logo": "Guild Logo",
+    "description": "Description",
+    "required_trophies": "Required Trophies",
+    "required_level": "Required Level",
+    "clan_tagline": "We take players with respect.",
+    "clan_power": "Clan Power",
+    "clan_level": "Clan level {{level}}",
+    "your_contribution": "Your contribution",
+    "close_announcement": "Close announcement",
+    "players": "Players",
+    "active_players": "Active Players",
+    "clan_type": "Clan Type",
+    "last_raid_damage": "Last Raid Damage",
+    "achievement_raid": "Raid",
+    "achievement_power": "Power",
+    "achievement_team": "Team",
+    "achievement_legend": "Legend",
+    "achievement_hunter": "Hunter",
+    "achievement_guard": "Guard",
+    "achievement_damage": "Damage",
+    "achievement_quests": "Quests",
+    "achievement_helper": "Helper",
+    "achievement_donations": "Donations",
+    "achievement_how_title": "How it works",
+    "achievement_clan_level_rule": "The clan levels up when all 4 achievements reach that level. Clan level 1 requires level 1 in every achievement.",
+    "donation_daily_limit": "limit resets every 12 hours",
+    "achievement_current_level": "Current level {{level}}",
+    "achievement_level_header": "Level",
+    "achievement_requirement_header": "Required",
+    "achievement_bonus_header": "Bonus",
+    "achievement_requirement_damage": "damage",
+    "achievement_requirement_quests": "quests",
+    "achievement_requirement_helper": "helps",
+    "achievement_requirement_donations": "tentacles",
+    "achievement_bonus_damage": "+{{value}}% poison damage",
+    "achievement_bonus_quests": "Quests up to tier {{value}}",
+    "achievement_bonus_helper": "up to {{value}} energy",
+    "achievement_bonus_donations": "{{value}} members",
+    "achievement_how_damage": "Tracks total damage dealt to bosses by clan members. Each level increases poison damage by 1%.",
+    "achievement_how_quests": "Tracks completed clan quests. Each level unlocks quests of the matching tier, up to tier VIII.",
+    "achievement_how_helper": "Tracks energy requests where clan members help each other. Each level raises the energy request limit by 5.",
+    "achievement_how_donations": "Tracks tentacles donated by clan members. Each level increases the clan's maximum member capacity.",
+    "quests": "Quests",
+    "donate": "Donate",
+    "start": "Start",
+    "go": "GO",
+    "in_progress": "IN PROGRESS",
+    "quest_reward": "+{{tentacles}} tentacles · +{{xp}} XP",
+    "quest_condition": {
+      "damage": "Deal {{target}} damage",
+      "energy": "Spend {{target}} energy",
+      "missions": "Complete {{target}} tasks",
+      "hits": "Hit a boss {{target}} times",
+      "tentacles": "Donate {{target}} tentacles"
+    },
+    "help": "Help",
+    "energy": "Energy",
+    "request_energy": "Request",
+    "donations_locked": "Donations locked",
+    "progress_raids": "Raids",
+    "progress_power": "Power",
+    "progress_members": "Members",
+    "progress_trophies": "Trophies",
+    "leave_clan": "Leave clan",
+    "clan_chat": "Clan chat",
+    "manage": "Manage",
+    "management_title": "Clan management",
+    "applications": "Applications {{count}}",
+    "settings": "Settings",
+    "log": "Log",
+    "level_short": "Lvl.",
+    "role_leader": "Leader",
+    "role_deputy": "Deputy",
+    "role_elder": "Elder",
+    "role_member": "Member",
+    "kick": "Kick",
+    "kick_confirm": "Kick {{name}} from the clan?",
+    "no_applications": "No applications",
+    "save_description": "Save description",
+    "announcement_subject": "Announcement subject",
+    "text": "Text",
+    "send_mail": "Send mail",
+    "pin": "Pin",
+    "transfer_member_id": "Member ID to transfer leadership",
+    "transfer_confirm": "Confirm leadership transfer?",
+    "transfer_leader": "Transfer leadership",
+    "dissolve_confirm": "Dissolve the clan?",
+    "dissolve": "Dissolve",
+    "empty_log": "Log is empty",
+    "log_sent_announcement": "sent an announcement: “{{title}}”.",
+    "log_joined": "joined the clan.",
+    "log_left": "left the clan.",
+    "log_kicked": "kicked {{name}} from the clan.",
+    "log_changed_description": "changed the clan description.",
+    "log_removed_announcement": "removed the pinned announcement.",
+    "members": "Members",
+    "roster": "Clan roster",
+    "power": "Power",
+    "join": "Join",
+    "top": "Top {{place}}",
+    "role_fighter": "Fighter",
+    "role_solo": "Solo",
+    "no_clan_name": "No clan",
+    "clan_type_request": "By request",
+    "not_created": "Not created",
+    "start_location": "Start",
+    "clan_description_default": "The clan shows only real members.",
+    "clan_description_guest": "The clan has not been created yet. Only your real profile is shown here.",
+    "clan_row_description_default": "This clan collects real members and goes to bosses together.",
+    "clan_create_description_default": "Concept and idea by the clan leader. We open bosses together and plan damage windows.",
+    "clan_create_subtitle": "Build your crew. Conquer the abyss.",
+    "change_emblem": "Change Emblem",
+    "clan_emblem": "Clan Emblem",
+    "clan_preview": "Clan Preview",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "clan_type_open": "Open",
+    "clan_create_type_request": "Request",
+    "clan_type_invite_only": "Invite Only",
+    "clan_type_open_hint": "Anyone can join.",
+    "clan_type_request_hint": "Leader approval required.",
+    "clan_type_invite_only_hint": "Only invited players can join.",
+    "log_promoted": "promoted {{name}}: {{from}} → {{to}}.",
+    "log_demoted": "demoted {{name}}: {{from}} → {{to}}.",
+    "log_accepted": "accepted {{name}} into the clan.",
+    "log_rejected": "rejected {{name}}’s application.",
+    "log_transferred": "transferred leadership to {{name}}.",
+    "log_join_type": "changed join type: {{from}} → {{to}}.",
+    "log_min_level": "changed minimum level: {{from}} → {{to}}."
+  },
+  "mail_panel": {
+    "title": "Mail",
+    "subtitle": "Game/admin bonus messages are stored here.",
+    "from_game": "Message from game",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "opening": "Opening",
+    "empty": "No new messages yet",
+    "open_error": "Could not open reward",
+    "claimed_fallback": "Reward claimed",
+    "rewards_tab": "Rewards",
+    "gifts_tab": "Gifts",
+    "counter": "{{current}}/{{max}} mails",
+    "mark_read": "Mark read",
+    "read": "Read",
+    "delete": "Delete",
+    "action_error": "Could not update message"
+  },
+  "resource_names": {
+    "dm": {
+      "short": "tentacles",
+      "full": "tentacles",
+      "description": "Main game currency."
+    },
+    "cdm": {
+      "short": "T-Pape",
+      "full": "T-Pape",
+      "description": "Premium game currency."
+    },
+    "ca": {
+      "short": "CA",
+      "full": "Cosmo Authority",
+      "description": "Hero power and status."
+    },
+    "exp": {
+      "short": "EXP",
+      "full": "Experience",
+      "description": "Experience for leveling up."
+    },
+    "mail": {
+      "short": "Mail",
+      "full": "Mail",
+      "description": "Game letters and rewards."
+    }
+  },
+  "skill_names": {
+    "finger": "Finger",
+    "pencil": "Pencil",
+    "small_poison": "Small Poison",
+    "medium_poison": "Medium Poison",
+    "big_poison": "Big Poison"
+  },
+  "battle_pass": {
+    "back": "Back to hero",
+    "season": "SEASON 01 · 28 DAYS",
+    "season_title": "PATH OF SURVIVAL",
+    "season_subtitle": "50 levels. Your story.",
+    "season_art": "SEASON ART · PLACEHOLDER",
+    "level": "LEVEL {{level}}",
+    "days_left": "{{days}} days left",
+    "inactive": "Season inactive",
+    "max_level": "MAXIMUM LEVEL",
+    "progress_hint": "Defeat bosses, complete daily tasks, and level up your Battle Pass!",
+    "rewards_tab": "REWARDS",
+    "tasks_tab": "TASKS",
+    "loading": "Loading season…",
+    "tasks_aria": "Battle Pass tasks",
+    "tasks_title": "BATTLE PASS TASKS",
+    "tasks_hint": "XP is credited automatically. Daily tasks reset at 00:00 UTC, weekly tasks on Monday at 00:00 UTC.",
+    "boss_victory_xp": "10–30 XP per win · up to 3/day · fight owner only",
+    "done": "Done",
+    "claim": "Claim",
+    "claimed": "claimed",
+    "locked": "locked",
+    "art_coming": "ART COMING SOON",
+    "reward": "Reward",
+    "reward_title": "Battle Pass reward",
+    "claim_error": "Could not claim reward",
+    "reward_aria": "{{track}}, level {{level}}: {{rewards}}, {{status}}",
+    "finish_title": "SEASON FINISH",
+    "finish_text": "Collect tickets for the prize draw after the season.",
+    "tickets": "Your tickets: {{count}}",
+    "groups": {
+      "bosses": "Bosses",
+      "daily": "Daily · 150 XP",
+      "weekly": "Weekly · 500 XP",
+      "season": "Season · 1,800 XP"
+    },
+    "rewards": {
+      "epic_background": "Epic background",
+      "legendary_background": "Legendary background",
+      "dm": "tentacles",
+      "cdm": "T-Pape",
+      "energy": "Energy",
+      "large": "Poison flask",
+      "medium": "Medium Poison",
+      "ticket": "Prize Ticket",
+      "boots": "Boots",
+      "legs": "Pants",
+      "hands": "Gloves",
+      "armor": "Armor",
+      "head": "Headgear",
+      "weapon": "Weapon",
+      "animated": "Animation",
+      "pet": "Season Pet",
+      "legendary_boots": "Legendary Boots",
+      "legendary_legs": "Legendary Pants",
+      "legendary_hands": "Legendary Gloves",
+      "legendary_armor": "Legendary Armor",
+      "legendary_head": "Legendary Headgear",
+      "legendary_weapon": "Legendary Weapon",
+      "exclusive_effect": "Exclusive Effect",
+      "season_animation": "Season Animation",
+      "exclusive_animation": "Exclusive Animation",
+      "epic_pet": "Alchemist Raven"
+    },
+    "go": "GO"
+  },
+  "background_panel": {
+    "section": "Backgrounds",
+    "title": "Hideout decor",
+    "boss_drops": "Boss drops",
+    "previous": "Previous background",
+    "next": "Next background",
+    "unlocked": "Unlocked",
+    "locked": "Locked",
+    "selected": "Selected",
+    "select": "Set background"
+  },
+  "camp_overlay": {
+    "tasks": "Quests",
+    "leaderboard": "Top",
+    "settings": "Settings",
+    "upgrades": "Tasks",
+    "boss": "Boss",
+    "blackjack": "Cards"
+  },
+  "collection_panel": {
+    "title": "COLLECTIONS",
+    "damage_bonus": "DAMAGE BONUS",
+    "drop_chance": "DROP CHANCE",
+    "hint": "Items drop from tasks (8%). Collect a set of 5 to get a box!",
+    "set_bonus": "✓ +10% damage",
+    "box": "Box",
+    "beach": "🏖️ Beach",
+    "factory": "🏭 Factory",
+    "oilrig": "🛢️ Oil rig"
+  },
+  "settings_panel": {
+    "title": "Settings",
+    "profile": "Profile",
+    "language": "Language",
+    "language_desc": "Choose the interface language. We will wire the multilingual pack later.",
+    "promo_code": "Promo Code",
+    "enter_code": "ENTER CODE...",
+    "ok": "OK",
+    "used": "Used",
+    "ton_wallet": "TON Wallet",
+    "ton_wallet_desc": "Official TonConnect UI is live. Backend stores the linked wallet and a proof-session scaffold for the next verification step.",
+    "connected": "connected",
+    "not_linked": "not linked",
+    "loading_wallet_state": "Loading wallet state...",
+    "no_wallet_linked": "No TON wallet linked yet",
+    "network": "Network",
+    "provider": "Provider",
+    "proof_status": "Proof status",
+    "manifest": "Manifest",
+    "preparing_proof": "Preparing proof payload...",
+    "platform": "Platform: {{platform}}",
+    "disconnect": "Disconnect",
+    "display": "Display",
+    "sound": "Sound",
+    "sound_desc": "Effects and music",
+    "vibration": "Vibration",
+    "vibration_desc": "Tactile feedback",
+    "logout": "Log Out",
+    "level_line": "Level {{level}} • {{tier}}",
+    "invalid_promo_code": "Invalid promo code",
+    "promo_already_used": "This promo code has already been used",
+    "promo_activated": "Activated: {{label}}",
+    "wallet_disconnected": "TON wallet disconnected",
+    "wallet_disconnect_failed": "Failed to disconnect TON wallet",
+    "wallet_load_failed": "Failed to load wallet status",
+    "proof_prepare_failed": "Failed to prepare TON proof payload",
+    "wallet_connected_proof": "Wallet connected via TonConnect. Proof payload matched and link saved.",
+    "wallet_linked": "TON wallet linked to your profile.",
+    "wallet_sync_failed": "Failed to sync TON wallet with backend"
+  },
+  "talentTree": {
+    "title": "TALENTS",
+    "tree": "VERTICAL TREE",
+    "progress": "Next point: {{current}}/{{goal}} · spent: {{spent}}",
+    "progressHintLabel": "Talent progress explanation",
+    "progressHint": "The talent bar shows progress toward the next level. Fill it in combat, earn talent points, and spend them in the Talents tab to strengthen your hero.",
+    "sector": "SECTOR {{id}} · {{name}}",
+    "sectors": [
+      "YARD",
+      "FINGER",
+      "PENCIL",
+      "CHEMISTRY",
+      "SHOWDOWN",
+      "SUPER TALENTS"
+    ],
+    "keyRequired": "Key talent 10/10",
+    "unlock": "Unlock: previous sector key talent 10/10 · {{points}} total points",
+    "unlockKeyProgress": "Previous sector key talent: {{level}}/10",
+    "unlockPointsProgress": "Points spent: {{spent}}/{{points}}",
+    "upgrade": "Upgrade {{name}}",
+    "level": "Level: {{level}}/{{max}}",
+    "nextLevel": "Next level: {{level}}/{{max}} · cost 1 ★",
+    "maxLevel": "Maximum level",
+    "requirements": "Requirements: {{requirements}}",
+    "none": "none",
+    "locked": "locked",
+    "talents": {
+      "t01": {
+        "name": "Nimble Finger",
+        "description": "Increases Finger damage by 3 per level."
+      },
+      "t02": {
+        "name": "Sharp Pencil",
+        "description": "Increases Pencil damage by 4 per level."
+      },
+      "t03": {
+        "name": "Dirty Chemistry",
+        "description": "Increases Small Poison damage by 5 per level."
+      },
+      "t04": {
+        "name": "Energy Reserve",
+        "description": "Increases maximum energy by 10 per talent level."
+      },
+      "t05": {
+        "name": "Yard Aim",
+        "description": "Increases Finger and Pencil critical hit chance by 1% per level."
+      },
+      "t06": {
+        "name": "Quick Jab",
+        "description": "Reduces Finger cooldown by 30 seconds per level."
+      },
+      "t07": {
+        "name": "Deep Graphite",
+        "description": "Bleeding deals 3 more damage per second per level."
+      },
+      "t08": {
+        "name": "Pure Dose",
+        "description": "Increases Medium Poison damage by 10 per level."
+      },
+      "t09": {
+        "name": "Thrifty Bubble",
+        "description": "Grants a 1% chance per level to save a Small or Medium Poison."
+      },
+      "t10": {
+        "name": "Working Hands",
+        "description": "Increases damage of all attacks and poisons by 2 per level."
+      },
+      "t11": {
+        "name": "Light Hand",
+        "description": "Reduces Finger cooldown by another 3 seconds per level."
+      },
+      "t12": {
+        "name": "Hard Jab",
+        "description": "Increases Finger damage by 5 per level."
+      },
+      "t13": {
+        "name": "Second Jab",
+        "description": "Grants a 0.5% chance per level for Finger to strike twice instead of once."
+      },
+      "t14": {
+        "name": "Precise Finger",
+        "description": "Increases Finger critical hit chance by 1% per level."
+      },
+      "t15": {
+        "name": "Marked Jab",
+        "description": "With 3 toxic marks on the boss, Finger deals 10 more damage per level. Marks are not consumed."
+      },
+      "t16": {
+        "name": "Under the Rib",
+        "description": "When the boss has less than half health, Finger deals 8 more damage per level."
+      },
+      "t17": {
+        "name": "Dirty Jab",
+        "description": "With 5 toxic marks on the boss, Finger deals 15 more damage per level. Marks are not consumed."
+      },
+      "t18": {
+        "name": "Raw Nerve",
+        "description": "While the boss is bleeding, Finger deals 8 more damage per level."
+      },
+      "t19": {
+        "name": "Final Jab",
+        "description": "When the boss has less than 15% health, Finger deals 15 more damage per level."
+      },
+      "t20": {
+        "name": "Full Swing",
+        "description": "Finger critical hits deal an additional 10 damage per level."
+      },
+      "t21": {
+        "name": "Fine Line",
+        "description": "Increases Pencil damage by 4 per level."
+      },
+      "t22": {
+        "name": "Torn Paper",
+        "description": "Bleeding deals 3 more damage per second per level."
+      },
+      "t23": {
+        "name": "Lasting Bleed",
+        "description": "Extends bleeding by 1 second per level."
+      },
+      "t24": {
+        "name": "Old Wound",
+        "description": "If the boss is already bleeding, Pencil deals 8 more damage per level."
+      },
+      "t25": {
+        "name": "Ragged Stroke",
+        "description": "Each time Pencil refreshes bleeding, it extends bleeding by another 1 second per level."
+      },
+      "t26": {
+        "name": "Poisoned Lead",
+        "description": "With at least 1 toxic mark on the boss, Pencil deals 6 more damage per level."
+      },
+      "t27": {
+        "name": "Bloody Handwriting",
+        "description": "With 3 toxic marks on the boss, bleeding deals 5 more damage per second per level."
+      },
+      "t28": {
+        "name": "Black Outline",
+        "description": "Increases Pencil critical hit chance by 1% per level."
+      },
+      "t29": {
+        "name": "Final Stroke",
+        "description": "When the boss has less than 20% health, Pencil deals 12 more damage per level."
+      },
+      "t30": {
+        "name": "Don't Wash It Off",
+        "description": "If the boss is bleeding and has 3 toxic marks, Pencil deals 15 more damage per level."
+      },
+      "t31": {
+        "name": "Small Portion",
+        "description": "Increases Small Poison damage by 5 per level."
+      },
+      "t32": {
+        "name": "Medium Business",
+        "description": "Increases Medium Poison damage by 10 per level."
+      },
+      "t33": {
+        "name": "Large Dose",
+        "description": "Increases Poison flask damage by 25 per level."
+      },
+      "t34": {
+        "name": "Waste Not",
+        "description": "Grants a 1% chance per level to save any poison."
+      },
+      "t35": {
+        "name": "Sticky Sludge",
+        "description": "Small Poison deals 3 additional damage per level."
+      },
+      "t36": {
+        "name": "Clinging Sludge",
+        "description": "Each toxic mark adds 3 poison damage per level."
+      },
+      "t37": {
+        "name": "Toxic Trail",
+        "description": "Medium Poison deals 5 additional damage per level."
+      },
+      "t38": {
+        "name": "Overdose",
+        "description": "Poison flask deals 60 more damage per level if the boss has 5 marks. The marks disappear after the hit."
+      },
+      "t39": {
+        "name": "Do Not Sniff",
+        "description": "Increases Poison flask damage by 25 per level."
+      },
+      "t40": {
+        "name": "Toxic Mayhem",
+        "description": "Poison flask deals an additional 80 damage per level if the boss has 5 marks. The marks disappear after the hit."
+      },
+      "t41": {
+        "name": "Working Rhythm",
+        "description": "Finger, Pencil and all poisons deal +3 damage."
+      },
+      "t42": {
+        "name": "Blood and Chemistry",
+        "description": "While bleeding is active, all poisons deal +8 damage."
+      },
+      "t43": {
+        "name": "Nervous Boss",
+        "description": "When boss HP is below 50%, all attacks deal +6 damage."
+      },
+      "t44": {
+        "name": "Second Wind",
+        "description": "Increases maximum energy by 13 per talent level."
+      },
+      "t45": {
+        "name": "Keep Pushing",
+        "description": "When boss HP is below 25%, all attacks deal +10 damage."
+      },
+      "t46": {
+        "name": "Finishing Moment",
+        "description": "When boss HP is below 15%, all attacks deal +15 damage."
+      },
+      "t47": {
+        "name": "Long Fight",
+        "description": "Clan boss active time +30 minutes."
+      },
+      "t48": {
+        "name": "Catch Your Breath",
+        "description": "Critical hit: +2% chance to restore 10 energy."
+      },
+      "t49": {
+        "name": "Working Focus",
+        "description": "Small, Medium and Poison flask deal +10 damage."
+      },
+      "t50": {
+        "name": "Relentless Pressure",
+        "description": "Increases damage of all attacks by 5 per level."
+      },
+      "t51": {
+        "name": "Endless Fight",
+        "description": "Bleeding deals 8 more damage per second per level."
+      },
+      "t52": {
+        "name": "Adrenaline",
+        "description": "Increases maximum energy by 17 per talent level."
+      },
+      "t53": {
+        "name": "Overdosed Yard",
+        "description": "Poison flask deals 75 more damage per level if the boss has 5 marks. The marks disappear after the hit."
+      },
+      "t54": {
+        "name": "Blood and Chemistry",
+        "description": "If the boss is bleeding and has 3 toxic marks, Pencil deals 20 more damage per level."
+      },
+      "t55": {
+        "name": "Take the Hit",
+        "description": "While the boss has more than 75% health, Finger and Pencil deal 8 more damage per level."
+      },
+      "t56": {
+        "name": "Last Chance",
+        "description": "When the boss has less than 10% health, all attacks deal 25 more damage per level."
+      },
+      "t57": {
+        "name": "Zone Pressure",
+        "description": "When the boss has less than half health, critical hit chance increases by 2% per level."
+      },
+      "t58": {
+        "name": "Authority",
+        "description": "Increases damage of all attacks and poisons by 5 per level."
+      },
+      "t59": {
+        "name": "Toxic Authority",
+        "description": "With 3 toxic marks on the boss, all poisons deal 15 more damage per level."
+      },
+      "t60": {
+        "name": "Law of the Zone",
+        "description": "If the boss is bleeding and has 5 toxic marks, all attacks deal 20 more damage per level. Poison flask consumes the marks after the hit."
+      }
+    }
+  }
+}

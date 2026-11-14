@@ -1,0 +1,106 @@
+
+.halloween-event { --halloween-amber:#efb86c; --halloween-violet:#a78acb; background:radial-gradient(ellipse at 100% 30%,#2b16304d,transparent 52%),radial-gradient(ellipse at 0 85%,#5a2c0f24,transparent 50%),#070b08; }
+.halloween-event-banner { border:1px solid #a87945; border-radius:12px 12px 5px 5px; box-shadow:0 3px 16px #0008,inset 0 1px #ffcd8620; }
+.halloween-event-banner::after { content:''; position:absolute; inset:0; pointer-events:none; border-radius:inherit; box-shadow:inset 0 -16px 20px #100a1699; }
+.halloween-event-banner button { border-color:#aa8256; color:#ffdda4; background:#160e1de8; }
+.halloween-event-tabs { gap:5px; border-color:#997143; }
+.halloween-event-tabs button { position:relative; height:34px; border-color:#66503f; border-radius:9px 9px 0 0; color:#c3b6ca; background:linear-gradient(180deg,#211727,#12150f); letter-spacing:.045em; }
+.halloween-event-tabs button[aria-current=page] { border-color:#ecb367; color:#271608; background:linear-gradient(180deg,#ffda91,#d7973d); box-shadow:inset 0 1px #fff0bf90,0 -3px 14px #e89a2920; }
+.halloween-event-tabs button:focus-visible { outline:2px solid #ffd998; outline-offset:2px; }
+.halloween-event-stats { position:relative; gap:8px; padding:8px 0 10px; }
+.halloween-event-stats > div { border:1px solid #77543770; border-radius:9px; padding:8px 3px 5px; background:linear-gradient(125deg,#2b1b104f,#0d120d); box-shadow:inset 0 1px #ffce8310; }
+.halloween-event-stats > div + div { border-color:#69527780; background:linear-gradient(125deg,#25182e88,#0d120d); }
+.halloween-event-stats > div > p:first-child { color:#bdad96; font-size:8px; letter-spacing:.07em; }
+.halloween-event-stats > div > p:last-child { color:#ffd18b; font-size:21px; line-height:1.7; }
+.halloween-event-stats > div + div > p:last-child { color:#ded0ed; }
+.halloween-event-stats img { filter:drop-shadow(0 2px 6px #e77c2335); }
+.halloween-event-frame { border-radius:10px; border-color:#9b7546; background:linear-gradient(150deg,#14170c,#0c0e0c); box-shadow:0 5px 16px #0005; }
+.halloween-event-frame h2 { color:#f1c285; }
+.halloween-event .void-toilet-scene { border-radius:8px; overflow:hidden; outline:1px solid #84609a35; }
+.halloween-event .void-exchange-heading { margin-top:9px; }
+.halloween-event .void-exchange-title { color:#f3c48a; letter-spacing:.055em; }
+.halloween-event .void-exchange-rate { display:flex; gap:6px; width:fit-content; margin:9px auto 5px; padding:5px 14px; border:1px solid #7d5d374f; border-radius:20px; background:#080b085e; color:#efdab7; }
+.halloween-event .void-exchange-counter output { color:#ffdc9b; text-shadow:0 2px 7px #cc7e2225; }
+.halloween-event .void-exchange-counter button { border-color:#8e6a4266; }
+.halloween-event .void-exchange-presets button { border-color:#8e6a4255; }
+.halloween-event .void-exchange-presets button[aria-pressed=true] { border-color:#edb567; box-shadow:0 0 8px #edb56722; }
+.halloween-event .void-exchange-flush { margin-top:9px; box-shadow:0 2px 10px #f3b64f20; }
+.halloween-event-panel { position:relative; overflow:hidden; border-color:#8c674265; border-radius:10px; padding:13px 11px; background:linear-gradient(120deg,#21160f88,#0d140f); box-shadow:inset 0 1px #ffd29712; }
+.halloween-event-panel > h2 { display:flex; align-items:center; gap:7px; padding-bottom:9px; margin-bottom:3px; border-bottom:1px solid #936e3c3f; color:#edc38b; font-size:11px; text-transform:uppercase; letter-spacing:.055em; }
+.halloween-event-panel > div { border-color:#9d77422e; padding-top:10px; padding-bottom:10px; font-size:11px; }
+.halloween-event-panel button { flex-shrink:0; border:1px solid #dca965; border-radius:7px; background:linear-gradient(180deg,#f2d398,#c58b3f); color:#2b1c0d; font-size:10px; box-shadow:inset 0 1px #fff0bf70; }
+.halloween-event-panel button:disabled { opacity:.4; filter:saturate(.4); box-shadow:none; }
+.halloween-event-panel progress { height:10px; border:1px solid #87623a; border-radius:10px; overflow:hidden; accent-color:#e8ad58; background:#10140d; }
+.halloween-event-panel progress::-webkit-progress-bar { background:#10140d; }
+.halloween-event-panel progress::-webkit-progress-value { background:linear-gradient(90deg,#9b6cc0,#edb159); border-radius:10px; }
+.halloween-event .halloween-own-rank { position:sticky; bottom:0; z-index:5; padding:8px 0 3px; border-color:#c39853; background:linear-gradient(180deg,#11150be8,#11150b 25%); box-shadow:0 -8px 15px #090d0980; }
+.halloween-own-rank > div { border-color:#cfac63; background:linear-gradient(110deg,#2a2110,#14200e); box-shadow:inset 0 0 12px #e9b95b0a; }
+@media(prefers-reduced-motion:no-preference) { .halloween-event-tabs button { transition:background .18s,color .18s,box-shadow .18s; } }
+
+.halloween-exclusive-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; padding-bottom:0!important; }
+.halloween-exclusive-card { display:flex; flex-direction:column; align-items:center; min-width:0; padding:12px 8px; border:1px solid #aa784c80; border-radius:9px; background:radial-gradient(ellipse at 50% 20%,#663a1c55,transparent 65%),#0c100d; text-align:center; }
+.halloween-exclusive-tag { color:#c6a2e0; font-size:6px; font-weight:900; letter-spacing:.12em; }
+.halloween-exclusive-art { height:88px; width:100%; object-fit:contain; margin:9px 0; filter:drop-shadow(0 0 10px #ed9c2930); }
+.halloween-exclusive-card h3 { font-size:11px; font-weight:900; color:#ffce8b; }
+.halloween-exclusive-bonuses { flex:1; margin:8px 0; color:#c4d2b5; font-size:9px; line-height:1.6; }
+.halloween-exclusive-unlock { color:#b1a0bf; font-size:8px; line-height:1.5; margin-bottom:8px; }
+.halloween-exclusive-unlock img { width:18px; height:16px; }
+.halloween-exclusive-card button { width:100%; min-height:34px; margin-top:auto; }
+
+.halloween-exclusive-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+.halloween-exclusive-card { padding:9px 5px; }
+.halloween-exclusive-art { height:64px; margin:8px 0; }
+.halloween-exclusive-card h3 { min-height:30px; font-size:9px; line-height:1.45; overflow-wrap:anywhere; }
+.halloween-exclusive-bonuses { font-size:8px; }
+.halloween-exclusive-unlock { font-size:7px; }
+.halloween-exclusive-card button { padding:6px 3px; }
+
+.halloween-exclusive-card { position:relative; }
+.halloween-event-panel .halloween-exclusive-card .halloween-item-help { position:absolute; top:5px; right:5px; display:grid; place-items:center; width:21px; height:21px; min-height:0; padding:0; margin:0; border:1px solid #bf945d80; border-radius:50%; background:#19121e; color:#f1c78d; font-size:12px; line-height:1; z-index:1; }
+.halloween-exclusive-tag { padding-right:15px; }
+.halloween-exclusive-card > button:last-child { margin-top:10px; }
+.halloween-item-overlay { position:fixed; inset:0; z-index:270; display:flex; align-items:flex-end; justify-content:center; padding-top:24px; background:#000b; backdrop-filter:blur(2px); }
+.halloween-item-details { width:100%; max-width:520px; max-height:90dvh; overflow-y:auto; padding:16px 16px max(18px,env(safe-area-inset-bottom)); border:1px solid #a57a47; border-top:2px solid #edbc7c; border-radius:22px 22px 0 0; background:linear-gradient(140deg,#211725,#0c140e 70%); color:#eaf5d8; box-shadow:0 -10px 35px #0008; }
+.halloween-item-details-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:13px; color:#c6a1df; font:900 9px monospace; letter-spacing:.1em; }
+.halloween-item-details-heading button { padding:3px 8px; color:#f1c78d; font-size:28px; line-height:1; }
+.halloween-item-details-body { display:flex; align-items:flex-start; gap:14px; }
+.halloween-item-details-body > img { flex-shrink:0; width:32%; max-width:136px; height:144px; object-fit:contain; padding:9px; border:1px solid #8d6748; border-radius:12px; background:#090f0c; }
+.halloween-item-details-body > div { min-width:0; flex:1; }
+.halloween-item-details h2 { font:900 18px/1.25 Rubik,sans-serif; text-transform:uppercase; color:#ffdaa2; overflow-wrap:anywhere; }
+.halloween-item-rarity { margin-top:7px; font:900 9px/1.5 monospace; color:#c3a0e0; text-transform:uppercase; }
+.halloween-item-details-bonuses p { margin-top:7px; padding:7px; border:1px solid #8b6a3b50; border-radius:7px; font:11px/1.5 Rubik,sans-serif; color:#d4e3c5; }
+.halloween-item-condition { margin-top:13px; padding:9px; border-radius:8px; background:#21162c; font:10px/1.6 monospace; color:#c8b0df; }
+.halloween-item-details-footer { display:flex; justify-content:space-between; align-items:center; margin-top:13px; padding-top:12px; border-top:1px solid #a17d4250; color:#f2ce91; font:900 15px monospace; }
+
+.halloween-event-stats { align-items:stretch; }
+.halloween-event-stats > div { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:64px; }
+.halloween-reward-strip { display:flex; align-items:center; justify-content:space-between; gap:7px; min-height:38px; margin:0 0 10px; padding:3px 9px; border:1px solid #97704155; border-radius:7px; background:linear-gradient(90deg,#24172c66,#17160988); }
+.halloween-reward-strip-label { color:#bda786; font:900 7px monospace; letter-spacing:.07em; }
+.halloween-reward-strip > span:not(:first-child) { display:flex; align-items:center; justify-content:center; gap:4px; color:#dccba9; font:900 8px monospace; }
+.halloween-reward-strip svg { height:23px; width:23px; color:#cf9dea; stroke-width:1.6; }
+.halloween-reward-strip img { height:28px; width:28px; object-fit:contain; }
+.halloween-reward-strip > span:last-child img:last-child { height:23px; width:20px; margin-left:-9px; transform:rotate(12deg); }
+
+.halloween-event .void-exchange-heading { position:relative; padding-right:48px; min-height:22px; }
+.halloween-exchange-spider { position:absolute; right:1px; top:-14px; width:52px; height:50px; pointer-events:none; opacity:.8; }
+.halloween-event .void-exchange-resources { position:relative; z-index:1; }
+.halloween-event .void-exchange-resource.is-selected { border-color:#e9ba76; box-shadow:0 0 8px #efb45f30; }
+.halloween-event .void-exchange-panel[data-resource=paper] .void-exchange-resource.is-selected { border-color:#c4a0e4; box-shadow:0 0 8px #a379c530; }
+.halloween-event .void-exchange-panel .void-exchange-resource-content { color:#21130d; }
+.halloween-event .void-exchange-panel[data-resource=paper] .void-exchange-flush-label { color:#2b190c; }
+.halloween-event .void-exchange-presets button .void-exchange-preset-label { color:#e2c9a6; }
+.halloween-event .void-exchange-presets button[aria-pressed=true] .void-exchange-preset-label { color:#ffe1a3; text-shadow:none; }
+.halloween-event .void-exchange-panel[data-resource=paper] .void-exchange-presets button[aria-pressed=true] .void-exchange-preset-label { color:#ead5ff; text-shadow:none; }
+.halloween-event-banner::before { content:''; position:absolute; top:0; right:0; z-index:2; width:60px; height:60px; pointer-events:none; opacity:.35; background:repeating-radial-gradient(circle at 100% 0,transparent 0 12px,#b9a8cc 13px 13.7px,transparent 14px 23px); clip-path:polygon(0 0,100% 0,100% 100%); }
+
+/* Static Halloween color washes, matching the rules prize preview. */
+.halloween-event { background:radial-gradient(ellipse at 0 14%,#49224925,transparent 60%),radial-gradient(ellipse at 100% 88%,#9f70151b,transparent 58%),#080c09; }
+.halloween-event .halloween-event-frame { background:radial-gradient(ellipse at 100% 100%,#9c751b1c,transparent 65%),linear-gradient(125deg,#211725 0%,#141719 46%,#1d210e 100%); border-color:#9d7c3e; }
+.halloween-event-panel { background:radial-gradient(ellipse at 95% 95%,#9f761b22,transparent 65%),linear-gradient(125deg,#211725 0%,#141719 48%,#1b200f 100%); border-color:#92714488; }
+.halloween-event-stats > div { background:radial-gradient(ellipse at 100% 100%,#b2871922,transparent 80%),linear-gradient(120deg,#26192b,#151a15); }
+.halloween-event-stats > div + div { background:radial-gradient(ellipse at 100% 100%,#8f772626,transparent 70%),linear-gradient(120deg,#271c32,#141b14); }
+.halloween-reward-strip { background:radial-gradient(ellipse at 100% 100%,#ad821e22,transparent 75%),linear-gradient(110deg,#25182d,#171a16 55%,#20210f); }
+.halloween-exclusive-card { background:radial-gradient(ellipse at 85% 85%,#ac7a1c24,transparent 70%),radial-gradient(ellipse at 10% 0,#6b347a26,transparent 70%),linear-gradient(130deg,#1d1622,#151a13); }
+.halloween-exclusive-card:nth-child(3n+2) { background:radial-gradient(ellipse at 100% 100%,#c28b2224,transparent 75%),linear-gradient(135deg,#261b30,#161b14); }
+.halloween-event .halloween-own-rank > div { background:linear-gradient(115deg,#2c1c30,#242015 55%,#1a240f); }
+.halloween-event .void-exchange-panel { background:radial-gradient(ellipse at 0 20%,#58306214,transparent 65%),radial-gradient(ellipse at 100% 100%,#ad7d1b1a,transparent 75%); }

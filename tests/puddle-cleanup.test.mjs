@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {applyPlayerAction} from '../server/utils/playerActions.js';
+test('cleanup clears persistent puddle without changing balances and can be repeated',()=>{const p={puddle_active:true,tentacles:50,energy:20};applyPlayerAction(p,{type:'clean-puddle'});assert.equal(p.puddle_active,false);applyPlayerAction(p,{type:'clean-puddle'});assert.deepEqual(p,{puddle_active:false,tentacles:50,energy:20});});

@@ -1,0 +1,262 @@
+{
+  "name": "PlayerProfile",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string"
+    },
+    "level": {
+      "type": "number",
+      "default": 1
+    },
+    "xp": {
+      "type": "number",
+      "default": 0
+    },
+    "xp_to_next_level": {
+      "type": "number",
+      "default": 100
+    },
+    "tentacles": {
+      "type": "number",
+      "default": 0
+    },
+    "safe_tentacles": {
+      "type": "number",
+      "default": 0
+    },
+    "safe_capacity": {
+      "type": "number",
+      "default": 500
+    },
+    "premium": {
+      "type": "number",
+      "default": 0
+    },
+    "energy": {
+      "type": "number",
+      "default": 100
+    },
+    "max_energy": {
+      "type": "number",
+      "default": 100
+    },
+    "energy_regen_rate": {
+      "type": "number",
+      "default": 0.333
+    },
+    "last_energy_update": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tentacles_per_hour": {
+      "type": "number",
+      "default": 10
+    },
+    "last_income_collect": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "attack_power": {
+      "type": "number",
+      "default": 10
+    },
+    "defense_power": {
+      "type": "number",
+      "default": 5
+    },
+    "attack_level": {
+      "type": "number",
+      "default": 1
+    },
+    "defense_level": {
+      "type": "number",
+      "default": 1
+    },
+    "income_level": {
+      "type": "number",
+      "default": 1
+    },
+    "stash_level": {
+      "type": "number",
+      "default": 1
+    },
+    "total_raids": {
+      "type": "number",
+      "default": 0
+    },
+    "successful_raids": {
+      "type": "number",
+      "default": 0
+    },
+    "total_stolen": {
+      "type": "number",
+      "default": 0
+    },
+    "total_lost": {
+      "type": "number",
+      "default": 0
+    },
+    "total_boss_damage": {
+      "type": "number",
+      "default": 0
+    },
+    "boss_kills": {
+      "type": "number",
+      "default": 0
+    },
+    "best_medal": {
+      "type": "string",
+      "default": ""
+    },
+    "active_location": {
+      "type": "string",
+      "default": "beach"
+    },
+    "collection_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "collection_item_counts": {
+      "type": "object",
+      "default": {}
+    },
+    "collection_rewards_claimed": {
+      "type": "object",
+      "default": {}
+    },
+    "collection_boxes": {
+      "type": "object",
+      "default": {}
+    },
+    "task_completions": {
+      "type": "object",
+      "default": {}
+    },
+    "weapon_inventory": {
+      "type": "object",
+      "default": {}
+    },
+    "location_passive_claimed_at": {
+      "type": "object",
+      "default": {}
+    },
+    "keycards": {
+      "type": "object",
+      "default": {}
+    },
+    "weapon_cooldowns": {
+      "type": "object",
+      "default": {}
+    },
+    "stat_strength": {
+      "type": "number",
+      "default": 1
+    },
+    "stat_stealth": {
+      "type": "number",
+      "default": 1
+    },
+    "stat_endurance": {
+      "type": "number",
+      "default": 1
+    },
+    "stat_craft": {
+      "type": "number",
+      "default": 1
+    },
+    "hero_tier": {
+      "type": "string",
+      "default": "scavenger"
+    },
+    "claimed_collection_rows": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "claimed_collection_full": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "gambling_level": {
+      "type": "number",
+      "default": 0
+    },
+    "gambling_xp": {
+      "type": "number",
+      "default": 0
+    },
+    "blackjack_free_used": {
+      "type": "string",
+      "default": ""
+    },
+    "login_streak": {
+      "type": "number",
+      "default": 0
+    },
+    "last_login_date": {
+      "type": "string",
+      "default": ""
+    },
+    "clan_name": {
+      "type": "string",
+      "default": ""
+    },
+    "boss_hits_today": {
+      "type": "number",
+      "default": 0
+    },
+    "total_tasks_today": {
+      "type": "number",
+      "default": 0
+    },
+    "used_promo_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "username"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": true,
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

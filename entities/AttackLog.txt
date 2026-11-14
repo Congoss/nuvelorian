@@ -1,0 +1,38 @@
+{
+  "name": "AttackLog",
+  "type": "object",
+  "properties": {
+    "attacker_email": {
+      "type": "string"
+    },
+    "attacker_name": {
+      "type": "string"
+    },
+    "defender_email": {
+      "type": "string"
+    },
+    "defender_name": {
+      "type": "string"
+    },
+    "success": {
+      "type": "boolean"
+    },
+    "amount_stolen": {
+      "type": "number",
+      "default": 0
+    },
+    "is_revenge": {
+      "type": "boolean",
+      "default": false
+    },
+    "seen": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "attacker_email",
+    "defender_email",
+    "success"
+  ]
+}

@@ -1,0 +1,109 @@
+.nv-portal{--nv-accent:#b9ea45;position:fixed;inset:0;isolation:isolate;display:flex;flex-direction:column;overflow:hidden;background:#101b1c;color:#f6f8f5;font-family:Rubik,Arial,sans-serif}
+.nv-portal button,.nv-portal a{-webkit-tap-highlight-color:transparent}
+.nv-portal button:focus-visible,.nv-portal a:focus-visible,.nv-panel:focus-visible{outline:2px solid var(--nv-accent);outline-offset:-3px}
+.nv-atmosphere,.nv-grid,.nv-noise,.nv-glow{position:absolute;inset:0;pointer-events:none;z-index:-1}
+.nv-grid{background-image:linear-gradient(#0003 1px,transparent 1px),linear-gradient(90deg,#0003 1px,transparent 1px);background-size:64px 64px;mask-image:linear-gradient(120deg,#000,transparent 75%)}
+.nv-noise{opacity:.13;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23n)' opacity='.8' d='M0 0h180v180H0z'/%3E%3C/svg%3E")}
+.nv-glow{background:radial-gradient(ellipse at 88% 8%,#59632566,transparent 38%),radial-gradient(ellipse at 25% 0%,#a876342f,transparent 40%),radial-gradient(ellipse at 60% 70%,#00e89612,transparent 40%);animation:nv-breathe 12s ease-in-out infinite alternate}
+.nv-portal[data-page=roadmap] .nv-glow{background:radial-gradient(ellipse at 60% 45%,#38775f66,transparent 55%)}
+.nv-header{height:108px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:20px 40px;z-index:5}
+.nv-brand{display:flex;align-items:center;gap:15px;font-size:15px;font-weight:900;letter-spacing:.15em;background:none;border:0;color:inherit;cursor:pointer}
+.nv-mark{display:block;width:34px;height:48px;background:var(--nv-accent);clip-path:polygon(50% 0,100% 0,100% 33%,50% 33%,50% 66%,100% 66%,100% 100%,50% 100%,50% 66%,0 66%,0 33%,50% 33%)}
+.nv-header-actions{display:flex;align-items:center;gap:18px}
+.nv-button{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:60px;padding:16px 30px;border:1px solid transparent;text-transform:uppercase;font-size:13px;font-weight:800;cursor:pointer;transition:background .2s,transform .2s;color:inherit;text-decoration:none;border-radius:0}
+.nv-button:hover:not(:disabled){transform:translateY(-3px)}
+.nv-primary{background:var(--nv-accent);color:#102017;position:relative}
+.nv-primary:before{content:'▦';position:absolute;left:7px;top:3px;opacity:.25;font-size:23px}
+.nv-outline{border-color:#ffffff30;background:#0001}
+.nv-quiet{min-height:50px;background:#ffffff13;padding:12px 22px}
+.nv-button:disabled{cursor:not-allowed;opacity:.55}
+.nv-menu-toggle{height:50px;width:50px;border:1px solid #ffffff30;background:transparent;display:grid;place-items:center;cursor:pointer}
+.nv-menu{position:absolute;right:40px;top:90px;width:260px;padding:12px;background:#172725;border:1px solid #ffffff20;box-shadow:0 20px 60px #0008}
+.nv-menu button{display:flex;justify-content:space-between;width:100%;padding:14px;background:none;border:0;text-align:left;cursor:pointer}
+.nv-menu button:hover,.nv-menu button[aria-current]{color:var(--nv-accent)}
+.nv-stage{flex:1;min-height:0;position:relative;overflow:hidden}
+.nv-panel{height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#7a926044 transparent}
+.nv-content{width:min(1160px,calc(100% - 80px));margin:auto;min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:42px 0 58px}
+.nv-columns{display:grid;grid-template-columns:1.1fr 1fr;align-items:center;gap:90px}
+.nv-copy h1{font-size:clamp(32px,3.2vw,56px);font-weight:900;line-height:1.5;letter-spacing:.015em;margin:0 0 30px}
+.nv-copy h1 span{color:var(--nv-accent)}
+.nv-copy h3{font-size:clamp(19px,2vw,30px);font-weight:800;margin:0 0 45px}
+.nv-eyebrow{font-size:12px;letter-spacing:.2em;color:var(--nv-accent);text-transform:uppercase;margin-bottom:18px}
+.nv-cta{display:flex;gap:24px;flex-wrap:wrap}
+.nv-home-notes{margin-top:36px;font-size:13px;font-weight:700;line-height:2.2}
+.nv-home-notes strong{color:var(--nv-accent)}
+.nv-hero-art{position:relative;max-width:460px;width:100%;justify-self:center}
+.nv-hero-art img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:28% 38% 24% 36%;box-shadow:0 25px 90px #0006;mask-image:radial-gradient(ellipse,#000 55%,transparent 74%)}
+.nv-art-caption{display:block;text-align:center;font-size:11px;letter-spacing:.25em;color:#b6c2b7;margin-top:18px}
+.nv-heading{margin-bottom:46px}
+.nv-heading>p{font-size:14px;font-weight:800;text-transform:uppercase;color:var(--nv-accent);margin-bottom:20px}
+.nv-heading>p span{color:#ffffff35;margin-left:8px}
+.nv-heading h2{font-size:clamp(28px,3vw,44px);font-weight:900;line-height:1.2}
+.nv-about>div>p{font-size:16px;line-height:1.8;color:#d0d8d3;margin-bottom:22px}
+.nv-facts{display:grid;grid-template-columns:1fr 1fr;gap:100px 38px}
+.nv-facts h3{font-size:30px;font-weight:900}
+.nv-facts p{font-size:14px;color:#c6d0c8;margin-top:4px}
+.nv-roadmap{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.nv-roadmap h3{background:#ffffff12;padding:16px 18px;font-size:20px;font-weight:800;margin:0 -18px}
+.nv-status{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--nv-accent);margin:18px 0}
+.nv-roadmap ul{list-style:none;padding:0}
+.nv-roadmap li{display:flex;gap:12px;align-items:center;font-size:15px;color:#ced6d0;margin:20px 0}
+.nv-roadmap li svg{flex-shrink:0}
+.nv-creatures{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.nv-creatures article>div{background:#ffffff09;overflow:hidden}
+.nv-creatures img{width:100%;height:clamp(150px,28vh,290px);object-fit:cover;transition:transform .6s}
+.nv-creatures article:hover img{transform:scale(1.05)}
+.nv-creatures p{margin:20px 0 8px;font-size:10px;letter-spacing:.16em;color:var(--nv-accent)}
+.nv-creatures h3{font-weight:800;font-size:22px}
+.nv-faq{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.nv-faq article{background:#1d2a2cf2;margin-bottom:12px}
+.nv-faq button{display:flex;justify-content:space-between;gap:20px;text-align:left;width:100%;padding:24px 28px;font-size:19px;font-weight:800;background:none;border:0;cursor:pointer}
+.nv-faq svg{flex-shrink:0;color:#92a098}
+.nv-faq article p{padding:0 28px 25px;color:#b6c0bc;font-size:15px;line-height:1.8}
+.nv-mint-page{width:min(1020px,100%);margin:auto}
+.nv-mint-title{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:24px}
+.nv-mint-title .nv-heading{margin:0}
+.nv-mint-title>p{max-width:300px;margin-bottom:5px;color:#c2cec4;font-size:14px;line-height:1.6}
+.nv-nft-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.nv-nft-card{overflow:hidden;border:1px solid #ffffff25;background:#111b1c;box-shadow:0 18px 48px #0003}
+.nv-nft-art{position:relative;height:clamp(230px,37vh,360px);overflow:hidden;background:#20282c}
+.nv-nft-art:after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,#0c1414e8)}
+.nv-nft-art img{height:100%;width:100%;object-fit:cover;object-position:center 34%;transition:transform .65s cubic-bezier(.2,.8,.2,1)}
+.nv-nft-card:hover .nv-nft-art img{transform:scale(1.045)}
+.nv-nft-art>span{position:absolute;left:14px;top:14px;z-index:1;padding:7px 10px;background:#111b1ccc;border:1px solid #ffffff38;font-size:10px;font-weight:900;letter-spacing:.14em}
+.nv-nft-meta{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px}
+.nv-nft-meta p{font-size:10px;font-weight:800;letter-spacing:.15em;color:var(--nv-accent);margin-bottom:5px}
+.nv-nft-meta h3{font-size:19px;font-weight:900}
+.nv-nft-status{border:1px solid #ffffff2d;padding:6px 9px;font-size:9px;font-weight:900;letter-spacing:.12em;color:#d9e1db}
+.nv-nft-footer{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:16px}
+.nv-nft-footer>div{display:flex;align-items:center;gap:9px;color:#c4d0c6;font-size:13px;font-weight:700}
+.nv-live-dot{width:8px;height:8px;border-radius:50%;background:var(--nv-accent);box-shadow:0 0 12px var(--nv-accent);animation:nv-pulse 1.8s ease-in-out infinite}
+.nv-nft-footer .nv-button{min-height:48px;padding:12px 20px}
+.nv-nft-note{margin-top:10px;color:#94a39a;font-size:11px;line-height:1.6}
+@keyframes nv-pulse{50%{opacity:.45;box-shadow:0 0 3px var(--nv-accent)}}
+.nv-mint{max-width:880px;margin:auto}
+.nv-mint-art{background:#ffffff10;padding:22px}
+.nv-mint-art img{width:100%;aspect-ratio:1;object-fit:cover}
+.nv-mint .nv-heading{margin-bottom:24px}
+.nv-mint dl>div{display:flex;justify-content:space-between;gap:24px;padding:17px 0;border-bottom:1px solid #ffffff18;font-size:14px}
+.nv-mint dd{text-align:right;font-weight:700}
+.nv-mint .nv-button{width:100%;margin:25px 0 20px}
+.nv-mint p{font-size:14px;line-height:1.8;color:#bbc6bd}
+.nv-ticker{flex-shrink:0;height:48px;overflow:hidden;border-top:1px solid #ffffff14;background:#0002;display:flex;align-items:center}
+.nv-ticker>div{display:flex;width:max-content;animation:nv-ticker 38s linear infinite}
+.nv-ticker span{white-space:nowrap;font-weight:800;font-size:14px}
+.nv-tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));flex-shrink:0;background:#ffffff13;padding-bottom:env(safe-area-inset-bottom);z-index:4}
+.nv-tabs button{border:0;border-right:1px solid #ffffff15;background:transparent;min-height:62px;padding:14px 10px;font-size:14px;font-weight:800;text-transform:uppercase;cursor:pointer;transition:background .25s,color .25s;white-space:nowrap}
+.nv-tabs button:hover{background:#ffffff12}
+.nv-tabs button[aria-selected=true]{background:#ffffff24;box-shadow:inset 0 2px var(--nv-accent);color:#fff}
+.nv-float{position:absolute;animation:nv-float 9s ease-in-out infinite;color:var(--nv-accent);opacity:.65}
+.nv-float-one{width:44px;left:12%;top:14%;rotate:-12deg}
+.nv-float-two{font-size:60px;right:22%;top:13%;animation-delay:-3s}
+.nv-float-three{font-size:45px;right:8%;bottom:23%;animation-delay:-6s}
+@keyframes nv-float{50%{transform:translateY(-18px) rotate(12deg)}}
+@keyframes nv-breathe{to{opacity:.55;transform:scale(1.1)}}
+@keyframes nv-ticker{to{transform:translateX(-50%)}}
+@media(min-width:1600px){.nv-header{height:116px}.nv-columns{gap:110px}}
+@media(max-width:900px){.nv-header{height:80px;padding:15px 22px}.nv-content{width:calc(100% - 48px);padding:26px 0 36px}.nv-columns{gap:35px}.nv-copy h1{font-size:34px}.nv-copy h3{font-size:20px;margin-bottom:24px}.nv-button{padding:14px 18px;min-height:48px}.nv-cta{gap:12px}.nv-home-notes{font-size:11px}.nv-tabs button{font-size:11px}.nv-facts{gap:50px 20px}.nv-facts h3{font-size:22px}.nv-float-one{left:3%;top:15%;width:28px}.nv-heading{margin-bottom:28px}.nv-faq button{font-size:16px;padding:20px}.nv-roadmap h3{font-size:16px}.nv-menu{right:22px;top:75px}.nv-mint-title>p{font-size:12px;max-width:220px}.nv-nft-art{height:clamp(210px,34vh,300px)}}
+@media(max-width:600px){.nv-header{height:74px;padding:12px 16px}.nv-brand{font-size:11px;gap:8px}.nv-mark{width:24px;height:34px}.nv-header-actions{gap:7px}.nv-header .nv-button{padding:9px 12px;min-height:40px;font-size:10px}.nv-menu-toggle{width:40px;height:40px}.nv-content{width:calc(100% - 40px);padding:25px 0 32px}.nv-columns{grid-template-columns:1fr;gap:28px}.nv-home{gap:12px}.nv-copy h1{font-size:32px;line-height:1.3;margin-bottom:18px}.nv-copy h3{font-size:18px;margin-bottom:23px}.nv-eyebrow{font-size:10px}.nv-home-notes{margin-top:20px;line-height:1.9}.nv-hero-art{max-width:230px}.nv-art-caption{font-size:9px;margin-top:0}.nv-heading h2{font-size:27px}.nv-facts{gap:30px;margin-top:5px}.nv-tabs{display:flex;overflow-x:auto;scrollbar-width:thin}.nv-tabs button{flex:0 0 112px;min-height:56px;font-size:11px}.nv-ticker{height:34px}.nv-ticker span{font-size:11px}.nv-faq{grid-template-columns:1fr;gap:0}.nv-roadmap{grid-template-columns:1fr;gap:22px}.nv-roadmap h3{margin:0;padding:14px}.nv-creatures{grid-template-columns:1fr;gap:28px}.nv-creatures img{height:240px}.nv-mint-art{max-width:260px;margin:auto}.nv-mint-title{display:block;margin-bottom:16px}.nv-mint-title>p{margin-top:9px}.nv-nft-grid{gap:10px}.nv-nft-art{height:190px}.nv-nft-art>span{left:8px;top:8px;padding:5px 7px;font-size:8px}.nv-nft-meta{padding:10px;align-items:flex-start}.nv-nft-meta h3{font-size:14px}.nv-nft-meta p{font-size:8px;letter-spacing:.08em}.nv-nft-status{font-size:8px;padding:5px 6px}.nv-nft-footer{align-items:stretch;flex-direction:column;gap:10px;margin-top:12px}.nv-nft-footer .nv-button{width:100%}.nv-nft-note{font-size:10px}.nv-float-two{font-size:35px;right:8%;top:19%}.nv-float-one{display:none}}
+@media(prefers-reduced-motion:reduce){.nv-portal *{animation:none!important;transition:none!important}}

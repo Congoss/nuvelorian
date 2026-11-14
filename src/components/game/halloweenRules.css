@@ -1,0 +1,38 @@
+
+.halloween-rules { padding: 2px 0 10px; color: #eaf5d8; }
+.halloween-rules-hero { position: relative; display: flex; align-items: center; gap: 8px; min-height: 150px; overflow: hidden; padding: 18px 14px; border: 1px solid #b47738; border-radius: 12px 12px 5px 5px; background: radial-gradient(ellipse at 95% 70%, #b5671f35, transparent 52%), linear-gradient(130deg,#21142b,#11180e 75%); box-shadow: inset 0 1px #fbc66b25, 0 6px 20px #0005; }
+.halloween-rules-hero-copy { position: relative; z-index: 1; flex: 1; min-width: 0; }
+.halloween-rules-kicker { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 9px; color: #d8b978; font-size: 8px; font-weight: 900; letter-spacing: .16em; }
+.halloween-rules-hero h2 { margin: 0; color: #ffcd7e; font-size: clamp(16px,4.1vw,21px); line-height: 1.2; font-weight: 900; text-transform: uppercase; text-wrap: balance; }
+.halloween-rules-hero p { margin: 9px 0 0; color: #c8c4af; font-size: 10px; line-height: 1.6; }
+.halloween-rules-mascot { position: relative; z-index: 1; width: 88px; height: 92px; flex-shrink: 0; object-fit: contain; transform: rotate(9deg); filter: drop-shadow(0 0 15px #f5862645); }
+.halloween-rules-web { position: absolute; right: 0; top: 0; width: 100px; height: 100px; transform: rotate(90deg); opacity: .2; }
+.halloween-rules-web svg { width: 100%; height: 100%; stroke: #dcc1ef; stroke-width: .9; }
+.halloween-rules-path { position: relative; display: grid; gap: 9px; margin-top: 13px; }
+.halloween-rule-card { --rule: #e8a55a; position: relative; display: flex; align-items: flex-start; gap: 12px; overflow: hidden; padding: 13px 12px; border: 1px solid color-mix(in srgb,var(--rule) 34%,transparent); border-left: 3px solid var(--rule); border-radius: 5px 10px 10px 5px; background: linear-gradient(110deg,color-mix(in srgb,var(--rule) 7%,#0b100b),#0a100b); }
+.halloween-rule-card[data-tone=purple] { --rule: #bb94dc; }
+.halloween-rule-card[data-tone=green] { --rule: #9dbf6b; }
+.halloween-rule-card[data-tone=gold] { --rule: #e9c65f; background: linear-gradient(110deg,#25200d,#11190d); border-color: #a48c43; }
+.halloween-rule-icon { position: relative; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex-shrink: 0; color: var(--rule); border: 1px solid color-mix(in srgb,var(--rule) 28%,transparent); border-radius: 10px; background: #0004; }
+.halloween-rule-icon span { position: absolute; bottom: -6px; right: -4px; padding: 1px 4px; border-radius: 3px; background: #11150d; color: var(--rule); font-size: 7px; font-weight: 900; }
+.halloween-rule-copy { flex: 1; min-width: 0; }
+.halloween-rule-copy h3 { margin: 0 0 5px; color: var(--rule); font-size: 11px; font-weight: 900; line-height: 1.4; text-transform: uppercase; }
+.halloween-rule-copy p { margin: 0; color: #c0c9b3; font-family: Rubik,sans-serif; font-size: 11px; line-height: 1.6; }
+.halloween-rule-prize { width: 36px; height: 40px; flex-shrink: 0; align-self: center; object-fit: contain; }
+.halloween-rules-note { display: flex; align-items: flex-start; gap: 9px; margin-top: 12px; padding: 12px; border: 1px dashed #63804c75; border-radius: 8px; background: #14210e55; color: #96b17e; }
+.halloween-rules-note svg { flex-shrink: 0; margin-top: 2px; }
+.halloween-rules-note p { margin: 0; font-family: Rubik,sans-serif; font-size: 10px; line-height: 1.65; }
+@media(max-width:360px) { .halloween-rules-mascot { width: 64px; height: 75px; } .halloween-rules-hero { padding: 14px 10px; } .halloween-rule-card { gap: 9px; padding: 11px 9px; } }
+
+.halloween-rules-hero { flex-wrap:wrap; }
+.halloween-rules-hero-copy { flex-basis:calc(100% - 110px); }
+.halloween-prizes-preview { position:relative; z-index:1; flex-basis:100%; margin-top:6px; padding-top:12px; border-top:1px solid #b58a4c45; }
+.halloween-prizes-caption { margin:0 0 8px!important; color:#b7a1c8!important; font:900 7px monospace!important; letter-spacing:.13em; }
+.halloween-prizes-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+.halloween-prize-preview { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:98px; padding:9px 5px; border:1px solid #ac805747; border-radius:9px; background:radial-gradient(ellipse at 50% 35%,#bd793622,transparent 75%),#0b0d104d; }
+.halloween-prize-preview > img,.halloween-prize-box-art { width:56px; height:56px; object-fit:contain; margin-bottom:5px; filter:drop-shadow(0 2px 6px #d49e2725); }
+.halloween-prize-preview > svg { width:44px; height:44px; margin:6px 0 11px; color:#d7a5ee; stroke-width:1.5; filter:drop-shadow(0 0 8px #b865d54d); }
+.halloween-prize-preview > span { color:#e4cfab; font:900 8px/1.4 Rubik,sans-serif; text-align:center; }
+.halloween-prize-box-art { position:relative; }
+.halloween-prize-box-art > img:first-child { width:100%; height:100%; object-fit:contain; }
+.halloween-prize-box-art > img:last-child { position:absolute; bottom:0; right:-5px; width:27px; height:29px; object-fit:contain; transform:rotate(12deg); }

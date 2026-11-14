@@ -1,0 +1,32 @@
+.rb2-background { position:absolute; inset:0; overflow:hidden; pointer-events:none; container-type:size; }
+.rb2-background > img { width:100%; height:100%; object-fit:cover; }
+.rb2-stars { position:absolute; width:max(100cqw, calc(100cqh * 500 / 896)); height:max(100cqh, calc(100cqw * 896 / 500)); left:50%; top:50%; transform:translate(-50%,-50%); }
+.rb2-stars i { position:absolute; border-radius:50%; background:#fff7d9; box-shadow:0 0 5px 1px #d5eeff; animation:rb2-twinkle var(--twinkle-duration) ease-in-out infinite; }
+.rb2-composite { position:relative; height:min(100%,428px); width:auto; max-width:100%; aspect-ratio:410/585; pointer-events:none; isolation:isolate; }
+.rb2-layer { position:absolute; left:-15.854%; top:-41.026%; width:121.951%; height:153.162%; max-width:none; pointer-events:none; }
+.rb2-legs { z-index:0; }
+.rb2-upper { position:absolute; inset:0; z-index:1; animation:rb2-breathe 3.8s ease-in-out infinite; transform-origin:50% 65%; }
+.rb2-shoulder, .rb2-button, .rb2-eyes, .rb2-duck-eye { mix-blend-mode:screen; }
+.rb2-shoulder { filter:brightness(1.6) drop-shadow(0 0 7px #ff1b16); animation:rb2-red-pulse 2.6s ease-in-out infinite; }
+.rb2-button { filter:brightness(2) drop-shadow(0 0 4px #ff2517); animation:rb2-button-flicker 1.9s steps(1,end) infinite; }
+.rb2-eyes { filter:brightness(1.8) drop-shadow(0 0 5px #ff1b0a); animation:rb2-eye-burn .7s ease-in-out infinite alternate; }
+.rb2-fire { position:absolute; top:16.8%; width:7.5%; height:2.8%; border-radius:70% 30% 60% 35%; background:radial-gradient(ellipse at 50% 100%,#fff2a2 0%,#ff4b15 32%,#d40000 58%,transparent 75%); filter:blur(1px) drop-shadow(0 -3px 4px #ff1b00); mix-blend-mode:screen; animation:rb2-fire .22s ease-in-out infinite alternate; transform-origin:50% 100%; }
+.rb2-fire-left { left:40%; transform:rotate(16deg); }
+.rb2-fire-right { left:50.2%; width:6%; animation-delay:-.12s; transform:rotate(-16deg); }
+.rb2-breath { position:absolute; left:48.5%; top:27%; width:6%; height:3%; }
+.rb2-breath i { position:absolute; width:160%; height:120%; border-radius:50%; background:radial-gradient(ellipse,#dae9ed99,#c6d6dd44 40%,transparent 72%); filter:blur(3px); opacity:0; animation:rb2-steam 4.6s ease-out infinite; animation-delay:calc(var(--puff) * .18s); }
+.rb2-duck-eye { filter:brightness(3) drop-shadow(0 0 6px #ff2910) drop-shadow(0 0 12px #ff8a00); animation:rb2-duck-flash 1.25s ease-out both; }
+.rb2-impact { position:absolute; left:86%; top:32%; width:5%; height:4%; border-radius:50%; background:#ffb522; filter:blur(7px); mix-blend-mode:screen; animation:rb2-duck-flash .5s ease-out both; }
+.rb2-talk { position:absolute; right:0; top:12%; max-width:38%; padding:7px 9px; border:3px solid #211719; border-radius:45% 48% 38% 42%; background:#fff3b5; color:#c81f19; font-family:'Comic Sans MS','Comic Sans',cursive; font-size:clamp(12px,3.6vw,18px); font-weight:900; font-style:italic; line-height:1; text-align:center; text-shadow:1px 1px #fff; box-shadow:3px 4px 0 #211719; animation:rb2-talk 1.25s ease-out both; }
+.rb2-talk::after { content:''; position:absolute; right:20%; bottom:-12px; width:13px; height:15px; background:#fff3b5; border-right:3px solid #211719; border-bottom:3px solid #211719; transform:skewY(-35deg); }
+@media(min-width:640px) { .rb2-composite { height:min(100%,521px); } }
+@keyframes rb2-breathe { 0%,100% { transform:translateY(0) scaleY(1); } 50% { transform:translateY(2px) scaleY(.994); } }
+@keyframes rb2-twinkle { 0%,65%,100% { opacity:.08; transform:scale(.55); } 35% { opacity:1; transform:scale(1.3); } }
+@keyframes rb2-red-pulse { 0%,100% { opacity:.35; } 50% { opacity:.95; } }
+@keyframes rb2-button-flicker { 0%,9%,18%,60%,100% { opacity:.25; } 5%,14%,42%,68% { opacity:1; } }
+@keyframes rb2-eye-burn { from { opacity:.6; } to { opacity:1; } }
+@keyframes rb2-fire { from { opacity:.6; scale:1 .75; } to { opacity:1; scale:1.05 1.35; } }
+@keyframes rb2-steam { 0%,40%,100% { opacity:0; transform:translate(0,0) scale(.4); } 48% { opacity:.65; } 76% { opacity:0; transform:translate(18px,28px) scale(2.7); } }
+@keyframes rb2-duck-flash { 0%,20% { opacity:1; } 45% { opacity:.4; } 65% { opacity:.85; } 100% { opacity:0; } }
+@keyframes rb2-talk { 0% { opacity:0; transform:translateY(12px) scale(.55) rotate(-9deg); } 15%,70% { opacity:1; transform:translateY(0) scale(1) rotate(-5deg); } 100% { opacity:0; transform:translateY(-22px) scale(1.08) rotate(-3deg); } }
+@media(prefers-reduced-motion:reduce) { .rb2-composite *, .rb2-stars i { animation:none !important; } .rb2-breath { display:none; } }

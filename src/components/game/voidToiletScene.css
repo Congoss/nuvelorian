@@ -1,0 +1,19 @@
+.void-toilet-scene { position: relative; width: 100%; aspect-ratio: 5 / 3; overflow: hidden; isolation: isolate; background: #0c0925; }
+.void-toilet-layer { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.void-tentacle-emergence { position: absolute; inset: 0; clip-path: polygon(0 0, 100% 0, 100% 52%, 63% 52%, 60% 55%, 56% 57%, 50% 57.64%, 44% 57%, 40% 55%, 37% 52%, 0 52%); }
+.void-tentacle-rise { position: absolute; inset: 0; }
+.void-tentacle { --tentacle-angle: 76deg; --tentacle-scale: 1; position: absolute; width: 43%; height: 28%; left: 4%; top: 40.8%; transform-origin: 96% 65%; animation: void-tentacle-emerge var(--burst-duration) ease-in-out var(--burst-delay) both; }
+.void-tentacle-1 { --tentacle-angle: 104deg; left: 16%; }
+.void-tentacle-2 { --tentacle-angle: 84deg; --tentacle-scale: .72; left: 8%; }
+.void-tentacle-3 { --tentacle-angle: 96deg; --tentacle-scale: .72; left: 12%; }
+.void-tentacle-4 { --tentacle-angle: 82deg; --tentacle-scale: .92; left: 6%; }
+.void-tentacle-sprite { width: 100%; height: 100%; background-size: 3100% 100%; background-repeat: no-repeat; animation: void-tentacle-grasp var(--burst-duration) steps(30) var(--burst-delay) both; }
+.void-tentacle-2 .void-tentacle-sprite, .void-tentacle-3 .void-tentacle-sprite, .void-tentacle-4 .void-tentacle-sprite { transform-origin: 96% 65%; transform: scaleY(-1); }
+.void-toilet-rim { clip-path: inset(57.64% 0 0); }
+@keyframes void-tentacle-grasp { 0%, 100% { background-position: 0% 0; } 55% { background-position: 100% 0; } }
+@keyframes void-tentacle-emerge {
+  0%, 100% { transform: rotate(calc(var(--tentacle-angle) - 28deg)) scale(0); }
+  20%, 60% { transform: rotate(var(--tentacle-angle)) scale(var(--tentacle-scale)); }
+  40% { transform: rotate(calc(var(--tentacle-angle) + 7deg)) scale(var(--tentacle-scale)); }
+}
+@media (prefers-reduced-motion: reduce) { .void-tentacle-sprite { animation: none; background-position: 50% 0; } .void-tentacle { animation: none; transform: rotate(var(--tentacle-angle)) scale(var(--tentacle-scale)); } }

@@ -1,0 +1,28 @@
+{
+  "name": "BossDamageLog",
+  "type": "object",
+  "properties": {
+    "fight_id": {
+      "type": "string"
+    },
+    "player_email": {
+      "type": "string"
+    },
+    "player_name": {
+      "type": "string"
+    },
+    "damage": {
+      "type": "number",
+      "default": 0
+    },
+    "hits": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "fight_id",
+    "player_email",
+    "damage"
+  ]
+}

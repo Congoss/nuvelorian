@@ -1,0 +1,840 @@
+{
+  "tasks": {
+    "go": "GO",
+    "afkBonus": "АФК БОНУС",
+    "claim": "Забрать",
+    "ready": "Готово",
+    "afkLine1": "Забирай каждые {{hours}} часа • {{percent}}% от полного прохождения сектора.",
+    "afkLine2": "Каждое новое прохождение даёт +1% к наградам.",
+    "afkNotReady": "АФК-награда ещё не готова. Таймер обновлён."
+  },
+  "shop": {
+    "sections": {
+      "popular": "Популярное",
+      "dailyOffer": "Акция дня",
+      "gems": "T-Pape",
+      "paidConsumables": "Энергия и яды за Stars / NEAR",
+      "energy": "Энергия",
+      "dailyForTentacles": "Ежедневное за tentacles",
+      "roulette": "Рулетка",
+      "packs": "Паки",
+      "unopenedPacks": "Нераскрытые паки"
+    },
+    "buyEnergy": "Купить энергию",
+    "items": {
+      "energy25": "Энергия +25",
+      "dailyToxicPack": "Ежедневный токсичный пак",
+      "bossDamagePack": "Пак урона боссу",
+      "spin1": "Spin x1",
+      "spin5": "Spin x5",
+      "spin20": "Spin x20",
+      "starterOffer": "Стартовое предложение",
+      "firstBossOffer": "Предложение первого босса",
+      "weeklyOffer": "Недельное предложение",
+      "energy50": "Энергия +50",
+      "fullEnergyRefill": "Полное восстановление энергии",
+      "energy100": "Энергия +100",
+      "poisonPack": "Пак яда",
+      "weeklyProgressPack": "Пак недельного прогресса"
+    },
+    "desc": {
+      "forTentacles": "За tentacles",
+      "forPremium": "За T-Pape",
+      "dailyOffer": "Дневное предложение",
+      "tentacles500": "500 tentacles",
+      "tentacles900": "900 tentacles",
+      "tentacles1500": "1 500 tentacles",
+      "tentacles800": "800 tentacles",
+      "premium30": "30 T-Pape",
+      "premium50": "50 T-Pape",
+      "premium60": "60 T-Pape",
+      "premium120": "120 T-Pape",
+      "premium180": "180 T-Pape",
+      "premium250": "250 T-Pape",
+      "premium1000": "1 000 T-Pape"
+    },
+    "dailyToxicOdds": {
+      "l1": "70% — Малый яд x3",
+      "l2": "20% — Малый яд x5 + Средний яд x1",
+      "l3": "8% — Средний яд x2",
+      "l4": "2% — Фляга с ядом x1"
+    },
+    "remaining": "Осталось {{left}}/{{total}}",
+    "noPacks": "Паков нет.",
+    "selectedPayment": "Выбранная оплата",
+    "gemPackNote": "Выберите TON, NEAR или Telegram Stars.",
+    "cancel": "Отмена",
+    "confirmPayment": "Подтвердить",
+    "openOne": "Открыть 1",
+    "openAll": "Открыть все"
+  },
+  "leaderboard_panel": {
+    "tab_players": "Игроки",
+    "tab_clans": "Кланы",
+    "tab_referrals": "Рефералы",
+    "top_1": "Топ 1",
+    "top_2": "Топ 2",
+    "top_3": "Топ 3",
+    "no_clan": "Без клана",
+    "empty_players": "Игроков пока нет",
+    "empty_clans": "Кланов пока нет",
+    "empty_referrals": "Рефералов пока нет"
+  },
+  "camp_view": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "equip": "Надеть",
+    "unequip": "Снять",
+    "no_extra_bonus": "Без дополнительного бонуса",
+    "future_locked_hint": "Будет доступно позже",
+    "locked_item": "Предмет заблокирован",
+    "shop_price_prefix": "Цена:",
+    "drop_prefix": "Дроп:",
+    "top": "Топ",
+    "gear": "Экип",
+    "daily": "Ежедневные",
+    "roulette": "Рулетка",
+    "events": "Ивенты",
+    "friends_tab": "Друзья",
+    "back_to_ranking": "Назад к рейтингу",
+    "friends_header": "Пригласи друзей",
+    "friends_description": "Приглашай друзей, помогай им стартовать и забирай инвайт-боксы.",
+    "copy": "Скопировать",
+    "invite": "Пригласить",
+    "confirm": "Подтвердить",
+    "claim": "Забрать",
+    "claimed": "Забрано",
+    "friends_list": "Приглашенные друзья",
+    "rewards_title": "Реферальные награды",
+    "reward_line": "{{count}} active friend: {{reward}}",
+    "no_friends": "Пока нет приглашенных друзей",
+    "friend_status_joined": "joined",
+    "friend_status_active": "active",
+    "friend_status_reward_ready": "reward_ready",
+    "friend_status_claimed": "claimed"
+  },
+  "chat_panel": {
+    "clan_tab": "Клан",
+    "world_tab": "Мир",
+    "clan_chat_title": "Клановый чат",
+    "world_chat_title": "Мировой чат",
+    "online_count": "Онлайн: {{count}}",
+    "chat_history_24h": "История чата за 24 ч",
+    "role_deputy": "Заместитель",
+    "role_warrior": "Воин",
+    "role_wasteland": "Пустошь",
+    "role_tentacles_yard": "Мусорный двор",
+    "role_rift_kids": "Дети Разлома",
+    "message_placeholder": "Напиши сообщение...",
+    "send_button": "Отправить",
+    "energy_request": "Запрос энергии",
+    "energy_request_mine": "Ваш запрос энергии",
+    "request_energy": "Запросить энергию",
+    "energy_requested": "Ожидание",
+    "energy_helped": "Помогли"
+  },
+  "bottom_nav": {
+    "bosses": "Боссы",
+    "quests": "Квесты",
+    "hero": "Герой",
+    "skills": "Таланты",
+    "clans": "Кланы"
+  },
+  "loot_modal": {
+    "tap_to_open": "Нажми, чтобы открыть",
+    "opening": "Открываем...",
+    "loot_in_chest": "Лут в сундуке",
+    "open_button": "Открыть",
+    "claim_button": "Забрать"
+  },
+  "profile": {
+    "personalInfo": "Личная информация",
+    "openWebGame": "Веб-игра · оплата NEAR",
+    "hideBanners": "Скрыть баннеры профиля",
+    "chooseBanner": "Выбрать баннер профиля",
+    "openFramePicker": "Открыть выбор рамки аватара",
+    "nickname": "Ник",
+    "changeNickname": "Изменить никнейм?",
+    "newNickname": "Новый никнейм",
+    "firstNicknameFree": "Первая смена — бесплатно",
+    "nicknamePrice": "Цена: 500 T-Pape",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "uid": "UID",
+    "guild": "Клан",
+    "promoCode": "ПРОМОКОД",
+    "ok": "OK",
+    "codeNotFound": "Промокод не найден или неактивен",
+    "codeUsed": "Этот код уже активирован",
+    "activated": "Активировано",
+    "walletLink": "Подключение кошелька",
+    "walletStatus": "TON live / NEAR скоро",
+    "nearSoon": "NEAR скоро",
+    "achievements": "Достижения",
+    "futureBonuses": "будущие бонусы",
+    "notifications": "Уведомления",
+    "later": "позже",
+    "copyUid": "Скопировать UID",
+    "codeLimitReached": "Лимит активаций промокода исчерпан",
+    "codeActivationFailed": "Не удалось активировать промокод. Попробуй ещё раз."
+  },
+  "topbar": {
+    "settings": "Настройки",
+    "shop": "Магазин",
+    "mail": "Почта"
+  },
+  "upgrades": {
+    "title": "Улучшения базы",
+    "level": "Ур.",
+    "current": "Текущее:",
+    "atk": "АТК",
+    "def": "ЗАЩ",
+    "hour": "ч",
+    "stashShort": "тайн.",
+    "statsTitle": "СТАТЫ",
+    "attack": {
+      "name": "Оружие",
+      "description": "Увеличивает урон по боссам"
+    },
+    "defense": {
+      "name": "Оборона",
+      "description": "Снижает потери во время рейдов"
+    },
+    "income": {
+      "name": "Ферма лома",
+      "description": "Больше лома в час"
+    },
+    "stash": {
+      "name": "Тайник",
+      "description": "Увеличивает защищённый резерв"
+    },
+    "stats": {
+      "strength": "CA",
+      "stealth": "Стелс",
+      "endurance": "Выносливость",
+      "craft": "Крафт"
+    }
+  },
+  "boss_panel": {
+    "choose_boss": "Выбери босса",
+    "reward_title": "Награда",
+    "reward_strength_line": "CA +{{min}}-{{max}}",
+    "reward_xp_line": "EXP +{{min}}-{{max}}",
+    "players": "Игроки",
+    "clans": "Кланы",
+    "clan_damage": "Урон клана"
+  },
+  "tasks_panel": {
+    "location_reward_strength_short": "+CA",
+    "location_reward_xp_short": "+EXP",
+    "back_to_locations": "Назад к локациям",
+    "missions_count": "{{count}} миссий",
+    "collection": "Коллекция",
+    "location_artifacts_title": "Артефакты локации",
+    "location_artifacts_hint": "Каждая миссия даёт свой артефакт после заполнения шкалы. Полный сет меняется на оружие.",
+    "location_unlock_hint": "Победи {{boss}} или достигни уровня {{level}}",
+    "final_task_unlock_hint": "Откроется после полного цикла первых 6 миссий"
+  },
+  "clan_panel": {
+    "open_clans_title": "Открыть кланы",
+    "available_now": "Доступно сейчас",
+    "no_real_clans_hint": "Реальных кланов пока нет. Можешь создать первый.",
+    "clan_list": "Список кланов",
+    "create_clan_tab": "Создать клан",
+    "clan_settings": "Настройки клана",
+    "create_clan": "Создание клана",
+    "create_requirement": "10 lvl + 10k лома",
+    "clan_name": "Название клана",
+    "cost": "Стоимость",
+    "create": "Создать",
+    "locked": "Заблокировано",
+    "clan_sign": "Знак клана",
+    "guild_logo": "Логотип гильдии",
+    "description": "Описание",
+    "required_trophies": "Требуемые трофеи",
+    "required_level": "Требуемый уровень",
+    "clan_tagline": "Мы относимся к игрокам с уважением.",
+    "clan_power": "Сила клана",
+    "clan_level": "Уровень клана {{level}}",
+    "your_contribution": "Твой вклад",
+    "close_announcement": "Закрыть объявление",
+    "players": "Игроки",
+    "active_players": "Активные игроки",
+    "clan_type": "Тип клана",
+    "last_raid_damage": "Урон в рейд-боссе",
+    "achievement_raid": "Рейд",
+    "achievement_power": "Сила",
+    "achievement_team": "Команда",
+    "achievement_legend": "Легенда",
+    "achievement_hunter": "Охотник",
+    "achievement_guard": "Стража",
+    "achievement_damage": "Урон",
+    "achievement_quests": "Квесты",
+    "achievement_helper": "Помощник",
+    "achievement_donations": "Донаты",
+    "achievement_how_title": "Как это работает",
+    "achievement_clan_level_rule": "Уровень клана повышается, когда все 4 достижения достигают этого уровня. Для 1 уровня нужен 1 уровень в каждом достижении.",
+    "donation_daily_limit": "лимит обновляется каждые 12 часов",
+    "achievement_current_level": "Текущий уровень {{level}}",
+    "achievement_level_header": "Уровень",
+    "achievement_requirement_header": "Нужно",
+    "achievement_bonus_header": "Бонус",
+    "achievement_requirement_damage": "урона",
+    "achievement_requirement_quests": "квестов",
+    "achievement_requirement_helper": "помощей",
+    "achievement_requirement_donations": "tentacles",
+    "achievement_bonus_damage": "+{{value}}% урона ядом",
+    "achievement_bonus_quests": "Квесты до уровня {{value}}",
+    "achievement_bonus_helper": "до {{value}} энергии",
+    "achievement_bonus_donations": "{{value}} участников",
+    "achievement_how_damage": "Учитывается суммарный урон, который участники клана наносят боссам. Каждый уровень увеличивает урон ядом на 1%.",
+    "achievement_how_quests": "Учитываются завершённые клановые квесты. Уровень открывает квесты соответствующей сложности, максимум — VIII уровень.",
+    "achievement_how_helper": "Учитываются запросы энергии, в которых участники помогли друг другу. Каждый уровень повышает лимит энергии в запросе на 5.",
+    "achievement_how_donations": "Учитываются tentacles, пожертвованные участниками клана. Каждый уровень увеличивает максимальное число мест в клане.",
+    "quests": "Квесты",
+    "donate": "Донат",
+    "start": "Старт",
+    "go": "GO",
+    "in_progress": "В РАБОТЕ",
+    "quest_reward": "+{{tentacles}} tentacles · +{{xp}} XP",
+    "quest_condition": {
+      "damage": "Нанести {{target}} урона",
+      "energy": "Потратить {{target}} энергии",
+      "missions": "Выполнить {{target}} задания",
+      "hits": "Ударить босса {{target}} раз",
+      "tentacles": "Задонатить {{target}} tentacles"
+    },
+    "help": "Помочь",
+    "energy": "Энергия",
+    "request_energy": "Запросить",
+    "donations_locked": "Донаты заблокированы",
+    "progress_raids": "Рейды",
+    "progress_power": "Сила",
+    "progress_members": "Участники",
+    "progress_trophies": "Трофеи",
+    "leave_clan": "Покинуть клан",
+    "clan_chat": "Чат клана",
+    "manage": "Управление",
+    "management_title": "Управление кланом",
+    "applications": "Заявки {{count}}",
+    "settings": "Настройки",
+    "log": "Журнал",
+    "level_short": "Ур.",
+    "role_leader": "Глава",
+    "role_deputy": "Заместитель",
+    "role_elder": "Космодед",
+    "role_member": "Стажёр",
+    "kick": "Исключить",
+    "kick_confirm": "Исключить {{name}} из клана?",
+    "no_applications": "Нет заявок",
+    "save_description": "Сохранить описание",
+    "announcement_subject": "Тема объявления",
+    "text": "Текст",
+    "send_mail": "Отправить письмо",
+    "pin": "Закрепить",
+    "transfer_member_id": "ID участника для передачи лидерства",
+    "transfer_confirm": "Подтвердить передачу роли?",
+    "transfer_leader": "Передать лидерство",
+    "dissolve_confirm": "Распустить клан?",
+    "dissolve": "Распустить",
+    "empty_log": "Журнал пуст",
+    "log_sent_announcement": "отправил объявление: «{{title}}».",
+    "log_joined": "вступил в клан.",
+    "log_left": "покинул клан.",
+    "log_kicked": "исключил {{name}} из клана.",
+    "log_changed_description": "изменил описание клана.",
+    "log_removed_announcement": "убрал закреплённое объявление.",
+    "members": "Участники",
+    "roster": "Состав клана",
+    "power": "Сила",
+    "join": "Присоединиться",
+    "top": "Топ {{place}}",
+    "role_fighter": "Боец",
+    "role_solo": "Один",
+    "no_clan_name": "Без клана",
+    "clan_type_request": "По заявке",
+    "not_created": "Не создано",
+    "start_location": "Старт",
+    "clan_description_default": "Клан показывает только реальных участников.",
+    "clan_description_guest": "Клан еще не создан. Здесь показывается только твой реальный профиль.",
+    "clan_row_description_default": "Клан собирает реальных участников и вместе ходит на боссов.",
+    "clan_create_description_default": "Концепт и идея от лидера клана. Ходим на боссов вместе и планируем окна урона.",
+    "clan_create_subtitle": "Собери свою команду. Покори бездну.",
+    "change_emblem": "Сменить эмблему",
+    "clan_emblem": "Эмблема клана",
+    "clan_preview": "Превью клана",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "close": "Закрыть",
+    "clan_type_open": "Открытый",
+    "clan_create_type_request": "Запрос",
+    "clan_type_invite_only": "Только приглашения",
+    "clan_type_open_hint": "Присоединиться может каждый.",
+    "clan_type_request_hint": "Нужно одобрение лидера.",
+    "clan_type_invite_only_hint": "Только для приглашённых игроков.",
+    "log_promoted": "повысил {{name}}: {{from}} → {{to}}.",
+    "log_demoted": "понизил {{name}}: {{from}} → {{to}}.",
+    "log_accepted": "принял {{name}} в клан.",
+    "log_rejected": "отклонил заявку {{name}}.",
+    "log_transferred": "передал звание главы {{name}}.",
+    "log_join_type": "изменил тип вступления: {{from}} → {{to}}.",
+    "log_min_level": "изменил минимальный уровень: {{from}} → {{to}}."
+  },
+  "mail_panel": {
+    "title": "Почта",
+    "subtitle": "Здесь хранятся бонусы от игры и админа.",
+    "from_game": "Письмо от игры",
+    "claim": "Забрать",
+    "claimed": "Получено",
+    "opening": "Открываем",
+    "empty": "Пока нет новых писем",
+    "open_error": "Не удалось открыть награду",
+    "claimed_fallback": "Награда получена",
+    "rewards_tab": "Награды",
+    "gifts_tab": "Подарки",
+    "counter": "{{current}}/{{max}} писем",
+    "mark_read": "Прочитать",
+    "read": "Прочитано",
+    "delete": "Удалить",
+    "action_error": "Не удалось обновить сообщение"
+  },
+  "resource_names": {
+    "dm": {
+      "short": "tentacles",
+      "full": "tentacles",
+      "description": "Основная валюта игры."
+    },
+    "cdm": {
+      "short": "T-Pape",
+      "full": "T-Pape",
+      "description": "Премиум-валюта игры."
+    },
+    "ca": {
+      "short": "CA",
+      "full": "Космо авторитет",
+      "description": "Сила и статус героя."
+    },
+    "exp": {
+      "short": "EXP",
+      "full": "Опыт",
+      "description": "Опыт для повышения уровня."
+    },
+    "mail": {
+      "short": "Почта",
+      "full": "Почта",
+      "description": "Письма и награды от игры."
+    }
+  },
+  "skill_names": {
+    "finger": "Палец",
+    "pencil": "Карандаш",
+    "small_poison": "Малый яд",
+    "medium_poison": "Средний яд",
+    "big_poison": "Фляга с ядом"
+  },
+  "battle_pass": {
+    "back": "Назад к герою",
+    "season": "СЕЗОН 01 · 28 ДНЕЙ",
+    "season_title": "ПУТЬ ВЫЖИВАНИЯ",
+    "season_subtitle": "50 уровней. Твоя история.",
+    "season_art": "АРТ СЕЗОНА · ЗАГЛУШКА",
+    "level": "УРОВЕНЬ {{level}}",
+    "days_left": "{{days}} дн. до конца",
+    "inactive": "Сезон неактивен",
+    "max_level": "МАКСИМАЛЬНЫЙ УРОВЕНЬ",
+    "progress_hint": "Бей боссов, выполняй ежедневные задания и прокачивай Battle Pass!",
+    "rewards_tab": "НАГРАДЫ",
+    "tasks_tab": "ЗАДАНИЯ",
+    "loading": "Загрузка сезона…",
+    "tasks_aria": "Задания Battle Pass",
+    "tasks_title": "ЗАДАНИЯ BATTLE PASS",
+    "tasks_hint": "XP начисляется автоматически. Ежедневные — 00:00 UTC, недельные — понедельник 00:00 UTC.",
+    "boss_victory_xp": "10–30 XP за победу · до 3/день · владельцу боя",
+    "done": "Выполнено",
+    "claim": "Забрать",
+    "claimed": "получено",
+    "locked": "заблокировано",
+    "art_coming": "АРТ ПОЗЖЕ",
+    "reward": "Награда",
+    "reward_title": "Награда Battle Pass",
+    "claim_error": "Не удалось забрать награду",
+    "reward_aria": "{{track}}, уровень {{level}}: {{rewards}}, {{status}}",
+    "finish_title": "ФИНИШ СЕЗОНА",
+    "finish_text": "Собери билеты для розыгрыша призов после сезона.",
+    "tickets": "Твои билеты: {{count}}",
+    "groups": {
+      "bosses": "Боссы",
+      "daily": "Ежедневные · 150 XP",
+      "weekly": "Недельные · 500 XP",
+      "season": "Сезонные · 1 800 XP"
+    },
+    "rewards": {
+      "epic_background": "Эпический фон",
+      "legendary_background": "Легендарный фон",
+      "dm": "tentacles",
+      "cdm": "T-Pape",
+      "energy": "Энергия",
+      "large": "Фляга с ядом",
+      "medium": "Средний яд",
+      "ticket": "Билет розыгрыша",
+      "boots": "Обувь",
+      "legs": "Штаны",
+      "hands": "Перчатки",
+      "armor": "Броня",
+      "head": "Головной убор",
+      "weapon": "Оружие",
+      "animated": "Анимация",
+      "pet": "Пет сезона",
+      "legendary_boots": "Легендарная обувь",
+      "legendary_legs": "Легендарные штаны",
+      "legendary_hands": "Легендарные перчатки",
+      "legendary_armor": "Легендарная броня",
+      "legendary_head": "Легендарный головной убор",
+      "legendary_weapon": "Легендарное оружие",
+      "exclusive_effect": "Эксклюзивный эффект",
+      "season_animation": "Сезонная анимация",
+      "exclusive_animation": "Эксклюзивная анимация",
+      "epic_pet": "Ворон алхимика"
+    },
+    "go": "GO"
+  },
+  "background_panel": {
+    "section": "Фоны",
+    "title": "Декор убежища",
+    "boss_drops": "Дроп с боссов",
+    "previous": "Предыдущий фон",
+    "next": "Следующий фон",
+    "unlocked": "Открыто",
+    "locked": "Закрыто",
+    "selected": "Установлено",
+    "select": "Поставить фон"
+  },
+  "camp_overlay": {
+    "tasks": "Квесты",
+    "leaderboard": "Топ",
+    "settings": "Настройки",
+    "upgrades": "Задания",
+    "boss": "Босс",
+    "blackjack": "Карты"
+  },
+  "collection_panel": {
+    "title": "КОЛЛЕКЦИИ",
+    "damage_bonus": "БОНУС К УРОНУ",
+    "drop_chance": "ШАНС ДРОПА",
+    "hint": "Предметы падают при заданиях (8%). Собери сет из 5 — получи ящик!",
+    "set_bonus": "✓ +10% урона",
+    "box": "Ящик",
+    "beach": "🏖️ Пляж",
+    "factory": "🏭 Завод",
+    "oilrig": "🛢️ Нефтяная вышка"
+  },
+  "settings_panel": {
+    "title": "Настройки",
+    "profile": "Профиль",
+    "language": "Язык",
+    "language_desc": "Выбери язык интерфейса. Мультиязычный пакет подключим дальше.",
+    "promo_code": "Промокод",
+    "enter_code": "ВВЕДИ КОД...",
+    "ok": "ОК",
+    "used": "Использовано",
+    "ton_wallet": "TON Wallet",
+    "ton_wallet_desc": "Официальный TonConnect UI уже работает. Backend хранит привязанный кошелёк и proof-session для следующего шага проверки.",
+    "connected": "подключено",
+    "not_linked": "не подключено",
+    "loading_wallet_state": "Загрузка состояния кошелька...",
+    "no_wallet_linked": "TON-кошелёк ещё не подключён",
+    "network": "Сеть",
+    "provider": "Провайдер",
+    "proof_status": "Статус подтверждения",
+    "manifest": "Манифест",
+    "preparing_proof": "Подготовка данных подтверждения...",
+    "platform": "Платформа: {{platform}}",
+    "disconnect": "Отключить",
+    "display": "Отображение",
+    "sound": "Звук",
+    "sound_desc": "Эффекты и музыка",
+    "vibration": "Вибрация",
+    "vibration_desc": "Тактильный отклик",
+    "logout": "Выйти",
+    "level_line": "Уровень {{level}} • {{tier}}",
+    "invalid_promo_code": "Недействительный промокод",
+    "promo_already_used": "Этот промокод уже использован",
+    "promo_activated": "Активировано: {{label}}",
+    "wallet_disconnected": "TON кошелёк отключён",
+    "wallet_disconnect_failed": "Не удалось отключить TON кошелёк",
+    "wallet_load_failed": "Не удалось загрузить состояние кошелька",
+    "proof_prepare_failed": "Не удалось подготовить TON proof payload",
+    "wallet_connected_proof": "Кошелёк подключён через TonConnect. Proof payload совпал и привязка сохранена.",
+    "wallet_linked": "TON кошелёк привязан к профилю.",
+    "wallet_sync_failed": "Не удалось синхронизировать TON кошелёк с backend"
+  },
+  "talentTree": {
+    "title": "ТАЛАНТЫ",
+    "tree": "ВЕРТИКАЛЬНОЕ ДЕРЕВО",
+    "progress": "До следующего очка: {{current}}/{{goal}} · потрачено: {{spent}}",
+    "progressHintLabel": "Пояснение шкалы талантов",
+    "progressHint": "Шкала талантов показывает прогресс до следующего уровня. Заполняй её в бою, получай очки талантов и трать их во вкладке «Таланты», чтобы усиливать героя.",
+    "sector": "СЕКТОР {{id}} · {{name}}",
+    "sectors": [
+      "ДВОР",
+      "ПАЛЕЦ",
+      "КАРАНДАШ",
+      "ХИМИЯ",
+      "РАЗБОРКА",
+      "СУПЕРТАЛАНТЫ"
+    ],
+    "keyRequired": "Ключевой талант 10/10",
+    "unlock": "Открытие: ключевой талант предыдущего сектора 10/10 · {{points}} очков всего",
+    "unlockKeyProgress": "Ключевой талант предыдущего сектора: {{level}}/10",
+    "unlockPointsProgress": "Потрачено очков: {{spent}}/{{points}}",
+    "upgrade": "Улучшить {{name}}",
+    "level": "Уровень: {{level}}/{{max}}",
+    "nextLevel": "Следующий уровень: {{level}}/{{max}} · цена 1 ★",
+    "maxLevel": "Максимальный уровень",
+    "requirements": "Требования: {{requirements}}",
+    "none": "нет",
+    "locked": "заблокировано",
+    "talents": {
+      "t01": {
+        "name": "Ловкий палец",
+        "description": "Увеличивает урон Пальца на 3 за уровень."
+      },
+      "t02": {
+        "name": "Острый карандаш",
+        "description": "Увеличивает урон Карандаша на 4 за уровень."
+      },
+      "t03": {
+        "name": "Грязная химия",
+        "description": "Увеличивает урон Малого яда на 5 за уровень."
+      },
+      "t04": {
+        "name": "Запас сил",
+        "description": "Увеличивает максимальный запас энергии на 10 за уровень таланта."
+      },
+      "t05": {
+        "name": "Прицел двора",
+        "description": "Увеличивает шанс критического удара Пальца и Карандаша на 1% за уровень."
+      },
+      "t06": {
+        "name": "Быстрый тычок",
+        "description": "Уменьшает время восстановления Пальца на 30 секунд за уровень."
+      },
+      "t07": {
+        "name": "Глубокий графит",
+        "description": "Кровотечение наносит на 3 больше урона каждую секунду за уровень."
+      },
+      "t08": {
+        "name": "Чистая доза",
+        "description": "Увеличивает урон Среднего яда на 10 за уровень."
+      },
+      "t09": {
+        "name": "Экономный пузырёк",
+        "description": "Даёт 1% шанс не потратить Малый или Средний яд за уровень."
+      },
+      "t10": {
+        "name": "Рабочие руки",
+        "description": "Увеличивает урон всех атак и ядов на 2 за уровень."
+      },
+      "t11": {
+        "name": "Лёгкая рука",
+        "description": "Уменьшает время восстановления Пальца ещё на 3 секунды за уровень."
+      },
+      "t12": {
+        "name": "Жёсткий тычок",
+        "description": "Увеличивает урон Пальца на 5 за уровень."
+      },
+      "t13": {
+        "name": "Второй тычок",
+        "description": "Даёт 0,5% шанс за уровень нанести Пальцем два удара вместо одного."
+      },
+      "t14": {
+        "name": "Точный палец",
+        "description": "Увеличивает шанс критического удара Пальца на 1% за уровень."
+      },
+      "t15": {
+        "name": "Тычок по метке",
+        "description": "Если на боссе есть 3 токсичные метки, Палец наносит на 10 больше урона за уровень. Метки не расходуются."
+      },
+      "t16": {
+        "name": "Под ребро",
+        "description": "Когда у босса меньше половины здоровья, Палец наносит на 8 больше урона за уровень."
+      },
+      "t17": {
+        "name": "Грязный тычок",
+        "description": "Если на боссе 5 токсичных меток, Палец наносит на 15 больше урона за уровень. Метки не расходуются."
+      },
+      "t18": {
+        "name": "По живому",
+        "description": "Пока босс истекает кровью, Палец наносит на 8 больше урона за уровень."
+      },
+      "t19": {
+        "name": "Финальный тычок",
+        "description": "Когда у босса осталось меньше 15% здоровья, Палец наносит на 15 больше урона за уровень."
+      },
+      "t20": {
+        "name": "Удар с размаху",
+        "description": "Критический удар Пальца наносит ещё на 10 больше урона за уровень."
+      },
+      "t21": {
+        "name": "Тонкая линия",
+        "description": "Увеличивает урон Карандаша на 4 за уровень."
+      },
+      "t22": {
+        "name": "Разорванная бумага",
+        "description": "Кровотечение наносит на 3 больше урона каждую секунду за уровень."
+      },
+      "t23": {
+        "name": "Долгая кровь",
+        "description": "Продлевает кровотечение на 1 секунду за уровень."
+      },
+      "t24": {
+        "name": "По старой ране",
+        "description": "Если босс уже истекает кровью, Карандаш наносит на 8 больше урона за уровень."
+      },
+      "t25": {
+        "name": "Рваный штрих",
+        "description": "Каждое обновление кровотечения Карандашом продлевает его ещё на 1 секунду за уровень."
+      },
+      "t26": {
+        "name": "Ядовитый грифель",
+        "description": "Если на боссе есть хотя бы 1 токсичная метка, Карандаш наносит на 6 больше урона за уровень."
+      },
+      "t27": {
+        "name": "Кровавый почерк",
+        "description": "Если на боссе 3 токсичные метки, кровотечение наносит на 5 больше урона каждую секунду за уровень."
+      },
+      "t28": {
+        "name": "Чёрный контур",
+        "description": "Увеличивает шанс критического удара Карандаша на 1% за уровень."
+      },
+      "t29": {
+        "name": "Последний штрих",
+        "description": "Когда у босса меньше 20% здоровья, Карандаш наносит на 12 больше урона за уровень."
+      },
+      "t30": {
+        "name": "Не смывай",
+        "description": "Если босс истекает кровью и имеет 3 токсичные метки, Карандаш наносит на 15 больше урона за уровень."
+      },
+      "t31": {
+        "name": "Малая порция",
+        "description": "Увеличивает урон Малого яда на 5 за уровень."
+      },
+      "t32": {
+        "name": "Среднее дело",
+        "description": "Увеличивает урон Среднего яда на 10 за уровень."
+      },
+      "t33": {
+        "name": "Большая доза",
+        "description": "Увеличивает урон Большого яда на 25 за уровень."
+      },
+      "t34": {
+        "name": "Не лей зря",
+        "description": "Даёт 1% шанс не потратить любой яд за уровень."
+      },
+      "t35": {
+        "name": "Липкая жижа",
+        "description": "Малый яд наносит на 3 больше урона за уровень."
+      },
+      "t36": {
+        "name": "Жижа прилипла",
+        "description": "Каждая токсичная метка добавляет ядам 3 урона за уровень."
+      },
+      "t37": {
+        "name": "Токсичный след",
+        "description": "Средний яд наносит на 5 больше урона за уровень."
+      },
+      "t38": {
+        "name": "Передоз",
+        "description": "Фляга с ядом наносит на 60 больше урона за уровень, если на боссе 5 меток. После удара метки исчезают."
+      },
+      "t39": {
+        "name": "Банка «Не нюхай»",
+        "description": "Увеличивает урон Большого яда на 25 за уровень."
+      },
+      "t40": {
+        "name": "Большой токсичный кипиш",
+        "description": "Фляга с ядом наносит ещё на 80 больше урона за уровень, если на боссе 5 меток. После удара метки исчезают."
+      },
+      "t41": {
+        "name": "Рабочий ритм",
+        "description": "Палец, Карандаш и все яды +3 урона."
+      },
+      "t42": {
+        "name": "Кровь и химия",
+        "description": "При активном кровотечении все яды +8 урона."
+      },
+      "t43": {
+        "name": "Босс нервничает",
+        "description": "При HP босса ниже 50% все атаки +6 урона."
+      },
+      "t44": {
+        "name": "Второе дыхание",
+        "description": "Увеличивает максимальный запас энергии на 13 за уровень таланта."
+      },
+      "t45": {
+        "name": "Дави дальше",
+        "description": "При HP босса ниже 25% все атаки +10 урона."
+      },
+      "t46": {
+        "name": "Добивающий момент",
+        "description": "При HP босса ниже 15% все атаки +15 урона."
+      },
+      "t47": {
+        "name": "Долгий бой",
+        "description": "Время активности кланового босса +30 минут."
+      },
+      "t48": {
+        "name": "Перевести дух",
+        "description": "Критический удар: +2% шанса восстановить 10 энергии."
+      },
+      "t49": {
+        "name": "Рабочая концентрация",
+        "description": "Малый, Средний и Фляга с ядом +10 урона."
+      },
+      "t50": {
+        "name": "Давление без пауз",
+        "description": "Увеличивает урон всех атак на 5 за уровень."
+      },
+      "t51": {
+        "name": "Вечный бой",
+        "description": "Кровотечение наносит на 8 больше урона каждую секунду за уровень."
+      },
+      "t52": {
+        "name": "Адреналин",
+        "description": "Увеличивает максимальный запас энергии на 17 за уровень таланта."
+      },
+      "t53": {
+        "name": "Передозированный дворик",
+        "description": "Фляга с ядом наносит на 75 больше урона за уровень, если на боссе 5 меток. После удара метки исчезают."
+      },
+      "t54": {
+        "name": "Кровь и химия",
+        "description": "Если босс истекает кровью и имеет 3 токсичные метки, Карандаш наносит на 20 больше урона за уровень."
+      },
+      "t55": {
+        "name": "Держи удар",
+        "description": "Пока у босса больше 75% здоровья, Палец и Карандаш наносят на 8 больше урона за уровень."
+      },
+      "t56": {
+        "name": "Последний шанс",
+        "description": "Когда у босса меньше 10% здоровья, все атаки наносят на 25 больше урона за уровень."
+      },
+      "t57": {
+        "name": "Зона давит",
+        "description": "Когда у босса меньше половины здоровья, шанс критического удара увеличивается на 2% за уровень."
+      },
+      "t58": {
+        "name": "Авторитет",
+        "description": "Увеличивает урон всех атак и ядов на 5 за уровень."
+      },
+      "t59": {
+        "name": "Токсичный авторитет",
+        "description": "Если на боссе 3 токсичные метки, все яды наносят на 15 больше урона за уровень."
+      },
+      "t60": {
+        "name": "Закон зоны",
+        "description": "Если босс истекает кровью и имеет 5 токсичных меток, все атаки наносят на 20 больше урона за уровень. Фляга с ядом после удара расходует метки."
+      }
+    }
+  }
+}

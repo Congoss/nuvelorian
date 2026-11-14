@@ -1,0 +1,56 @@
+{
+  "name": "BossFight",
+  "type": "object",
+  "properties": {
+    "boss_id": {
+      "type": "string"
+    },
+    "boss_name": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "max_hp": {
+      "type": "number"
+    },
+    "current_hp": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "dead"
+      ],
+      "default": "active"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "boss_id",
+    "max_hp",
+    "current_hp"
+  ],
+  "rls": {
+    "create": true,
+    "read": true,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

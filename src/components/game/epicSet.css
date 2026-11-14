@@ -1,0 +1,62 @@
+
+.bp-set-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
+.bp-set-canvas{position:absolute;left:50%;top:50%;width:100%;aspect-ratio:500/896;max-height:100%;translate:-50% -50%;pointer-events:none}
+.bp-set-pet{position:absolute;aspect-ratio:500/896;pointer-events:none}
+.bp-set-glow{mix-blend-mode:screen;animation:bp-set-glow 4.6s ease-in-out infinite}
+.bp-set-acid{filter:brightness(1.6) drop-shadow(0 0 3px #a5ff1d)}
+.bp-set-blue{filter:brightness(1.3) drop-shadow(0 0 3px #45e6ff);animation-delay:-1.7s}
+.bp-set-bottle{animation:bp-set-bottle 5.8s ease-in-out infinite}
+.bp-set-weapon{animation:bp-set-weapon 6.2s ease-in-out infinite}
+.bp-set-electric{opacity:0;filter:drop-shadow(0 0 2px #38dfff);animation:bp-set-electric 8.7s steps(1,end) infinite}
+.bp-set-head-electric{animation-duration:10.3s;animation-delay:-3s}
+.bp-set-head-spark{filter:brightness(2) drop-shadow(0 0 3px #7beeff);animation:bp-set-electric 10.3s steps(1,end) infinite;animation-delay:-3s}
+.bp-set-eyes{filter:drop-shadow(0 0 3px #ff1616);animation:bp-set-glow 3.8s ease-in-out infinite}
+.bp-set-shine-mask{mask-size:100% 100%;mask-repeat:no-repeat;-webkit-mask-size:100% 100%;-webkit-mask-repeat:no-repeat}
+.bp-set-metal-shine{position:absolute;inset:0;background:linear-gradient(105deg,transparent 43%,#d8f5ffbb 49%,#ffffffdd 50%,transparent 56%);animation:bp-set-metal-shine 9s ease-in-out infinite}
+.bp-set-claw-right{transform-origin:26.5% 81.5%;animation:bp-set-claw-right 6.7s ease-in-out infinite}
+.bp-set-claw-left{transform-origin:24% 81.5%;animation:bp-set-claw-left 6.7s ease-in-out infinite}
+.bp-set-raven-eye{filter:brightness(1.5) drop-shadow(0 0 2px #c1ff32);animation:bp-set-raven-eye 6s ease-in-out infinite}
+@keyframes bp-set-glow{0%,100%{opacity:.35}50%{opacity:.9}}
+@keyframes bp-set-bottle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes bp-set-weapon{0%,100%{transform:rotate(-1.6deg)}50%{transform:rotate(1.6deg)}}
+@keyframes bp-set-electric{0%,77%,83%,88%,100%{opacity:0}78%,81%,85%,87%{opacity:1}}
+@keyframes bp-set-metal-shine{0%,70%{transform:translateX(-100%);opacity:0}72%{opacity:.8}84%{transform:translateX(100%);opacity:.8}86%,100%{transform:translateX(100%);opacity:0}}
+@keyframes bp-set-claw-right{0%,65%,73%,78%,100%{transform:rotate(0)}68%,75%{transform:rotate(13deg)}}
+@keyframes bp-set-claw-left{0%,65%,73%,78%,100%{transform:rotate(0)}68%,75%{transform:rotate(-13deg)}}
+@keyframes bp-set-raven-eye{0%,27%,34%,68%,75%,100%{opacity:.75;transform:scaleY(1)}29%,32%,70%,73%{opacity:0;transform:scaleY(.05)}50%{opacity:1}}
+.bp-set-raven-lid{transform-box:fill-box;transform-origin:center;animation:bp-set-raven-lid 6s ease-in-out infinite}
+@keyframes bp-set-raven-lid{0%,27%,34%,68%,75%,100%{opacity:0;transform:scaleY(0)}29%,32%,70%,73%{opacity:1;transform:scaleY(1)}}
+.bp-set-eye-aura{position:absolute;width:10%;height:5%;translate:-50% -50%;pointer-events:none}
+.bp-set-eye-mist{position:absolute;inset:0;border-radius:46% 61% 39% 58%;background:radial-gradient(ellipse at 50% 65%,#ff241c99 0%,#d7152266 28%,#a8082433 49%,transparent 72%);filter:blur(2px);mix-blend-mode:screen;animation:bp-set-eye-mist 4.2s ease-out infinite}
+.bp-set-eye-mist-delayed{animation-delay:-2.1s;animation-direction:reverse}
+@keyframes bp-set-eye-mist{0%{opacity:.15;transform:translate(0,2px) scale(.55) rotate(-12deg)}30%{opacity:.75}65%{opacity:.4}100%{opacity:0;transform:translate(-3px,-14px) scale(1.4) rotate(18deg)}}
+html[data-game-hidden="true"] [class*="bp-set-"]{animation-play-state:paused!important}
+[data-modal-open="true"] .animated-camp-scene [class*="bp-set-"]{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){[class*="bp-set-"]{animation:none!important}.bp-set-electric,.bp-set-head-spark,.bp-set-metal-shine{opacity:0}.bp-set-glow,.bp-set-eyes,.bp-set-raven-eye{opacity:.6}}
+
+@media(prefers-reduced-motion:reduce){.bp-set-raven-lid{opacity:0}.bp-set-eye-mist{opacity:.3;transform:scale(.8)}}
+
+
+.bp-set-demonic-aura{isolation:isolate;overflow:visible;pointer-events:none}
+.bp-set-raven-vortex{overflow:visible;filter:drop-shadow(0 0 1px #8c819511)}
+.bp-set-crow-wing,.bp-set-crow-body{fill:#8e90a0;stroke:#b5b5c344;stroke-width:.9;stroke-linejoin:round}
+.bp-set-crow-wing{transform-origin:0 2px;animation:bp-set-crow-flap 5s ease-in-out infinite}
+.bp-set-crow-wing-right{animation-direction:reverse}
+.bp-set-vortex-bird{opacity:.3;animation:bp-set-crow-arc 20s ease-in-out infinite}
+.bp-set-ink-stream{fill:#17131fb3;stroke:#81718e55;stroke-width:.7;animation:bp-set-ink-flow 19s ease-in-out infinite;transform-origin:50% 50%}
+.bp-set-ink-streams{filter:blur(1.2px)}
+.bp-set-vortex-feather{animation:bp-set-feather-float 12s ease-in-out infinite}
+.bp-set-vortex-dust{animation:bp-set-ash 9s ease-out infinite}
+@keyframes bp-set-crow-arc{0%,100%{transform:translate(0,0) rotate(-3deg)}28%{transform:translate(var(--arc-x),var(--arc-y)) rotate(7deg)}62%{transform:translate(calc(var(--arc-x)*.25),calc(var(--arc-y)*1.4)) rotate(-7deg)}82%{transform:translate(calc(var(--arc-x)*-.3),calc(var(--arc-y)*.55)) rotate(2deg)}}
+@keyframes bp-set-crow-flap{0%,100%{transform:scaleY(1) rotate(-3deg)}44%{transform:scaleY(.72) rotate(5deg)}72%{transform:scaleY(.91) rotate(-1deg)}}
+@keyframes bp-set-ink-flow{0%,100%{opacity:.25;transform:translate(0,9px) skewX(-2deg) scaleX(.95)}42%{opacity:.6;transform:translate(5px,-14px) skewX(3deg) scaleX(1.03)}75%{opacity:.38;transform:translate(-4px,-22px) skewX(-1deg) scaleX(.98)}}
+@keyframes bp-set-feather-float{0%,100%{opacity:.12;transform:translate(0,12px) rotate(-12deg)}35%{opacity:.7;transform:translate(8px,-5px) rotate(8deg)}72%{opacity:.3;transform:translate(-5px,-22px) rotate(23deg)}}
+@keyframes bp-set-ash{0%,100%{opacity:0;transform:translate(0,7px)}24%{opacity:.6}76%{opacity:.12;transform:translate(5px,-27px)}}
+@media(prefers-reduced-motion:reduce){.bp-set-ink-stream{opacity:.35;transform:none}.bp-set-vortex-feather{opacity:.45;transform:none}.bp-set-vortex-dust{opacity:.3;transform:none}}
+
+.bp-set-demonic-aura .bp-set-ink-streams{display:none}
+.bp-set-demonic-aura .bp-set-raven-vortex>g:nth-of-type(2){opacity:.08}
+
+.bp-set-crow-fade{animation:bp-set-crow-fade 11s ease-in-out infinite}
+@keyframes bp-set-crow-fade{0%,100%{opacity:0}18%{opacity:.45}36%,54%{opacity:1}78%{opacity:.35}92%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.bp-set-crow-fade{opacity:.65;filter:none}}

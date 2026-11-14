@@ -1,0 +1,75 @@
+import assert from 'node:assert/strict';
+import { applyTalentUpgrade, getTalentProgressGoalForLevel, getWeaponTalentStats, isTalentUnlocked } from '../src/lib/talents.js';
+import { awardTalentDamage, getTalentThreshold, migrateTalentTreeState } from '../src/lib/talentTreeState.js';
+import { createTalentCombatState, getBleedTicks, registerHpThresholds, resolveTalentAttack } from '../src/lib/talentCombat.js';
+import { GAME_CONFIG } from '../src/lib/gameConfig.js';
+
+assert.equal(getTalentThreshold(0), 30);
+assert.equal(getTalentThreshold(1), 33);
+const cumulative = (points) => Array.from({ length: points }, (_, index) => getTalentThreshold(index)).reduce((sum, value) => sum + value, 0);
+assert.equal(cumulative(50), 19360);
+assert.equal(cumulative(58), 30096);
+assert.equal(getTalentProgressGoalForLevel(1), 30);
+assert.equal(getTalentProgressGoalForLevel(2), 33);
+assert.equal(awardTalentDamage({}, 30).available_talent_points, 1);
+assert.equal(awardTalentDamage({}, 63).available_talent_points, 2);
+assert.equal(awardTalentDamage({}, 99).available_talent_points, 3);
+const overflow = awardTalentDamage({}, 100);
+assert.equal(overflow.available_talent_points, 3);
+assert.equal(overflow.talent_damage_progress, 1);
+assert.equal(awardTalentDamage(awardTalentDamage({}, 30), 33).available_talent_points, 2);
+
+const migrated = migrateTalentTreeState({ talent_points: 7, boss_talent_progress: 22, boss_talent_level: 3, talent_levels: { t01: 2 } });
+assert.equal(migrated.available_talent_points, 7);
+assert.equal(migrated.talent_damage_progress, 22);
+assert.deepEqual(migrated.legacy_talent_levels, { t01: 2 });
+
+const profile = { talent_tree_version: 2, available_talent_points: 2, talent_levels: {} };
+const first = applyTalentUpgrade(profile, 't01');
+assert.equal(first.talent_levels.t01, 1);
+assert.equal(first.available_talent_points, 1);
+assert.equal(applyTalentUpgrade({ ...profile, ...first }, 't01').talent_levels.t01, 2);
+assert.equal(applyTalentUpgrade({ talent_tree_version: 2, available_talent_points: 0, talent_levels: {} }, 't01'), null);
+
+// Data-driven base attack values and flat modifiers.
+const weapon = (id) => GAME_CONFIG.WEAPONS.find((item) => item.id === id);
+const fullyTalented = { talent_tree_version: 2, talent_levels: { t01: 10, t02: 10, t03: 10, t08: 10, t31: 10, t32: 10, t33: 10, t39: 10, t06: 10 } };
+assert.equal(getWeaponTalentStats(weapon('fist'), fullyTalented).damage, 50);
+assert.equal(getWeaponTalentStats(weapon('fist'), fullyTalented).cooldownMin, 5);
+assert.equal(getWeaponTalentStats(weapon('knuckle'), fullyTalented).damage, 90);
+assert.equal(getWeaponTalentStats(weapon('satchel'), fullyTalented).damage, 135);
+assert.equal(getWeaponTalentStats(weapon('f4'), fullyTalented).damage, 270);
+assert.equal(getWeaponTalentStats(weapon('c4'), fullyTalented).damage, 700);
+assert.equal(getWeaponTalentStats(weapon('f4'), { talent_tree_version: 2, talent_levels: { t08: 10 } }).damage, 170);
+assert.equal(getWeaponTalentStats(weapon('c4'), { talent_tree_version: 2, talent_levels: { t33: 10 } }).damage, 450);
+assert.equal(isTalentUnlocked({ talent_tree_version: 2, available_talent_points: 1, talent_levels: {} }, 't06'), false);
+assert.equal(applyTalentUpgrade({ talent_tree_version: 2, available_talent_points: 1, talent_levels: { t01: 10 } }, 't01'), null);
+assert.equal(isTalentUnlocked({ talent_tree_version: 2, talent_levels: { t01: 5, t02: 5, t03: 5, t10: 10 } }, 't11'), true);
+assert.equal(isTalentUnlocked({ talent_tree_version: 2, talent_levels: { t10: 10 } }, 't11'), false);
+
+const fight = { max_hp: 1000, current_hp: 1000, started_at: new Date(0).toISOString() };
+const small = weapon('satchel');
+const finger = weapon('fist');
+const pencil = weapon('knuckle');
+const poisonResult = resolveTalentAttack({ weapon: small, levels: { t35: 10 }, state: {}, fight, now: 10, random: () => 1 });
+assert.equal(poisonResult.state.toxicMarks, 1);
+assert.equal(poisonResult.poisonPreserveChance, 0);
+assert.equal(resolveTalentAttack({ weapon: small, levels: { t09: 10, t34: 10 }, state: {}, fight, now: 10, random: () => 1 }).poisonPreserveChance, .4);
+const overdose = resolveTalentAttack({ weapon: weapon('c4'), levels: { t38: 10, t53: 10, t35: 10 }, state: { toxicMarks: 5 }, fight, now: 20, random: () => 1 });
+assert.equal(overdose.damage, 1550);
+assert.equal(overdose.state.toxicMarks, 0);
+const bleed = resolveTalentAttack({ weapon: pencil, levels: { t07: 10, t22: 10, t23: 10 }, state: {}, fight, now: 1000, random: () => 1 });
+assert.equal(bleed.state.bleed.damage, 65);
+const bleedTick = resolveTalentAttack({ weapon: finger, levels: {}, state: bleed.state, fight, now: 21000, random: () => 1 });
+assert.equal(bleedTick.bleedDamage, 1040);
+assert.equal(bleedTick.state.bleed, null);
+const idleState = { toxicMarks: 1 };
+assert.deepEqual(getBleedTicks(idleState, 1).state, { toxicMarks: 1 });
+let comboState = resolveTalentAttack({ weapon: small, levels: {}, state: createTalentCombatState(), fight, now: 1, random: () => 1 }).state;
+comboState = resolveTalentAttack({ weapon: finger, levels: {}, state: comboState, fight, now: 2, random: () => 1 }).state;
+const combo = resolveTalentAttack({ weapon: pencil, levels: { t42: 10 }, state: comboState, fight, now: 3, random: () => 1 });
+assert.equal(combo.damage, 50);
+assert.deepEqual(registerHpThresholds({}, 800, 740, 1000), { toxicMarks: 0, bleed: null });
+const authority = resolveTalentAttack({ weapon: finger, levels: { t58: 10, t10: 10, t20: 10, t30: 10, t40: 10, t50: 10 }, state: {}, fight, now: 1, random: () => 1 });
+assert.equal(authority.damage, 140);
+console.log('Talent tree core tests passed');
